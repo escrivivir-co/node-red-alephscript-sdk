@@ -36,7 +36,8 @@
       "alephscript-ui-format": "dist/nodes/ui-format-node.js",
       "alephscript-config": "dist/nodes/alephscript-config.js",
       "alephscript-bot-registry": "dist/nodes/alephscript-bot-registry.js",
-      "alephscript-room-tester": "dist/nodes/alephscript-room-tester.js"
+      "alephscript-room-tester": "dist/nodes/alephscript-room-tester.js",
+      "alephscript-stream-monitor": "dist/nodes/alephscript-stream-monitor.js"
     }
   },
   "dependencies": {

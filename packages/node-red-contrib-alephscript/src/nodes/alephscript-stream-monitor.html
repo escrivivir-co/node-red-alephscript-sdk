@@ -1,0 +1,637 @@
+<script type="text/html" data-template-name="alephscript-stream-monitor">
+    <div class="form-row">
+        <label for="node-input-name"><i class="fa fa-tag"></i> Name</label>
+        <input type="text" id="node-input-name" placeholder="Stream Monitor">
+    </div>
+    <div class="form-row">
+        <label for="node-input-config"><i class="fa fa-cog"></i> Server</label>
+        <input type="text" id="node-input-config">
+    </div>
+    <div class="form-row">
+        <label for="node-input-group"><i class="fa fa-table"></i> Group</label>
+        <input type="text" id="node-input-group">
+    </div>
+    <div class="form-row">
+        <label for="node-input-width"><i class="fa fa-arrows-h"></i> Width</label>
+        <select id="node-input-width">
+            <option value="0">auto</option>
+            <option value="1">1</option>
+            <option value="2">2</option>
+            <option value="3">3</option>
+            <option value="4">4</option>
+            <option value="5">5</option>
+            <option value="6">6</option>
+            <option value="7">7</option>
+            <option value="8" selected>8</option>
+            <option value="9">9</option>
+            <option value="10">10</option>
+            <option value="11">11</option>
+            <option value="12">12</option>
+        </select>
+        <label for="node-input-height" style="margin-left: 20px;"><i class="fa fa-arrows-v"></i> Height</label>
+        <input type="number" id="node-input-height" placeholder="6" style="width:80px">
+    </div>
+    <div class="form-row">
+        <label for="node-input-maxMessages"><i class="fa fa-list"></i> Max Messages</label>
+        <input type="number" id="node-input-maxMessages" value="100" style="width:80px">
+        <label for="node-input-autoScroll" style="margin-left: 20px;">
+            <input type="checkbox" id="node-input-autoScroll" checked style="width:auto">
+            Auto-scroll
+        </label>
+    </div>
+    <div class="form-row">
+        <label>&nbsp;</label>
+        <input type="checkbox" id="node-input-showTimestamps" checked style="display: inline-block; width: auto; vertical-align: top;">
+        <label for="node-input-showTimestamps" style="width: 70%;">Show timestamps</label>
+    </div>
+</script>
+
+<script type="text/html" data-help-name="alephscript-stream-monitor">
+    <p><strong>AlephScript Live Stream Monitor</strong></p>
+    <p>Dashboard 2.0 widget for monitoring real-time message streams from AlephScript bots and channels.</p>
+    
+    <h3>Properties</h3>
+    <dl class="message-properties">
+        <dt>Name <span class="property-type">string</span></dt>
+        <dd>Display name for this widget</dd>
+        
+        <dt>Server <span class="property-type">config</span></dt>
+        <dd>AlephScript server configuration node</dd>
+        
+        <dt>Group <span class="property-type">string</span></dt>
+        <dd>Dashboard 2.0 group to place this widget in</dd>
+        
+        <dt>Width <span class="property-type">number</span></dt>
+        <dd>Widget width (1-12 columns, 0=auto)</dd>
+        
+        <dt>Height <span class="property-type">number</span></dt>
+        <dd>Widget height in units</dd>
+        
+        <dt>Max Messages <span class="property-type">number</span></dt>
+        <dd>Maximum number of messages to keep in history (default: 100)</dd>
+        
+        <dt>Auto-scroll <span class="property-type">boolean</span></dt>
+        <dd>Automatically scroll to show newest messages</dd>
+        
+        <dt>Show timestamps <span class="property-type">boolean</span></dt>
+        <dd>Display timestamps for each message</dd>
+    </dl>
+    
+    <h3>Outputs</h3>
+    <ol class="node-ports">
+        <li>Stream events
+            <dl class="message-properties">
+                <dt>topic <span class="property-type">string</span></dt>
+                <dd>Event type: "new_message", "message_history", "status", "monitor_error", "history_cleared"</dd>
+                <dt>payload <span class="property-type">object</span></dt>
+                <dd>Stream data including messages, room info, and monitoring status</dd>
+            </dl>
+        </li>
+    </ol>
+    
+    <h3>Inputs</h3>
+    <ol class="node-ports">
+        <li>Monitor commands
+            <dl class="message-properties">
+                <dt>payload.command <span class="property-type">string</span></dt>
+                <dd>"start_monitoring", "stop_monitoring", "clear_history", "filter_room", or "get_status"</dd>
+                <dt>payload.room <span class="property-type">string</span></dt>
+                <dd>Room to monitor (optional for start_monitoring, required for filter_room)</dd>
+                <dt>payload.filterEnabled <span class="property-type">boolean</span></dt>
+                <dd>Enable/disable room filtering (required for filter_room)</dd>
+            </dl>
+        </li>
+    </ol>
+    
+    <h3>Core Requirement Validation</h3>
+    <p>This widget validates the original requirement:</p>
+    <blockquote>"su stream recibe los mensajes y si sale deja"</blockquote>
+    
+    <h3>Features</h3>
+    <ul>
+        <li><strong>Real-time Stream Display</strong> - Shows "su stream recibe los mensajes" in real-time</li>
+        <li><strong>Room Join/Leave Detection</strong> - Validates "si sale deja" behavior</li>
+        <li><strong>Multi-Channel Support</strong> - App/Sys/UI channel message differentiation</li>
+        <li><strong>Message History</strong> - Scrollable log with timestamps</li>
+        <li><strong>Room Filtering</strong> - Monitor specific rooms or all rooms</li>
+        <li><strong>Auto-cleanup</strong> - Messages stop when bots leave rooms</li>
+    </ul>
+    
+    <h3>Message Types</h3>
+    <ul>
+        <li><strong>Messages</strong> - Regular bot communications</li>
+        <li><strong>Join Events</strong> - When bots enter rooms</li>
+        <li><strong>Leave Events</strong> - When bots exit rooms (demonstrates "si sale deja")</li>
+        <li><strong>System Events</strong> - Monitor start/stop, errors</li>
+        <li><strong>Channel Messages</strong> - App/Sys/UI channel specific messages</li>
+    </ul>
+    
+    <h3>Testing Workflow</h3>
+    <ol>
+        <li>Start monitoring to see "su stream recibe los mensajes"</li>
+        <li>Use Room Tester to make bot join another room</li>
+        <li>Verify messages appear in stream (proves reception)</li>
+        <li>Use Room Tester to make bot leave room</li>
+        <li>Verify messages stop appearing (proves "si sale deja")</li>
+    </ol>
+</script>
+
+<script type="text/javascript">
+    RED.nodes.registerType('alephscript-stream-monitor', {
+        category: 'dashboard',
+        color: '#2196F3',
+        defaults: {
+            name: { value: "" },
+            config: { value: "", type: "alephscript-config", required: true },
+            group: { value: "", type: "ui-group", required: true },
+            width: { value: 8, validate: RED.validators.number() },
+            height: { value: 6, validate: RED.validators.number() },
+            maxMessages: { value: 100, validate: RED.validators.number() },
+            autoScroll: { value: true },
+            showTimestamps: { value: true },
+            format: { value: "" }
+        },
+        inputs: 1,
+        outputs: 1,
+        icon: "font-awesome/fa-bar-chart",
+        label: function() {
+            return this.name || "Stream Monitor";
+        },
+        labelStyle: function() {
+            return this.name ? "node_label_italic" : "";
+        },
+        oneditprepare: function() {
+            this.format = `
+<div id="alephscript-stream-monitor-{{$id}}" class="alephscript-stream-monitor">
+    <style>
+        .alephscript-stream-monitor {
+            padding: 10px;
+            font-family: 'Courier New', monospace;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+        }
+        .stream-monitor-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+            padding-bottom: 8px;
+            border-bottom: 2px solid #2196F3;
+            flex-shrink: 0;
+        }
+        .monitor-title {
+            margin: 0;
+            color: #2196F3;
+            font-size: 16px;
+        }
+        .status-indicators {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+        .connection-status, .monitor-status {
+            padding: 3px 6px;
+            border-radius: 3px;
+            font-size: 11px;
+            font-weight: bold;
+        }
+        .connection-status.connected {
+            background-color: #4CAF50;
+            color: white;
+        }
+        .connection-status.disconnected {
+            background-color: #F44336;
+            color: white;
+        }
+        .monitor-status.monitoring {
+            background-color: #FF9800;
+            color: white;
+        }
+        .monitor-status.stopped {
+            background-color: #ccc;
+            color: #666;
+        }
+        .stream-controls {
+            display: flex;
+            gap: 5px;
+            margin-bottom: 10px;
+            flex-wrap: wrap;
+            flex-shrink: 0;
+        }
+        .stream-controls button {
+            padding: 4px 8px;
+            border: none;
+            border-radius: 3px;
+            cursor: pointer;
+            font-size: 11px;
+            font-weight: bold;
+        }
+        .btn-start {
+            background-color: #4CAF50;
+            color: white;
+        }
+        .btn-stop {
+            background-color: #F44336;
+            color: white;
+        }
+        .btn-clear {
+            background-color: #FF9800;
+            color: white;
+        }
+        .btn-filter {
+            background-color: #9C27B0;
+            color: white;
+        }
+        .btn-start:disabled, .btn-stop:disabled, .btn-clear:disabled {
+            background-color: #ccc;
+            cursor: not-allowed;
+        }
+        .room-filter {
+            display: flex;
+            gap: 5px;
+            align-items: center;
+            margin-bottom: 10px;
+            flex-shrink: 0;
+        }
+        .room-filter input {
+            padding: 3px 6px;
+            border: 1px solid #ddd;
+            border-radius: 3px;
+            font-size: 11px;
+            width: 120px;
+        }
+        .message-stream {
+            flex: 1;
+            border: 1px solid #ddd;
+            border-radius: 3px;
+            background-color: #000;
+            color: #00ff00;
+            padding: 8px;
+            overflow-y: auto;
+            font-family: 'Courier New', monospace;
+            font-size: 11px;
+            line-height: 1.3;
+            min-height: 200px;
+        }
+        .stream-message {
+            margin-bottom: 2px;
+            padding: 1px 0;
+            word-wrap: break-word;
+        }
+        .stream-message.message {
+            color: #00ff00;
+        }
+        .stream-message.join {
+            color: #00bfff;
+        }
+        .stream-message.leave {
+            color: #ff6b6b;
+        }
+        .stream-message.system {
+            color: #ffff00;
+        }
+        .stream-message.app-channel {
+            color: #ff8c00;
+        }
+        .stream-message.sys-channel {
+            color: #ff69b4;
+        }
+        .stream-message.ui-channel {
+            color: #9370db;
+        }
+        .message-timestamp {
+            color: #666;
+            font-size: 9px;
+        }
+        .message-room {
+            color: #87ceeb;
+            font-weight: bold;
+        }
+        .message-from {
+            color: #ffd700;
+        }
+        .message-content {
+            color: inherit;
+        }
+        .stream-stats {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 5px;
+            padding-top: 5px;
+            border-top: 1px solid #ddd;
+            font-size: 10px;
+            color: #666;
+            flex-shrink: 0;
+        }
+        .no-messages {
+            color: #666;
+            font-style: italic;
+            text-align: center;
+            padding: 20px;
+        }
+    </style>
+    
+    <div class="stream-monitor-header">
+        <h3 class="monitor-title">Live Stream Monitor</h3>
+        <div class="status-indicators">
+            <span class="connection-status disconnected" id="connection-status-{{$id}}">Disconnected</span>
+            <span class="monitor-status stopped" id="monitor-status-{{$id}}">Stopped</span>
+        </div>
+    </div>
+    
+    <div class="stream-controls">
+        <button type="button" class="btn-start" id="start-btn-{{$id}}" onclick="startMonitoring('{{$id}}')">
+            Start Monitor
+        </button>
+        <button type="button" class="btn-stop" id="stop-btn-{{$id}}" onclick="stopMonitoring('{{$id}}')" disabled>
+            Stop Monitor
+        </button>
+        <button type="button" class="btn-clear" id="clear-btn-{{$id}}" onclick="clearHistory('{{$id}}')">
+            Clear History
+        </button>
+        <button type="button" class="btn-filter" id="filter-btn-{{$id}}" onclick="toggleRoomFilter('{{$id}}')">
+            Room Filter
+        </button>
+    </div>
+    
+    <div class="room-filter" id="room-filter-{{$id}}" style="display: none;">
+        <label style="font-size: 11px;">Filter Room:</label>
+        <input type="text" id="filter-room-{{$id}}" placeholder="room name">
+        <button type="button" class="btn-filter" onclick="applyRoomFilter('{{$id}}')">Apply</button>
+        <button type="button" class="btn-clear" onclick="clearRoomFilter('{{$id}}')">Clear</button>
+    </div>
+    
+    <div class="message-stream" id="message-stream-{{$id}}">
+        <div class="no-messages">
+            Stream monitor ready. Click "Start Monitor" to begin receiving messages.
+            <br><br>
+            <strong>Testing "su stream recibe los mensajes y si sale deja":</strong>
+            <br>1. Start monitoring
+            <br>2. Use Room Tester to join/leave rooms
+            <br>3. Verify message reception starts/stops
+        </div>
+    </div>
+    
+    <div class="stream-stats">
+        <span id="message-count-{{$id}}">Messages: 0</span>
+        <span id="filtered-rooms-{{$id}}">All Rooms</span>
+        <span id="last-message-{{$id}}">No messages</span>
+    </div>
+</div>
+
+<script>
+(function() {
+    var widgetId = '{{$id}}';
+    var connected = false;
+    var monitoring = false;
+    var messageCount = 0;
+    var filteredRoom = null;
+    var autoScroll = {{autoScroll}};
+    var showTimestamps = {{showTimestamps}};
+    var maxMessages = {{maxMessages}};
+    
+    // Start monitoring function
+    window.startMonitoring = function(id) {
+        if (id !== widgetId) return;
+        
+        var room = filteredRoom;
+        
+        send({
+            payload: {
+                command: 'start_monitoring',
+                room: room
+            }
+        });
+        
+        addSystemMessage('Starting stream monitor...');
+    };
+    
+    // Stop monitoring function
+    window.stopMonitoring = function(id) {
+        if (id !== widgetId) return;
+        
+        send({
+            payload: {
+                command: 'stop_monitoring'
+            }
+        });
+        
+        addSystemMessage('Stopping stream monitor...');
+    };
+    
+    // Clear history function
+    window.clearHistory = function(id) {
+        if (id !== widgetId) return;
+        
+        send({
+            payload: {
+                command: 'clear_history'
+            }
+        });
+        
+        var streamEl = document.getElementById('message-stream-' + widgetId);
+        if (streamEl) {
+            streamEl.innerHTML = '<div class="no-messages">Message history cleared.</div>';
+        }
+        updateStats(0, 'History cleared');
+    };
+    
+    // Toggle room filter visibility
+    window.toggleRoomFilter = function(id) {
+        if (id !== widgetId) return;
+        
+        var filterEl = document.getElementById('room-filter-' + widgetId);
+        if (filterEl) {
+            filterEl.style.display = filterEl.style.display === 'none' ? 'flex' : 'none';
+        }
+    };
+    
+    // Apply room filter
+    window.applyRoomFilter = function(id) {
+        if (id !== widgetId) return;
+        
+        var roomInput = document.getElementById('filter-room-' + widgetId);
+        var room = roomInput ? roomInput.value.trim() : '';
+        
+        if (room) {
+            filteredRoom = room;
+            send({
+                payload: {
+                    command: 'filter_room',
+                    room: room,
+                    filterEnabled: true
+                }
+            });
+            updateFilterDisplay(room);
+            addSystemMessage('Filtering messages for room: ' + room);
+        }
+    };
+    
+    // Clear room filter
+    window.clearRoomFilter = function(id) {
+        if (id !== widgetId) return;
+        
+        filteredRoom = null;
+        var roomInput = document.getElementById('filter-room-' + widgetId);
+        if (roomInput) roomInput.value = '';
+        
+        send({
+            payload: {
+                command: 'filter_room',
+                filterEnabled: false
+            }
+        });
+        updateFilterDisplay(null);
+        addSystemMessage('Removed room filter - monitoring all rooms');
+    };
+    
+    // Update connection status
+    function updateConnectionStatus(isConnected) {
+        connected = isConnected;
+        var statusEl = document.getElementById('connection-status-' + widgetId);
+        if (statusEl) {
+            statusEl.textContent = isConnected ? 'Connected' : 'Disconnected';
+            statusEl.className = 'connection-status ' + (isConnected ? 'connected' : 'disconnected');
+        }
+        updateControls();
+    }
+    
+    // Update monitoring status
+    function updateMonitoringStatus(isMonitoring) {
+        monitoring = isMonitoring;
+        var statusEl = document.getElementById('monitor-status-' + widgetId);
+        if (statusEl) {
+            statusEl.textContent = isMonitoring ? 'Monitoring' : 'Stopped';
+            statusEl.className = 'monitor-status ' + (isMonitoring ? 'monitoring' : 'stopped');
+        }
+        updateControls();
+    }
+    
+    // Update button states
+    function updateControls() {
+        var startBtn = document.getElementById('start-btn-' + widgetId);
+        var stopBtn = document.getElementById('stop-btn-' + widgetId);
+        var clearBtn = document.getElementById('clear-btn-' + widgetId);
+        
+        if (startBtn) startBtn.disabled = !connected || monitoring;
+        if (stopBtn) stopBtn.disabled = !connected || !monitoring;
+        if (clearBtn) clearBtn.disabled = false; // Always allow clear
+    }
+    
+    // Update filter display
+    function updateFilterDisplay(room) {
+        var filteredEl = document.getElementById('filtered-rooms-' + widgetId);
+        if (filteredEl) {
+            filteredEl.textContent = room ? 'Room: ' + room : 'All Rooms';
+        }
+    }
+    
+    // Add message to stream
+    function addMessageToStream(message) {
+        var streamEl = document.getElementById('message-stream-' + widgetId);
+        if (!streamEl) return;
+        
+        // Remove no-messages placeholder
+        var noMessages = streamEl.querySelector('.no-messages');
+        if (noMessages) {
+            streamEl.innerHTML = '';
+        }
+        
+        var messageEl = document.createElement('div');
+        var cssClass = 'stream-message ' + message.type;
+        if (message.channel) {
+            cssClass += ' ' + message.channel + '-channel';
+        }
+        messageEl.className = cssClass;
+        
+        var timestamp = showTimestamps ? 
+            '<span class="message-timestamp">[' + new Date(message.timestamp).toLocaleTimeString() + ']</span> ' : '';
+        
+        messageEl.innerHTML = 
+            timestamp +
+            '<span class="message-room">[' + message.room + ']</span> ' +
+            '<span class="message-from">' + message.from + ':</span> ' +
+            '<span class="message-content">' + message.message + '</span>';
+        
+        streamEl.appendChild(messageEl);
+        
+        // Limit message count
+        while (streamEl.children.length > maxMessages) {
+            streamEl.removeChild(streamEl.firstChild);
+        }
+        
+        // Auto-scroll to bottom
+        if (autoScroll) {
+            streamEl.scrollTop = streamEl.scrollHeight;
+        }
+        
+        messageCount = streamEl.children.length;
+        updateStats(messageCount, 'Last: ' + new Date(message.timestamp).toLocaleTimeString());
+    }
+    
+    // Add system message
+    function addSystemMessage(text) {
+        addMessageToStream({
+            id: Date.now().toString(),
+            timestamp: Date.now(),
+            room: 'system',
+            from: 'monitor',
+            message: text,
+            type: 'system'
+        });
+    }
+    
+    // Update statistics
+    function updateStats(count, lastMessage) {
+        var countEl = document.getElementById('message-count-' + widgetId);
+        var lastEl = document.getElementById('last-message-' + widgetId);
+        
+        if (countEl) countEl.textContent = 'Messages: ' + count;
+        if (lastEl) lastEl.textContent = lastMessage || 'No messages';
+    }
+    
+    // Handle messages from Node-RED
+    this.scope.msg = {};
+    this.scope.$watch('msg', function(newVal) {
+        if (newVal && newVal.topic) {
+            switch (newVal.topic) {
+                case 'connection':
+                    updateConnectionStatus(newVal.payload.connected);
+                    break;
+                case 'status':
+                    updateMonitoringStatus(newVal.payload.isMonitoring);
+                    if (newVal.payload.monitoredRooms && newVal.payload.monitoredRooms.length > 0) {
+                        updateFilterDisplay(newVal.payload.monitoredRooms[0]);
+                    }
+                    break;
+                case 'new_message':
+                    addMessageToStream(newVal.payload);
+                    break;
+                case 'message_history':
+                    // Could update with full history if needed
+                    break;
+                case 'history_cleared':
+                    addSystemMessage('Message history cleared');
+                    updateStats(0, 'History cleared');
+                    break;
+                case 'monitor_error':
+                    addSystemMessage('ERROR: ' + newVal.payload.error);
+                    break;
+            }
+        }
+    });
+    
+    // Initial status request
+    send({
+        payload: {
+            command: 'get_status'
+        }
+    });
+})();
+</script>
+`;
+        }
+    });
+</script>

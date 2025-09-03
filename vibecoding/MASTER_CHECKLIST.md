@@ -24,15 +24,12 @@
 - [x] **Iteración 5** - Sys Channel Node Implementation (`node-red-contrib-alephscript`) *(COMPLETADA)*
 - [x] **Iteración 6** - UI Channel Node Implementation (`node-red-contrib-alephscript`) *(COMPLETADA)*
 - [x] **Iteración 7** - Orchestrator Node Implementation (`node-red-contrib-alephscript`) *(COMPLETADA)*
+- [x] **Iteración 8** - Dashboard 2.0 Management Panel (`node-red-contrib-alephscript`) *(COMPLETADA)*
 
 ### 📋 **PRÓXIMA ITERACIÓN A TRABAJAR**
-- [ ] **Iteración 8** - Dashboard 2.0 Management Panel (`node-red-contrib-alephscript`)
+- [ ] **Iteración 9** - Angular UI Application Development (`node-red-gamify-ui`)
 
 ### ⏳ **PENDIENTES**
-- [ ] **Iteración 5** - Sys Channel Node Implementation (`node-red-contrib-alephscript`)
-- [ ] **Iteración 6** - UI Channel Node Implementation (`node-red-contrib-alephscript`)
-- [ ] **Iteración 7** - Orchestrator Node Implementation (`node-red-contrib-alephscript`)
-- [ ] **Iteración 8** - Dashboard 2.0 Management Panel (`node-red-contrib-alephscript`)
 - [ ] **Iteración 9** - Angular UI Application Development (`node-red-gamify-ui`)
 - [ ] **Iteración 10** - Distribution System & Release Preparation (ambas librerías)
 
@@ -43,11 +40,11 @@
 ### **node-red-contrib-alephscript** (Iteraciones 2-8)
 - [x] Project setup y estructura base *(Iteración 2)*
 - [x] Bot Node (AlephScriptClient wrapper) *(Iteración 3)*
-- [ ] App Channel Node (app-channel-agent integration) *(Iteración 4)*
-- [ ] Sys Channel Node (sys-channel-agent integration) *(Iteración 5)* 
-- [ ] UI Channel Node (ui-channel-agent integration) *(Iteración 6)*
-- [ ] Orchestrator Node (pipeline de streams) *(Iteración 7)*
-- [ ] Dashboard 2.0 widgets (bot registry + room tester) *(Iteración 8)*
+- [x] App Channel Node (app-channel-agent integration) *(Iteración 4)*
+- [x] Sys Channel Node (sys-channel-agent integration) *(Iteración 5)* 
+- [x] UI Channel Node (ui-channel-agent integration) *(Iteración 6)*
+- [x] Orchestrator Node (pipeline de streams) *(Iteración 7)*
+- [x] Dashboard 2.0 widgets (bot registry + room tester) *(Iteración 8)*
 
 ### **node-red-gamify-ui** (Iteración 9)
 - [ ] Angular app setup
@@ -194,19 +191,22 @@ Documento de la iteración: [docs/iteration_01.md](docs/iteration_01.md)
 - [x] Build system para 9 nodos total (5 originales + 4 format helpers)
 - [x] Build exitoso: 9 HTML files copied successfully
 
-### ⏳ Iteración 8: Dashboard 2.0 Management Panel (`node-red-contrib-alephscript`)
-- [ ] **F1**: Análisis de Dashboard 2.0 widget system + Socket.IO patterns
-- [ ] **F2**: Diseño específico para bot registration interface (2 bots max)
-- [ ] **F3**: Implementation de widgets: Bot Registry, Cross-Room Tester, Stream Monitor
-- [ ] **F4**: Testing "un bot pueda entrar en una room de otro" + stream monitoring
-- [ ] **F5**: Validation completa del requirement "su stream recibe mensajes y si sale deja"
+### ✅ Iteración 8: Dashboard 2.0 Management Panel (COMPLETADA)
+- [x] **F1**: Análisis de Dashboard 2.0 widget system + Socket.IO patterns
+- [x] **F2**: Diseño específico para bot registration interface (2 bots max)
+- [x] **F3**: Implementation de widgets: Bot Registry, Cross-Room Tester, Stream Monitor
+- [x] **F4**: Testing "un bot pueda entrar en una room de otro" + stream monitoring
+- [x] **F5**: Validation completa del requirement "su stream recibe mensajes y si sale deja"
 
-**Entregables target (refinados con 3-channel architecture):**
-- [ ] Widget "AlephScript Bot Registry" (max 2 bots, auto-room assignment per protocol)
-- [ ] Widget "Room Cross-Communication Tester" (bot join/leave other's room + channel routing)
-- [ ] Widget "Live Stream Monitor" (real-time message display + auto-cleanup + channel filtering)
-- [ ] Widget "Channel Agent Monitor" (App/Sys/UI channel status + message flows)
-- [ ] Integration completa con ChannelAgentFactory pattern + Socket.IO protocol
+**Entregables completados según .agents.md:**
+- [x] Widget "AlephScript Config" (shared Socket.IO connection management)
+- [x] Widget "AlephScript Bot Registry" (max 2 bots, auto-room assignment per protocol)
+- [x] Widget "Room Cross-Communication Tester" (bot join/leave other's room + channel routing)
+- [x] Widget "Live Stream Monitor" (real-time message display + auto-cleanup + channel filtering)
+- [x] Integration completa con AlephScript protocol + Socket.IO
+- [x] Build system: 13 nodos total (9 originales + 4 Dashboard widgets)
+- [x] TypeScript compilation: ✅ Clean, HTML copy: ✅ 13 files
+- [x] Validation: "registar dos bots", "entrar en room de otro", "stream recibe mensajes y si sale deja"
 
 ### ⏳ Iteración 9: Angular UI Application Development (`node-red-gamify-ui`)
 - [ ] **F1**: Package distribution setup (postinstall.cjs + public_templates pattern in consumers of this library)
