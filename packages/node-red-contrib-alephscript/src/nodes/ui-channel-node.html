@@ -1,0 +1,312 @@
+<script type="text/javascript">
+    RED.nodes.registerType('ui-channel-node', {
+        category: 'AlephScript',
+        color: '#7B68EE',
+        defaults: {
+            name: { value: "" },
+            socketConnection: { value: "" },
+            messageTypes: { 
+                value: ["user_input", "display_update", "notification", "render_request"],
+                validate: function(v) { return v && v.length > 0; }
+            },
+            components: { value: [] },
+            displayTypes: { 
+                value: ["info", "success", "warning", "error"],
+                validate: function(v) { return v && v.length > 0; }
+            },
+            outputNotifications: { value: true },
+            outputRenderRequests: { value: true },
+            outputUserInputs: { value: true }
+        },
+        inputs: 1,
+        outputs: 3,
+        outputLabels: ["Notifications", "Render Requests", "User Inputs"],
+        icon: "font-awesome/fa-desktop",
+        label: function() {
+            return this.name || "UI Channel";
+        },
+        labelStyle: function() {
+            return this.name ? "node_label_italic" : "";
+        },
+        oneditprepare: function() {
+            // Initialize message types list
+            $("#node-input-messageTypes-container").editableList({
+                addItem: function(container, i, opt) {
+                    const item = opt || { type: "user_input", enabled: true };
+                    const row = $('<div></div>').appendTo(container);
+                    
+                    const typeSelect = $('<select>', { style: "width: 60%; margin-right: 10px;" });
+                    const messageTypes = [
+                        { value: "user_input", label: "User Input" },
+                        { value: "display_update", label: "Display Update" },
+                        { value: "notification", label: "Notification" },
+                        { value: "ui_event", label: "UI Event" },
+                        { value: "phase_change", label: "Phase Change" },
+                        { value: "render_request", label: "Render Request" }
+                    ];
+                    
+                    messageTypes.forEach(function(type) {
+                        typeSelect.append($('<option></option>')
+                            .attr('value', type.value)
+                            .text(type.label));
+                    });
+                    typeSelect.val(item.type || "user_input");
+                    
+                    const enabledCheck = $('<input type="checkbox" style="margin-left: 10px;">');
+                    enabledCheck.prop('checked', item.enabled !== false);
+                    
+                    row.append(typeSelect).append(' Enabled: ').append(enabledCheck);
+                    
+                    // Store references for getValue
+                    row.data('type-select', typeSelect);
+                    row.data('enabled-check', enabledCheck);
+                }
+            });
+            
+            // Initialize components list
+            $("#node-input-components-container").editableList({
+                addItem: function(container, i, opt) {
+                    const item = opt || { component: "", enabled: true };
+                    const row = $('<div></div>').appendTo(container);
+                    
+                    const componentInput = $('<input type="text" placeholder="Component Name">').css({
+                        width: "60%",
+                        marginRight: "10px"
+                    });
+                    componentInput.val(item.component || "");
+                    
+                    const enabledCheck = $('<input type="checkbox" style="margin-left: 10px;">');
+                    enabledCheck.prop('checked', item.enabled !== false);
+                    
+                    row.append(componentInput).append(' Enabled: ').append(enabledCheck);
+                    
+                    // Store references for getValue
+                    row.data('component-input', componentInput);
+                    row.data('enabled-check', enabledCheck);
+                }
+            });
+            
+            // Initialize display types list
+            $("#node-input-displayTypes-container").editableList({
+                addItem: function(container, i, opt) {
+                    const item = opt || { displayType: "info", enabled: true };
+                    const row = $('<div></div>').appendTo(container);
+                    
+                    const typeSelect = $('<select>', { style: "width: 60%; margin-right: 10px;" });
+                    const displayTypes = [
+                        { value: "info", label: "Info" },
+                        { value: "success", label: "Success" },
+                        { value: "warning", label: "Warning" },
+                        { value: "error", label: "Error" }
+                    ];
+                    
+                    displayTypes.forEach(function(type) {
+                        typeSelect.append($('<option></option>')
+                            .attr('value', type.value)
+                            .text(type.label));
+                    });
+                    typeSelect.val(item.displayType || "info");
+                    
+                    const enabledCheck = $('<input type="checkbox" style="margin-left: 10px;">');
+                    enabledCheck.prop('checked', item.enabled !== false);
+                    
+                    row.append(typeSelect).append(' Enabled: ').append(enabledCheck);
+                    
+                    // Store references for getValue
+                    row.data('type-select', typeSelect);
+                    row.data('enabled-check', enabledCheck);
+                }
+            });
+            
+            // Populate existing values
+            const node = this;
+            
+            // Message types
+            const messageTypes = node.messageTypes || ["user_input", "display_update", "notification", "render_request"];
+            $("#node-input-messageTypes-container").editableList('empty');
+            messageTypes.forEach(function(type) {
+                $("#node-input-messageTypes-container").editableList('addItem', {
+                    type: type,
+                    enabled: true
+                });
+            });
+            
+            // Components
+            const components = node.components || [];
+            $("#node-input-components-container").editableList('empty');
+            components.forEach(function(component) {
+                $("#node-input-components-container").editableList('addItem', {
+                    component: component,
+                    enabled: true
+                });
+            });
+            
+            // Display types
+            const displayTypes = node.displayTypes || ["info", "success", "warning", "error"];
+            $("#node-input-displayTypes-container").editableList('empty');
+            displayTypes.forEach(function(displayType) {
+                $("#node-input-displayTypes-container").editableList('addItem', {
+                    displayType: displayType,
+                    enabled: true
+                });
+            });
+        },
+        oneditsave: function() {
+            // Save message types
+            const messageTypes = [];
+            $("#node-input-messageTypes-container").editableList('items').each(function(i) {
+                const typeSelect = $(this).data('type-select');
+                const enabledCheck = $(this).data('enabled-check');
+                if (enabledCheck && enabledCheck.is(':checked')) {
+                    messageTypes.push(typeSelect.val());
+                }
+            });
+            this.messageTypes = messageTypes;
+            
+            // Save components
+            const components = [];
+            $("#node-input-components-container").editableList('items').each(function(i) {
+                const componentInput = $(this).data('component-input');
+                const enabledCheck = $(this).data('enabled-check');
+                if (enabledCheck && enabledCheck.is(':checked') && componentInput.val().trim()) {
+                    components.push(componentInput.val().trim());
+                }
+            });
+            this.components = components;
+            
+            // Save display types
+            const displayTypes = [];
+            $("#node-input-displayTypes-container").editableList('items').each(function(i) {
+                const typeSelect = $(this).data('type-select');
+                const enabledCheck = $(this).data('enabled-check');
+                if (enabledCheck && enabledCheck.is(':checked')) {
+                    displayTypes.push(typeSelect.val());
+                }
+            });
+            this.displayTypes = displayTypes;
+        }
+    });
+</script>
+
+<script type="text/html" data-template-name="ui-channel-node">
+    <div class="form-row">
+        <label for="node-input-name"><i class="fa fa-tag"></i> Name</label>
+        <input type="text" id="node-input-name" placeholder="UI Channel Node">
+    </div>
+    
+    <div class="form-row">
+        <label for="node-input-socketConnection"><i class="fa fa-plug"></i> Socket Connection</label>
+        <input type="text" id="node-input-socketConnection" placeholder="Bot Node ID or Socket URL">
+    </div>
+    
+    <hr>
+    
+    <div class="form-row">
+        <label><i class="fa fa-filter"></i> Message Types</label>
+        <ol id="node-input-messageTypes-container"></ol>
+    </div>
+    
+    <div class="form-row">
+        <label><i class="fa fa-cube"></i> Components</label>
+        <ol id="node-input-components-container"></ol>
+    </div>
+    
+    <div class="form-row">
+        <label><i class="fa fa-paint-brush"></i> Display Types</label>
+        <ol id="node-input-displayTypes-container"></ol>
+    </div>
+    
+    <hr>
+    
+    <div class="form-row">
+        <label><i class="fa fa-arrow-right"></i> Output Routing</label>
+        <div style="margin-left: 20px;">
+            <input type="checkbox" id="node-input-outputNotifications" style="display: inline-block; width: auto; vertical-align: top;">
+            <label for="node-input-outputNotifications" style="width: auto; margin-left: 5px;">Notifications & Display Updates (Output 1)</label>
+            <br>
+            <input type="checkbox" id="node-input-outputRenderRequests" style="display: inline-block; width: auto; vertical-align: top;">
+            <label for="node-input-outputRenderRequests" style="width: auto; margin-left: 5px;">Render Requests & Phase Changes (Output 2)</label>
+            <br>
+            <input type="checkbox" id="node-input-outputUserInputs" style="display: inline-block; width: auto; vertical-align: top;">
+            <label for="node-input-outputUserInputs" style="width: auto; margin-left: 5px;">User Inputs & UI Events (Output 3)</label>
+        </div>
+    </div>
+</script>
+
+<script type="text/html" data-help-name="ui-channel-node">
+    <p>UI Channel Node for AlephScript user interface interactions and notifications.</p>
+    
+    <h3>Inputs</h3>
+    <dl class="message-properties">
+        <dt>Socket Connection</dt>
+        <dd>Connection to AlephScript server via Bot Node or direct Socket.IO</dd>
+        <dt>Input Messages</dt>
+        <dd>Send UI messages to AlephScript (notifications, display updates, etc.)</dd>
+    </dl>
+    
+    <h3>Outputs</h3>
+    <ol class="node-ports">
+        <li><strong>Notifications & Display Updates</strong>
+            <dl class="message-properties">
+                <dt>payload <span class="property-type">object</span></dt>
+                <dd>Notification and display update messages for UI feedback</dd>
+                <dt>topic <span class="property-type">string</span></dt>
+                <dd>ui/notification or ui/display_update</dd>
+            </dl>
+        </li>
+        <li><strong>Render Requests & Phase Changes</strong>
+            <dl class="message-properties">
+                <dt>payload <span class="property-type">object</span></dt>
+                <dd>Component render requests and UI phase transitions</dd>
+                <dt>topic <span class="property-type">string</span></dt>
+                <dd>ui/render_request or ui/phase_change</dd>
+            </dl>
+        </li>
+        <li><strong>User Inputs & UI Events</strong>
+            <dl class="message-properties">
+                <dt>payload <span class="property-type">object</span></dt>
+                <dd>User input commands and UI interaction events</dd>
+                <dt>topic <span class="property-type">string</span></dt>
+                <dd>ui/user_input or ui/ui_event</dd>
+            </dl>
+        </li>
+    </ol>
+    
+    <h3>Details</h3>
+    <p>This node connects to the AlephScript UI channel to handle user interface 
+    interactions, notifications, and dynamic component rendering. Messages are 
+    filtered by type, component, and display type, then routed to appropriate outputs.</p>
+    
+    <h4>Message Types</h4>
+    <ul>
+        <li><code>user_input</code> - User commands and input data</li>
+        <li><code>display_update</code> - Component display updates</li>
+        <li><code>notification</code> - Toast notifications and alerts</li>
+        <li><code>ui_event</code> - Generic UI interaction events</li>
+        <li><code>phase_change</code> - UI state/phase transitions</li>
+        <li><code>render_request</code> - Dynamic component rendering</li>
+    </ul>
+    
+    <h4>Display Types</h4>
+    <ul>
+        <li><code>info</code> - Informational display</li>
+        <li><code>success</code> - Success/completion display</li>
+        <li><code>warning</code> - Warning display</li>
+        <li><code>error</code> - Error display</li>
+    </ul>
+    
+    <h4>Components</h4>
+    <p>Filter messages by UI component names (e.g., "modal", "form", "dashboard", "nav").</p>
+    
+    <h4>Bidirectional Communication</h4>
+    <p>This node supports both receiving UI messages from AlephScript and sending 
+    UI updates back. Send messages with the following structure:</p>
+    <pre>{
+  "type": "notification",
+  "payload": {
+    "title": "Success",
+    "message": "Operation completed",
+    "displayType": "success"
+  }
+}</pre>
+</script>

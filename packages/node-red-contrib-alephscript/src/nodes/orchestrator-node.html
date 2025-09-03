@@ -1,0 +1,234 @@
+<script type="text/javascript">
+    RED.nodes.registerType('orchestrator-node', {
+        category: 'AlephScript',
+        color: '#FF6B35',
+        defaults: {
+            name: { value: "" },
+            serverUrl: { 
+                value: "http://localhost:3001",
+                validate: function(v) { return v && v.trim().length > 0; }
+            },
+            clientName: { 
+                value: "orchestrator-node",
+                validate: function(v) { return v && v.trim().length > 0; }
+            },
+            roomName: { value: "" }, // Auto-generated if empty
+            enableAppChannel: { value: true },
+            enableSysChannel: { value: true },
+            enableUIChannel: { value: true },
+            enableCrossChannelRouting: { value: true },
+            messageTimeout: { 
+                value: 5000,
+                validate: function(v) { return v >= 1000; }
+            },
+            syncInterval: { 
+                value: 1000,
+                validate: function(v) { return v >= 500; }
+            },
+            enableStatistics: { value: true },
+            enableLogging: { value: true }
+        },
+        inputs: 3,
+        outputs: 4,
+        inputLabels: ["App Channel", "Sys Channel", "UI Channel"],
+        outputLabels: ["App Messages", "Sys Messages", "UI Messages", "Cross-Channel Aggregated"],
+        icon: "font-awesome/fa-hub",
+        label: function() {
+            return this.name || "Orchestrator";
+        },
+        labelStyle: function() {
+            return this.name ? "node_label_italic" : "";
+        },
+        oneditprepare: function() {
+            // Auto-generate room name if not set
+            if (!this.roomName || this.roomName.trim() === "") {
+                const clientName = this.clientName || "orchestrator-node";
+                $("#node-input-roomName").val(clientName + "_ROOM");
+            }
+            
+            // Update room name when client name changes
+            $("#node-input-clientName").on('input', function() {
+                const clientName = $(this).val().toString().trim();
+                if (clientName) {
+                    $("#node-input-roomName").val(clientName + "_ROOM");
+                }
+            });
+        }
+    });
+</script>
+
+<script type="text/html" data-template-name="orchestrator-node">
+    <div class="form-row">
+        <label for="node-input-name"><i class="fa fa-tag"></i> Name</label>
+        <input type="text" id="node-input-name" placeholder="Orchestrator Node">
+    </div>
+    
+    <div class="form-row">
+        <label for="node-input-serverUrl"><i class="fa fa-server"></i> AlephScript Server URL</label>
+        <input type="text" id="node-input-serverUrl" placeholder="http://localhost:3001">
+    </div>
+    
+    <hr>
+    
+    <div class="form-row">
+        <label for="node-input-clientName"><i class="fa fa-user"></i> Client Name</label>
+        <input type="text" id="node-input-clientName" placeholder="orchestrator-node">
+    </div>
+    
+    <div class="form-row">
+        <label for="node-input-roomName"><i class="fa fa-home"></i> Room Name</label>
+        <input type="text" id="node-input-roomName" placeholder="Auto-generated from client name">
+    </div>
+    
+    <hr>
+    
+    <div class="form-row">
+        <label><i class="fa fa-cogs"></i> Channel Configuration</label>
+        <div style="margin-left: 20px;">
+            <input type="checkbox" id="node-input-enableAppChannel" style="display: inline-block; width: auto; vertical-align: top;">
+            <label for="node-input-enableAppChannel" style="width: auto; margin-left: 5px;">Enable App Channel</label>
+            <br>
+            <input type="checkbox" id="node-input-enableSysChannel" style="display: inline-block; width: auto; vertical-align: top;">
+            <label for="node-input-enableSysChannel" style="width: auto; margin-left: 5px;">Enable Sys Channel</label>
+            <br>
+            <input type="checkbox" id="node-input-enableUIChannel" style="display: inline-block; width: auto; vertical-align: top;">
+            <label for="node-input-enableUIChannel" style="width: auto; margin-left: 5px;">Enable UI Channel</label>
+        </div>
+    </div>
+    
+    <div class="form-row">
+        <input type="checkbox" id="node-input-enableCrossChannelRouting" style="display: inline-block; width: auto; vertical-align: top;">
+        <label for="node-input-enableCrossChannelRouting" style="width: auto; margin-left: 5px;"><i class="fa fa-exchange"></i> Enable Cross-Channel Routing</label>
+    </div>
+    
+    <hr>
+    
+    <div class="form-row">
+        <label for="node-input-messageTimeout"><i class="fa fa-clock-o"></i> Message Timeout (ms)</label>
+        <input type="number" id="node-input-messageTimeout" min="1000" placeholder="5000">
+    </div>
+    
+    <div class="form-row">
+        <label for="node-input-syncInterval"><i class="fa fa-refresh"></i> Sync Interval (ms)</label>
+        <input type="number" id="node-input-syncInterval" min="500" placeholder="1000">
+    </div>
+    
+    <hr>
+    
+    <div class="form-row">
+        <label><i class="fa fa-bar-chart"></i> Monitoring</label>
+        <div style="margin-left: 20px;">
+            <input type="checkbox" id="node-input-enableStatistics" style="display: inline-block; width: auto; vertical-align: top;">
+            <label for="node-input-enableStatistics" style="width: auto; margin-left: 5px;">Enable Statistics</label>
+            <br>
+            <input type="checkbox" id="node-input-enableLogging" style="display: inline-block; width: auto; vertical-align: top;">
+            <label for="node-input-enableLogging" style="width: auto; margin-left: 5px;">Enable Logging</label>
+        </div>
+    </div>
+</script>
+
+<script type="text/html" data-help-name="orchestrator-node">
+    <p>Orchestrator Node - Central hub for AlephScript channel coordination and message routing.</p>
+    
+    <h3>Inputs</h3>
+    <ol class="node-ports">
+        <li><strong>App Channel</strong>
+            <dl class="message-properties">
+                <dt>payload <span class="property-type">object</span></dt>
+                <dd>App channel messages to be distributed via AlephScript</dd>
+                <dt>channel <span class="property-type">string</span></dt>
+                <dd>Must be "app" for proper routing</dd>
+            </dl>
+        </li>
+        <li><strong>Sys Channel</strong>
+            <dl class="message-properties">
+                <dt>payload <span class="property-type">object</span></dt>
+                <dd>System channel messages to be distributed via AlephScript</dd>
+                <dt>channel <span class="property-type">string</span></dt>
+                <dd>Must be "sys" for proper routing</dd>
+            </dl>
+        </li>
+        <li><strong>UI Channel</strong>
+            <dl class="message-properties">
+                <dt>payload <span class="property-type">object</span></dt>
+                <dd>UI channel messages to be distributed via AlephScript</dd>
+                <dt>channel <span class="property-type">string</span></dt>
+                <dd>Must be "ui" for proper routing</dd>
+            </dl>
+        </li>
+    </ol>
+    
+    <h3>Outputs</h3>
+    <ol class="node-ports">
+        <li><strong>App Messages</strong>
+            <dl class="message-properties">
+                <dt>payload <span class="property-type">object</span></dt>
+                <dd>Received app channel messages from AlephScript network</dd>
+                <dt>topic <span class="property-type">string</span></dt>
+                <dd>orchestrator/app/{messageType}</dd>
+            </dl>
+        </li>
+        <li><strong>Sys Messages</strong>
+            <dl class="message-properties">
+                <dt>payload <span class="property-type">object</span></dt>
+                <dd>Received system channel messages from AlephScript network</dd>
+                <dt>topic <span class="property-type">string</span></dt>
+                <dd>orchestrator/sys/{messageType}</dd>
+            </dl>
+        </li>
+        <li><strong>UI Messages</strong>
+            <dl class="message-properties">
+                <dt>payload <span class="property-type">object</span></dt>
+                <dd>Received UI channel messages from AlephScript network</dd>
+                <dt>topic <span class="property-type">string</span></dt>
+                <dd>orchestrator/ui/{messageType}</dd>
+            </dl>
+        </li>
+        <li><strong>Cross-Channel Aggregated</strong>
+            <dl class="message-properties">
+                <dt>payload <span class="property-type">object</span></dt>
+                <dd>Correlated messages from multiple channels when cross-channel routing is enabled</dd>
+                <dt>topic <span class="property-type">string</span></dt>
+                <dd>orchestrator/cross-channel</dd>
+            </dl>
+        </li>
+    </ol>
+    
+    <h3>Details</h3>
+    <p>This node serves as the central orchestrator for AlephScript communication, implementing 
+    the same pipeline pattern as the core orchestrator.ts. It acts as a Socket.IO hub that 
+    coordinates all channel communication and provides cross-channel message correlation.</p>
+    
+    <h4>AlephScript Integration</h4>
+    <p>The orchestrator automatically registers as an AlephScript client using the CLIENT_REGISTER, 
+    CLIENT_SUSCRIBE, and MAKE_MASTER protocol. It creates its own room for component coordination.</p>
+    
+    <h4>Channel Management</h4>
+    <ul>
+        <li><strong>App Channel:</strong> Business logic and state transitions</li>
+        <li><strong>Sys Channel:</strong> System health, monitoring, and errors</li>
+        <li><strong>UI Channel:</strong> User interface interactions and notifications</li>
+    </ul>
+    
+    <h4>Cross-Channel Routing</h4>
+    <p>When enabled, the orchestrator analyzes messages across all channels to identify 
+    correlations and patterns, sending aggregated insights to the fourth output.</p>
+    
+    <h4>Component Registry</h4>
+    <p>The orchestrator maintains a registry of all connected channel agents and components, 
+    providing lifecycle management and coordination services.</p>
+    
+    <h4>Performance Monitoring</h4>
+    <p>When statistics are enabled, the node status shows:</p>
+    <ul>
+        <li>Total messages processed</li>
+        <li>Number of registered components</li>
+        <li>Uptime in seconds</li>
+        <li>Error count (reflected in status color)</li>
+    </ul>
+    
+    <h4>Usage Pattern</h4>
+    <p>Deploy one Orchestrator Node as the central hub, then connect App Channel, Sys Channel, 
+    and UI Channel nodes to it. The orchestrator will coordinate all communication and provide 
+    intelligent message routing across the AlephScript network.</p>
+</script>

@@ -1,0 +1,340 @@
+<script type="text/javascript">
+    RED.nodes.registerType('sys-channel-node', {
+        category: 'AlephScript',
+        color: '#ff9900',
+        defaults: {
+            name: { value: "" },
+            socketConnection: { value: "" },
+            messageTypes: { 
+                value: ["health_check", "error", "warning", "info", "config_change", "service_status"],
+                validate: function(v) { return v && v.length > 0; }
+            },
+            logLevels: { 
+                value: ["info", "warn", "error", "fatal"],
+                validate: function(v) { return v && v.length > 0; }
+            },
+            serviceIds: { value: [] },
+            healthCheckInterval: { 
+                value: 10000, 
+                validate: function(v) { return v >= 1000; }
+            },
+            errorCountThreshold: { 
+                value: 5, 
+                validate: function(v) { return v > 0; }
+            },
+            memoryThreshold: { 
+                value: 500, 
+                validate: function(v) { return v > 0; }
+            },
+            outputHealth: { value: true },
+            outputErrors: { value: true },
+            outputInfo: { value: true }
+        },
+        inputs: 1,
+        outputs: 3,
+        outputLabels: ["Health & Status", "Alerts", "Info & Config"],
+        icon: "font-awesome/fa-heartbeat",
+        label: function() {
+            return this.name || "Sys Channel";
+        },
+        labelStyle: function() {
+            return this.name ? "node_label_italic" : "";
+        },
+        oneditprepare: function() {
+            // Initialize message types list
+            $("#node-input-messageTypes-container").editableList({
+                addItem: function(container, i, opt) {
+                    const item = opt || { type: "health_check", enabled: true };
+                    const row = $('<div></div>').appendTo(container);
+                    
+                    const typeSelect = $('<select>', { style: "width: 60%; margin-right: 10px;" });
+                    const messageTypes = [
+                        { value: "health_check", label: "Health Check" },
+                        { value: "error", label: "Error" },
+                        { value: "warning", label: "Warning" },
+                        { value: "info", label: "Info" },
+                        { value: "config_change", label: "Config Change" },
+                        { value: "service_status", label: "Service Status" }
+                    ];
+                    
+                    messageTypes.forEach(function(type) {
+                        typeSelect.append($('<option></option>')
+                            .attr('value', type.value)
+                            .text(type.label));
+                    });
+                    typeSelect.val(item.type || "health_check");
+                    
+                    const enabledCheck = $('<input type="checkbox" style="margin-left: 10px;">');
+                    enabledCheck.prop('checked', item.enabled !== false);
+                    
+                    row.append(typeSelect).append(' Enabled: ').append(enabledCheck);
+                    
+                    // Store references for getValue
+                    row.data('type-select', typeSelect);
+                    row.data('enabled-check', enabledCheck);
+                },
+                removeItem: function(opt) {
+                    // Item removed
+                },
+                sortItems: function(items) {
+                    // Items reordered
+                }
+            });
+            
+            // Initialize log levels list
+            $("#node-input-logLevels-container").editableList({
+                addItem: function(container, i, opt) {
+                    const item = opt || { level: "info", enabled: true };
+                    const row = $('<div></div>').appendTo(container);
+                    
+                    const levelSelect = $('<select>', { style: "width: 60%; margin-right: 10px;" });
+                    const logLevels = [
+                        { value: "debug", label: "Debug" },
+                        { value: "info", label: "Info" },
+                        { value: "warn", label: "Warning" },
+                        { value: "error", label: "Error" },
+                        { value: "fatal", label: "Fatal" }
+                    ];
+                    
+                    logLevels.forEach(function(level) {
+                        levelSelect.append($('<option></option>')
+                            .attr('value', level.value)
+                            .text(level.label));
+                    });
+                    levelSelect.val(item.level || "info");
+                    
+                    const enabledCheck = $('<input type="checkbox" style="margin-left: 10px;">');
+                    enabledCheck.prop('checked', item.enabled !== false);
+                    
+                    row.append(levelSelect).append(' Enabled: ').append(enabledCheck);
+                    
+                    // Store references for getValue
+                    row.data('level-select', levelSelect);
+                    row.data('enabled-check', enabledCheck);
+                }
+            });
+            
+            // Initialize service IDs list
+            $("#node-input-serviceIds-container").editableList({
+                addItem: function(container, i, opt) {
+                    const item = opt || { serviceId: "", enabled: true };
+                    const row = $('<div></div>').appendTo(container);
+                    
+                    const serviceInput = $('<input type="text" placeholder="Service ID">').css({
+                        width: "60%",
+                        marginRight: "10px"
+                    });
+                    serviceInput.val(item.serviceId || "");
+                    
+                    const enabledCheck = $('<input type="checkbox" style="margin-left: 10px;">');
+                    enabledCheck.prop('checked', item.enabled !== false);
+                    
+                    row.append(serviceInput).append(' Enabled: ').append(enabledCheck);
+                    
+                    // Store references for getValue
+                    row.data('service-input', serviceInput);
+                    row.data('enabled-check', enabledCheck);
+                }
+            });
+            
+            // Populate existing values
+            const node = this;
+            
+            // Message types
+            const messageTypes = node.messageTypes || ["health_check", "error", "warning", "info"];
+            $("#node-input-messageTypes-container").editableList('empty');
+            messageTypes.forEach(function(type) {
+                $("#node-input-messageTypes-container").editableList('addItem', {
+                    type: type,
+                    enabled: true
+                });
+            });
+            
+            // Log levels
+            const logLevels = node.logLevels || ["info", "warn", "error", "fatal"];
+            $("#node-input-logLevels-container").editableList('empty');
+            logLevels.forEach(function(level) {
+                $("#node-input-logLevels-container").editableList('addItem', {
+                    level: level,
+                    enabled: true
+                });
+            });
+            
+            // Service IDs
+            const serviceIds = node.serviceIds || [];
+            $("#node-input-serviceIds-container").editableList('empty');
+            serviceIds.forEach(function(serviceId) {
+                $("#node-input-serviceIds-container").editableList('addItem', {
+                    serviceId: serviceId,
+                    enabled: true
+                });
+            });
+        },
+        oneditsave: function() {
+            // Save message types
+            const messageTypes = [];
+            $("#node-input-messageTypes-container").editableList('items').each(function(i) {
+                const typeSelect = $(this).data('type-select');
+                const enabledCheck = $(this).data('enabled-check');
+                if (enabledCheck && enabledCheck.is(':checked')) {
+                    messageTypes.push(typeSelect.val());
+                }
+            });
+            this.messageTypes = messageTypes;
+            
+            // Save log levels
+            const logLevels = [];
+            $("#node-input-logLevels-container").editableList('items').each(function(i) {
+                const levelSelect = $(this).data('level-select');
+                const enabledCheck = $(this).data('enabled-check');
+                if (enabledCheck && enabledCheck.is(':checked')) {
+                    logLevels.push(levelSelect.val());
+                }
+            });
+            this.logLevels = logLevels;
+            
+            // Save service IDs
+            const serviceIds = [];
+            $("#node-input-serviceIds-container").editableList('items').each(function(i) {
+                const serviceInput = $(this).data('service-input');
+                const enabledCheck = $(this).data('enabled-check');
+                if (enabledCheck && enabledCheck.is(':checked') && serviceInput.val().trim()) {
+                    serviceIds.push(serviceInput.val().trim());
+                }
+            });
+            this.serviceIds = serviceIds;
+        }
+    });
+</script>
+
+<script type="text/html" data-template-name="sys-channel-node">
+    <div class="form-row">
+        <label for="node-input-name"><i class="fa fa-tag"></i> Name</label>
+        <input type="text" id="node-input-name" placeholder="Sys Channel Node">
+    </div>
+    
+    <div class="form-row">
+        <label for="node-input-socketConnection"><i class="fa fa-plug"></i> Socket Connection</label>
+        <input type="text" id="node-input-socketConnection" placeholder="Bot Node ID or Socket URL">
+    </div>
+    
+    <hr>
+    
+    <div class="form-row">
+        <label><i class="fa fa-filter"></i> Message Types</label>
+        <ol id="node-input-messageTypes-container"></ol>
+    </div>
+    
+    <div class="form-row">
+        <label><i class="fa fa-level-up"></i> Log Levels</label>
+        <ol id="node-input-logLevels-container"></ol>
+    </div>
+    
+    <div class="form-row">
+        <label><i class="fa fa-server"></i> Service IDs</label>
+        <ol id="node-input-serviceIds-container"></ol>
+    </div>
+    
+    <hr>
+    
+    <div class="form-row">
+        <label for="node-input-healthCheckInterval"><i class="fa fa-clock-o"></i> Health Check Interval (ms)</label>
+        <input type="number" id="node-input-healthCheckInterval" min="1000" placeholder="10000">
+    </div>
+    
+    <div class="form-row">
+        <label for="node-input-errorCountThreshold"><i class="fa fa-exclamation-triangle"></i> Error Count Threshold</label>
+        <input type="number" id="node-input-errorCountThreshold" min="1" placeholder="5">
+    </div>
+    
+    <div class="form-row">
+        <label for="node-input-memoryThreshold"><i class="fa fa-memory"></i> Memory Threshold (MB)</label>
+        <input type="number" id="node-input-memoryThreshold" min="1" placeholder="500">
+    </div>
+    
+    <hr>
+    
+    <div class="form-row">
+        <label><i class="fa fa-arrow-right"></i> Output Routing</label>
+        <div style="margin-left: 20px;">
+            <input type="checkbox" id="node-input-outputHealth" style="display: inline-block; width: auto; vertical-align: top;">
+            <label for="node-input-outputHealth" style="width: auto; margin-left: 5px;">Health & Status (Output 1)</label>
+            <br>
+            <input type="checkbox" id="node-input-outputErrors" style="display: inline-block; width: auto; vertical-align: top;">
+            <label for="node-input-outputErrors" style="width: auto; margin-left: 5px;">Alerts (Output 2)</label>
+            <br>
+            <input type="checkbox" id="node-input-outputInfo" style="display: inline-block; width: auto; vertical-align: top;">
+            <label for="node-input-outputInfo" style="width: auto; margin-left: 5px;">Info & Config (Output 3)</label>
+        </div>
+    </div>
+</script>
+
+<script type="text/html" data-help-name="sys-channel-node">
+    <p>System Channel Node for AlephScript system monitoring and health checks.</p>
+    
+    <h3>Inputs</h3>
+    <dl class="message-properties">
+        <dt>Socket Connection</dt>
+        <dd>Connection to AlephScript server via Bot Node or direct Socket.IO</dd>
+    </dl>
+    
+    <h3>Outputs</h3>
+    <ol class="node-ports">
+        <li><strong>Health & Status</strong>
+            <dl class="message-properties">
+                <dt>payload <span class="property-type">object</span></dt>
+                <dd>Health check and service status messages</dd>
+                <dt>topic <span class="property-type">string</span></dt>
+                <dd>sys/health_check or sys/service_status</dd>
+            </dl>
+        </li>
+        <li><strong>Alerts</strong>
+            <dl class="message-properties">
+                <dt>payload <span class="property-type">object</span></dt>
+                <dd>Error and warning messages requiring attention</dd>
+                <dt>topic <span class="property-type">string</span></dt>
+                <dd>sys/error or sys/warning</dd>
+            </dl>
+        </li>
+        <li><strong>Info & Config</strong>
+            <dl class="message-properties">
+                <dt>payload <span class="property-type">object</span></dt>
+                <dd>Informational and configuration change messages</dd>
+                <dt>topic <span class="property-type">string</span></dt>
+                <dd>sys/info or sys/config_change</dd>
+            </dl>
+        </li>
+    </ol>
+    
+    <h3>Details</h3>
+    <p>This node connects to the AlephScript system channel to monitor system health, 
+    handle errors, and track configuration changes. Messages are filtered by type, 
+    log level, and service ID, then routed to appropriate outputs.</p>
+    
+    <h4>Message Types</h4>
+    <ul>
+        <li><code>health_check</code> - Periodic system health reports</li>
+        <li><code>error</code> - System errors requiring attention</li>
+        <li><code>warning</code> - System warnings</li>
+        <li><code>info</code> - Informational messages</li>
+        <li><code>config_change</code> - Configuration updates</li>
+        <li><code>service_status</code> - Service online/offline/degraded status</li>
+    </ul>
+    
+    <h4>Log Levels</h4>
+    <ul>
+        <li><code>debug</code> - Detailed debugging information</li>
+        <li><code>info</code> - General information</li>
+        <li><code>warn</code> - Warning conditions</li>
+        <li><code>error</code> - Error conditions</li>
+        <li><code>fatal</code> - Critical system errors</li>
+    </ul>
+    
+    <h4>Thresholds</h4>
+    <p>Configure monitoring thresholds:</p>
+    <ul>
+        <li><strong>Health Check Interval</strong> - How often to perform system checks (ms)</li>
+        <li><strong>Error Count Threshold</strong> - Alert when error count exceeds this limit</li>
+        <li><strong>Memory Threshold</strong> - Alert when memory usage exceeds this limit (MB)</li>
+    </ul>
+</script>
