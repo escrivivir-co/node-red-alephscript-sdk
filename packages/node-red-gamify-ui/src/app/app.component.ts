@@ -1,67 +1,58 @@
 import { Component } from '@angular/core';
+import { CommonModule } from '@angular/common';
+import { MatToolbarModule } from '@angular/material/toolbar';
+import { MatIconModule } from '@angular/material/icon';
+import { InstanceListComponent } from './components/instance-list/instance-list.component';
 
 @Component({
   selector: 'app-root',
+  standalone: true,
+  imports: [
+    CommonModule,
+    MatToolbarModule,
+    MatIconModule,
+    InstanceListComponent
+  ],
   template: `
     <div class="app-container">
-      <header>
-        <h1>Node-RED AlephScript Manager</h1>
-        <p>Angular UI for managing Node-RED instances with AlephScript integration</p>
-      </header>
+      <mat-toolbar color="primary">
+        <mat-icon>router</mat-icon>
+        <span>Node-RED AlephScript Manager</span>
+        <span class="toolbar-spacer"></span>
+        <mat-icon>settings</mat-icon>
+      </mat-toolbar>
       
-      <main>
-        <div class="discovery-section">
-          <h2>Node-RED Discovery</h2>
-          <p>Scanning local network for Node-RED instances...</p>
-          <!-- Future: Node-RED instance list -->
-        </div>
-        
-        <div class="iframe-section">
-          <h2>Node-RED Interface</h2>
-          <p>Select a Node-RED instance to load its editor or dashboard</p>
-          <!-- Future: IFrame container -->
-        </div>
-        
-        <div class="alephscript-section">
-          <h2>AlephScript Integration</h2>
-          <p>Channel status and bot management</p>
-          <!-- Future: Channel status, bot registry -->
-        </div>
+      <main class="main-content">
+        <app-instance-list></app-instance-list>
       </main>
     </div>
   `,
   styles: [`
     .app-container {
-      padding: 20px;
-      font-family: Arial, sans-serif;
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
     }
     
-    header {
-      border-bottom: 1px solid #ccc;
-      margin-bottom: 20px;
-      padding-bottom: 10px;
+    .toolbar-spacer {
+      flex: 1 1 auto;
     }
     
-    .discovery-section,
-    .iframe-section,
-    .alephscript-section {
-      margin-bottom: 30px;
-      padding: 15px;
-      border: 1px solid #ddd;
-      border-radius: 5px;
+    .main-content {
+      flex: 1;
+      overflow: auto;
+      background: #f5f5f5;
     }
     
-    h1 {
-      color: #333;
-      margin: 0 0 10px 0;
+    mat-toolbar {
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
     }
     
-    h2 {
-      color: #555;
-      margin: 0 0 10px 0;
+    mat-toolbar span {
+      margin-left: 8px;
     }
   `]
 })
 export class AppComponent {
-  title = 'node-red-gamify-ui';
+  title = 'Node-RED AlephScript Manager';
 }
