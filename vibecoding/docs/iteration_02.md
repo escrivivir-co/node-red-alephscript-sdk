@@ -1,11 +1,11 @@
 # Iteración 2: Foundation & Setup del Proyecto (`node-red-contrib-alephscript`)
 
 ## 📋 ESTADO DEL PROGRESO
-- [ ] Fase 1: De dónde venimos
-- [ ] Fase 2: Dónde queremos ir
-- [ ] Fase 3: Opciones para ir
-- [ ] Fase 4: Vamos (Ejecución)
-- [ ] Fase 5: A dónde hemos llegado
+- [x] Fase 1: De dónde venimos
+- [x] Fase 2: Dónde queremos ir
+- [x] Fase 3: Opciones para ir
+- [x] Fase 4: Vamos (Ejecución)
+- [x] Fase 5: A dónde hemos llegado
 
 ---
 

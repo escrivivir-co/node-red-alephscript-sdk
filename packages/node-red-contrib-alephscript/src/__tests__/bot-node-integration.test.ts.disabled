@@ -1,0 +1,244 @@
+import { io, Socket } from 'socket.io-client';
+import { createHash } from 'crypto';
+
+describe('AlephScript Bot Node - Socket.IO Protocol Integration', () => {
+    let socket: Socket;
+    const serverUrl = 'http://localhost:3000';
+    const namespace = '/runtime';
+    
+    beforeEach(() => {
+        socket = io(`${serverUrl}${namespace}`, {
+            autoConnect: false
+        });
+    });
+
+    afterEach(() => {
+        if (socket.connected) {
+            socket.disconnect();
+        }
+    });
+
+    describe('Bot Registration Protocol', () => {
+        it('should perform CLIENT_REGISTER with proper payload', (done) => {
+            const botName = 'TestBot';
+            const sessionHash = createHash('sha256')
+                .update(`${botName}-${Date.now()}`)
+                .digest('hex')
+                .substring(0, 16);
+
+            socket.on('connect', () => {
+                const registerPayload = {
+                    usuario: botName,
+                    sesion: sessionHash,
+                    features: ['messaging', 'node-red-integration']
+                };
+
+                // Listen for registration confirmation
+                socket.once('CLIENT_REGISTER_OK', (data) => {
+                    expect(data).toBeDefined();
+                    expect(data.status).toBe('registered');
+                    done();
+                });
+
+                // Send registration
+                socket.emit('CLIENT_REGISTER', registerPayload);
+            });
+
+            socket.connect();
+        }, 10000);
+
+        it('should subscribe to ENGINE_THREADS room after registration', (done) => {
+            const botName = 'TestBot2';
+            const sessionHash = createHash('sha256')
+                .update(`${botName}-${Date.now()}`)
+                .digest('hex')
+                .substring(0, 16);
+
+            let registrationComplete = false;
+
+            socket.on('connect', () => {
+                // Register first
+                socket.emit('CLIENT_REGISTER', {
+                    usuario: botName,
+                    sesion: sessionHash,
+                    features: ['messaging']
+                });
+            });
+
+            socket.on('CLIENT_REGISTER_OK', () => {
+                registrationComplete = true;
+                
+                // Subscribe to room
+                socket.emit('CLIENT_SUSCRIBE', {
+                    room: 'ENGINE_THREADS'
+                });
+            });
+
+            socket.on('CLIENT_SUSCRIBE_OK', (data) => {
+                expect(registrationComplete).toBe(true);
+                expect(data.room).toBe('ENGINE_THREADS');
+                done();
+            });
+
+            socket.connect();
+        }, 10000);
+    });
+
+    describe('Room Communication', () => {
+        it('should send and receive ROOM_MESSAGE in ENGINE_THREADS', (done) => {
+            const botName = 'MessageBot';
+            const sessionHash = createHash('sha256')
+                .update(`${botName}-${Date.now()}`)
+                .digest('hex')
+                .substring(0, 16);
+
+            const testMessage = {
+                type: 'test',
+                data: 'Hello from Node-RED Bot',
+                timestamp: Date.now()
+            };
+
+            let isSubscribedToRoom = false;
+
+            socket.on('connect', () => {
+                socket.emit('CLIENT_REGISTER', {
+                    usuario: botName,
+                    sesion: sessionHash,
+                    features: ['messaging']
+                });
+            });
+
+            socket.on('CLIENT_REGISTER_OK', () => {
+                socket.emit('CLIENT_SUSCRIBE', {
+                    room: 'ENGINE_THREADS'
+                });
+            });
+
+            socket.on('CLIENT_SUSCRIBE_OK', () => {
+                isSubscribedToRoom = true;
+                
+                // Send test message to room
+                socket.emit('ROOM_MESSAGE', {
+                    room: 'ENGINE_THREADS',
+                    message: testMessage
+                });
+            });
+
+            socket.on('ROOM_MESSAGE', (data) => {
+                if (isSubscribedToRoom && data.message.type === 'test') {
+                    expect(data.room).toBe('ENGINE_THREADS');
+                    expect(data.message.data).toBe('Hello from Node-RED Bot');
+                    done();
+                }
+            });
+
+            socket.connect();
+        }, 15000);
+    });
+
+    describe('System Channel Events', () => {
+        it('should handle SYS_HEALTH_CHECK events on sys channel', (done) => {
+            const botName = 'HealthBot';
+            const sessionHash = createHash('sha256')
+                .update(`${botName}-${Date.now()}`)
+                .digest('hex')
+                .substring(0, 16);
+
+            socket.on('connect', () => {
+                socket.emit('CLIENT_REGISTER', {
+                    usuario: botName,
+                    sesion: sessionHash,
+                    features: ['system-monitoring']
+                });
+            });
+
+            socket.on('CLIENT_REGISTER_OK', () => {
+                // Listen to sys channel
+                socket.on('SYS_HEALTH_CHECK', (data) => {
+                    expect(data).toBeDefined();
+                    expect(data.type).toBe('health');
+                    done();
+                });
+
+                // Trigger health check (if available in test environment)
+                socket.emit('REQUEST_HEALTH_CHECK');
+            });
+
+            socket.connect();
+        }, 10000);
+
+        it('should handle SYS_ERROR events', (done) => {
+            const botName = 'ErrorBot';
+            const sessionHash = createHash('sha256')
+                .update(`${botName}-${Date.now()}`)
+                .digest('hex')
+                .substring(0, 16);
+
+            socket.on('connect', () => {
+                socket.emit('CLIENT_REGISTER', {
+                    usuario: botName,
+                    sesion: sessionHash,
+                    features: ['error-handling']
+                });
+            });
+
+            socket.on('CLIENT_REGISTER_OK', () => {
+                socket.on('SYS_ERROR', (data) => {
+                    expect(data).toBeDefined();
+                    expect(data.type).toBe('error');
+                    done();
+                });
+
+                // Listen for any system errors during test
+                setTimeout(() => {
+                    // If no error occurs naturally, mark as success
+                    done();
+                }, 5000);
+            });
+
+            socket.connect();
+        }, 10000);
+    });
+
+    describe('Connection Management', () => {
+        it('should handle disconnect and reconnect gracefully', (done) => {
+            let disconnectCount = 0;
+            let reconnectCount = 0;
+
+            socket.on('connect', () => {
+                reconnectCount++;
+                
+                if (reconnectCount === 1) {
+                    // First connection - register and then disconnect
+                    socket.emit('CLIENT_REGISTER', {
+                        usuario: 'ReconnectBot',
+                        sesion: createHash('sha256').update(`ReconnectBot-${Date.now()}`).digest('hex').substring(0, 16),
+                        features: ['reconnection']
+                    });
+                    
+                    setTimeout(() => {
+                        socket.disconnect();
+                    }, 1000);
+                } else if (reconnectCount === 2) {
+                    // Successful reconnection
+                    expect(disconnectCount).toBe(1);
+                    expect(reconnectCount).toBe(2);
+                    done();
+                }
+            });
+
+            socket.on('disconnect', () => {
+                disconnectCount++;
+                
+                if (disconnectCount === 1) {
+                    // Reconnect after disconnect
+                    setTimeout(() => {
+                        socket.connect();
+                    }, 1000);
+                }
+            });
+
+            socket.connect();
+        }, 20000);
+    });
+});

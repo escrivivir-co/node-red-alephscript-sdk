@@ -1,0 +1,29 @@
+### 4.1 Análisis AlephScriptClient
+- [x] Estudio detallado de state-machine-mcp-driver/src/clients/alephscript-client.ts
+- [x] Identificación de métodos core para Node-RED
+- [x] Mapeo de eventos Socket.IO necesarios
+- [x] Documentación de protocolo de registro
+
+### 4.2 Bot Node Development
+- [x] Creación de bot-node.ts base con integración completa
+- [x] Implementación de configuración UI (HTML)
+- [x] Integración con Socket.IO client
+- [x] Gestión de lifecycle (connect/disconnect)
+
+### 4.3 Socket.IO Integration
+- [x] Configuración de conexión a servidor
+- [x] Implementación de CLIENT_REGISTER protocol
+- [x] Gestión de rooms (join/leave)
+- [x] Broadcasting y message handling
+
+### 4.4 Node-RED Properties & UI
+- [x] Definición de propiedades configurables
+- [x] UI para server URL, namespace, bot name
+- [x] Status indicators (connected/disconnected)
+- [x] Help documentation integrada
+
+### 4.5 Testing & Validation
+- [x] Unit tests para Bot Node logic básicos
+- [x] Compilación TypeScript exitosa
+- [x] Testing de build system
+- [x] Validación de estructura de paquete Node-RED

@@ -1,0 +1,298 @@
+import { BotNodeConstructor } from '../nodes/bot-node';
+import { NodeMessage } from 'node-red';
+
+// Mock socket.io-client
+jest.mock('socket.io-client', () => {
+    const mockSocket = {
+        connect: jest.fn(),
+        disconnect: jest.fn(),
+        emit: jest.fn(),
+        on: jest.fn(),
+        once: jest.fn(),
+        connected: false,
+        id: 'mock-socket-id'
+    };
+
+    return {
+        io: jest.fn(() => mockSocket),
+        __mockSocket: mockSocket
+    };
+});
+
+// Mock crypto
+jest.mock('crypto', () => ({
+    createHash: jest.fn(() => ({
+        update: jest.fn().mockReturnThis(),
+        digest: jest.fn(() => 'mock-hash-value')
+    }))
+}));
+
+const { io } = require('socket.io-client');
+const mockSocket = (io as any).__mockSocket;
+
+describe('Bot Node Unit Tests', () => {
+    let mockRED: any;
+    let mockNode: any;
+    let mockConfig: any;
+
+    beforeEach(() => {
+        jest.clearAllMocks();
+        
+        mockNode = {
+            id: 'test-node-id',
+            send: jest.fn(),
+            status: jest.fn(),
+            error: jest.fn(),
+            warn: jest.fn(),
+            log: jest.fn(),
+            on: jest.fn()
+        };
+
+        mockConfig = {
+            name: 'TestBot',
+            botName: 'TestBot',
+            serverUrl: 'http://localhost:3000',
+            namespace: '/runtime',
+            autoConnect: true,
+            features: ['messaging', 'node-red-integration']
+        };
+
+        mockRED = {
+            nodes: {
+                createNode: jest.fn()
+            }
+        };
+
+        // Reset socket state
+        mockSocket.connected = false;
+        mockSocket.connect.mockClear();
+        mockSocket.disconnect.mockClear();
+        mockSocket.emit.mockClear();
+        mockSocket.on.mockClear();
+        mockSocket.once.mockClear();
+    });
+
+    describe('Node Initialization', () => {
+        it('should create bot node with proper configuration', () => {
+            BotNodeConstructor.call(mockNode, mockConfig);
+
+            expect(mockRED.nodes.createNode).toHaveBeenCalledWith(mockNode, mockConfig);
+            expect(io).toHaveBeenCalledWith('http://localhost:3000/runtime', {
+                autoConnect: false
+            });
+        });
+
+        it('should auto-connect when autoConnect is true', () => {
+            BotNodeConstructor.call(mockNode, mockConfig);
+
+            // Simulate Node-RED initialization
+            const initHandler = mockNode.on.mock.calls.find(call => call[0] === 'input');
+            expect(initHandler).toBeDefined();
+
+            // Auto-connect should trigger on first input or immediately
+            expect(mockSocket.connect).toHaveBeenCalled();
+        });
+
+        it('should not auto-connect when autoConnect is false', () => {
+            mockConfig.autoConnect = false;
+            BotNodeConstructor.call(mockNode, mockConfig);
+
+            expect(mockSocket.connect).not.toHaveBeenCalled();
+        });
+    });
+
+    describe('Socket Event Handlers', () => {
+        beforeEach(() => {
+            BotNodeConstructor.call(mockNode, mockConfig);
+        });
+
+        it('should register socket event listeners', () => {
+            const expectedEvents = [
+                'connect',
+                'disconnect',
+                'connect_error',
+                'CLIENT_REGISTER_OK',
+                'CLIENT_SUSCRIBE_OK',
+                'ROOM_MESSAGE',
+                'SYS_HEALTH_CHECK',
+                'SYS_ERROR',
+                'SYS_WARNING'
+            ];
+
+            expectedEvents.forEach(event => {
+                expect(mockSocket.on).toHaveBeenCalledWith(event, expect.any(Function));
+            });
+        });
+
+        it('should handle successful connection', () => {
+            const connectHandler = mockSocket.on.mock.calls.find(call => call[0] === 'connect')[1];
+            
+            connectHandler();
+
+            expect(mockNode.status).toHaveBeenCalledWith({
+                fill: 'green',
+                shape: 'dot',
+                text: 'connected'
+            });
+
+            expect(mockSocket.emit).toHaveBeenCalledWith('CLIENT_REGISTER', {
+                usuario: 'TestBot',
+                sesion: expect.any(String),
+                features: ['messaging', 'node-red-integration']
+            });
+        });
+
+        it('should handle registration success and subscribe to room', () => {
+            const registerHandler = mockSocket.on.mock.calls.find(call => call[0] === 'CLIENT_REGISTER_OK')[1];
+            
+            registerHandler({ status: 'registered', usuario: 'TestBot' });
+
+            expect(mockSocket.emit).toHaveBeenCalledWith('CLIENT_SUSCRIBE', {
+                room: 'ENGINE_THREADS'
+            });
+
+            expect(mockNode.status).toHaveBeenCalledWith({
+                fill: 'green',
+                shape: 'dot',
+                text: 'registered & subscribed'
+            });
+        });
+
+        it('should handle room messages and forward to Node-RED', () => {
+            const roomMessageHandler = mockSocket.on.mock.calls.find(call => call[0] === 'ROOM_MESSAGE')[1];
+            
+            const testMessage = {
+                room: 'ENGINE_THREADS',
+                message: {
+                    type: 'test',
+                    data: 'Hello World'
+                },
+                from: 'OtherBot'
+            };
+
+            roomMessageHandler(testMessage);
+
+            expect(mockNode.send).toHaveBeenCalledWith({
+                payload: testMessage,
+                topic: 'room-message'
+            });
+        });
+
+        it('should handle system health checks', () => {
+            const healthHandler = mockSocket.on.mock.calls.find(call => call[0] === 'SYS_HEALTH_CHECK')[1];
+            
+            const healthData = {
+                type: 'health',
+                status: 'ok',
+                timestamp: Date.now()
+            };
+
+            healthHandler(healthData);
+
+            expect(mockNode.send).toHaveBeenCalledWith({
+                payload: healthData,
+                topic: 'sys-health'
+            });
+        });
+
+        it('should handle system errors', () => {
+            const errorHandler = mockSocket.on.mock.calls.find(call => call[0] === 'SYS_ERROR')[1];
+            
+            const errorData = {
+                type: 'error',
+                message: 'Test error',
+                timestamp: Date.now()
+            };
+
+            errorHandler(errorData);
+
+            expect(mockNode.send).toHaveBeenCalledWith({
+                payload: errorData,
+                topic: 'sys-error'
+            });
+        });
+    });
+
+    describe('Message Handling', () => {
+        beforeEach(() => {
+            BotNodeConstructor.call(mockNode, mockConfig);
+            mockSocket.connected = true;
+        });
+
+        it('should send room messages when receiving input', () => {
+            const inputHandler = mockNode.on.mock.calls.find(call => call[0] === 'input')[1];
+            
+            const inputMessage: NodeMessage = {
+                payload: {
+                    type: 'user-command',
+                    data: 'Hello from Node-RED'
+                },
+                topic: 'test'
+            };
+
+            inputHandler(inputMessage);
+
+            expect(mockSocket.emit).toHaveBeenCalledWith('ROOM_MESSAGE', {
+                room: 'ENGINE_THREADS',
+                message: inputMessage.payload
+            });
+        });
+
+        it('should handle connection when not connected', () => {
+            mockSocket.connected = false;
+            const inputHandler = mockNode.on.mock.calls.find(call => call[0] === 'input')[1];
+            
+            const inputMessage: NodeMessage = {
+                payload: { data: 'test' }
+            };
+
+            inputHandler(inputMessage);
+
+            expect(mockSocket.connect).toHaveBeenCalled();
+        });
+    });
+
+    describe('Error Handling', () => {
+        beforeEach(() => {
+            BotNodeConstructor.call(mockNode, mockConfig);
+        });
+
+        it('should handle connection errors', () => {
+            const errorHandler = mockSocket.on.mock.calls.find(call => call[0] === 'connect_error')[1];
+            
+            const error = new Error('Connection failed');
+            errorHandler(error);
+
+            expect(mockNode.status).toHaveBeenCalledWith({
+                fill: 'red',
+                shape: 'ring',
+                text: 'error: Connection failed'
+            });
+
+            expect(mockNode.error).toHaveBeenCalledWith('Connection error: Connection failed', {});
+        });
+
+        it('should handle disconnection', () => {
+            const disconnectHandler = mockSocket.on.mock.calls.find(call => call[0] === 'disconnect')[1];
+            
+            disconnectHandler('transport close');
+
+            expect(mockNode.status).toHaveBeenCalledWith({
+                fill: 'red',
+                shape: 'ring',
+                text: 'disconnected'
+            });
+        });
+    });
+
+    describe('Cleanup', () => {
+        it('should disconnect socket on close', () => {
+            BotNodeConstructor.call(mockNode, mockConfig);
+            
+            const closeHandler = mockNode.on.mock.calls.find(call => call[0] === 'close')[1];
+            closeHandler();
+
+            expect(mockSocket.disconnect).toHaveBeenCalled();
+        });
+    });
+});

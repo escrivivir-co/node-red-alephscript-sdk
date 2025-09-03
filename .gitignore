@@ -1,0 +1,5 @@
+node_modules/
+**/dist/
+**/.angular/
+node-red-alephscript-sdk\packages\node-red-gamify-ui\dist
+node-red-alephscript-sdk\packages\node-red-gamify-ui\.angular

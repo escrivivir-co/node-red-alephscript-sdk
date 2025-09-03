@@ -3,13 +3,31 @@
   "private": true,
   "version": "0.1.0",
   "description": "SDK monorepo: Node-RED contrib nodes and a web UI (GamificationUI) for AlephScript",
-  "workspaces": [
+  "_workspaces_disabled": [
     "packages/*"
   ],
   "scripts": {
-    "build": "npm -ws run build",
-    "test": "echo no-tests",
-    "lint": "echo no-lint"
+    "build:all": "npm run build:contrib && npm run build:ui",
+    "build:contrib": "cd packages/node-red-contrib-alephscript && npm run build:full",
+    "build:ui": "cd packages/node-red-gamify-ui && npm run build",
+    "dev": "npm run dev:contrib",
+    "dev:contrib": "cd packages/node-red-contrib-alephscript && npm run dev",
+    "dev:ui": "cd packages/node-red-gamify-ui && npm run dev",
+    "test:all": "npm run test:contrib && npm run test:ui",
+    "test:contrib": "cd packages/node-red-contrib-alephscript && npm test",
+    "test:ui": "cd packages/node-red-gamify-ui && npm test",
+    "lint:all": "npm run lint:contrib && npm run lint:ui",
+    "lint:contrib": "cd packages/node-red-contrib-alephscript && npm run lint",
+    "lint:ui": "cd packages/node-red-gamify-ui && npm run lint",
+    "lint:fix:all": "npm run lint:fix:contrib && npm run lint:fix:ui",
+    "lint:fix:contrib": "cd packages/node-red-contrib-alephscript && npm run lint -- --fix",
+    "lint:fix:ui": "cd packages/node-red-gamify-ui && npm run lint -- --fix",
+    "install:all": "cd packages/node-red-contrib-alephscript && npm install && cd ../node-red-gamify-ui && npm install",
+    "clean:all": "npm run clean:contrib && npm run clean:ui",
+    "clean:contrib": "cd packages/node-red-contrib-alephscript && rm -rf dist",
+    "clean:ui": "cd packages/node-red-gamify-ui && rm -rf dist",
+    "prepare": "npm run build:all",
+    "postinstall": "npm run install:all"
   },
   "license": "MIT"
 }

@@ -1,11 +1,96 @@
-# Iteración 1: Análisis y Planificación del SDK Node-RED AlephScript
+# Iteración 1: Análisis y plan inicial del SDK Node-RED AlephScript
 
 ## Estado del Progreso
 - [x] Fase 1: De dónde venimos
 - [x] Fase 2: Dónde queremos ir
-- [ ] Fase 3: Opciones para ir
-- [ ] Fase 4: Vamos (Ejecución)
-- [ ] Fase 5: A dónde hemos llegado
+- [x] Fase 3: Opciones para ir
+- [x] Fase 4: Vamos (Ejecución)
+- [x] Fase 5: A dónde hemos llegado
+
+---## Fase 1: De dónde venimos
+- Contexto previo
+  - Objetivo: crear un paquete monorepo `node-red-alephscript-sdk` con 2 librerías:
+    1) `node-red-contrib-alephscript` (nodos Node-RED: Bot, App/Sys/UI Channels, Orchestrator, Dashboard2.0 widgets)
+    2) `node-red-gamify-ui` (webapp Angular tipo GamificationUI para gestionar instancias Node-RED por red local)
+  - Patrón técnico base: AlephScript core y orquestación multic canal (app/sys/ui) implmetando el patrón del AlephScriptClient (como por ejemplo Proserpina bot, OrfeoBot o Euridice bot para la room, Socket.IO.
+  - Distribución: seguir patrón de postinstall y `public_templates` visto en UIs existentes.
+- Mapa de carpetas relevantes y su rol
+  - state-machine-mcp-driver/: core runtime y APIs
+    - src/orchestration/channel/: app-channel-agent.ts, sys-channel-agent.ts, ui-channel-agent.ts
+    - src/orchestration/orchestrator.ts: hub de streams/mensajería
+    - src/ui/MultiUIGameManager.ts: integración Multi-UI; referencia para clase GamificationUI
+  - socket-gym/: servidor Socket.IO y gym de ejemplos (ws-server/, alephscript/)
+  - threejs-gamify-ui/: referencia de app Angular + patrón de distribución (postinstall → public_templates)
+  - web-rtc-gamify-ui/: otra referencia de UI Angular y postinstall
+  - aleph-unity-bot/: cliente Unity (bots Proserpina/Orfeo/Eurídice) como inspiración de AlephScriptClient
+  - node-red-alephscript-sdk/: monorepo objetivo (tiene `package.json` con workspaces "packages/*"; subcarpetas `projects/` aún sin package.json)
+- Limitaciones identificadas
+  - Mismatch de rutas de workspaces: `package.json` apunta a `packages/*` pero existen `projects/` en el repo; no hay manifests internos aún.
+  - Falta esqueleto de Node-RED contrib y de Angular app.
+  - Necesario definir protocolo exacto Socket.IO (registro, rooms) basándonos en `socket-gym` y el cliente AlephScript existente.
+  - Dashboard 2.0: decidir set de widgets mínimos (registro bots, cross-room tester, stream monitor).
+- Fundamentos
+  - Reusar Channel Agents (app/sys/ui) y Orchestrator como contratos para nodos.
+  - Reusar patrón de GamificationUI + postinstall para la app web.
+
+## Fase 2: Dónde queremos ir
+- Objetivo principal
+  - Cerrar el plan de implementación consensuado y preparar el terreno para Iteración 2 (scaffolding de proyectos y toolchain).
+- Criterios de éxito
+  - Documento de plan y checklist publicado (este archivo + README de paquete).
+  - MASTER_CHECKLIST enlaza esta iteración y marca “Fase de búsqueda” completada.
+  - Alcance técnico delimitado: nodos requeridos, UI requerida y referencias claras.
+- Impacto esperado
+  - Acelerar implementación en Iteración 2 sin ambigüedades.
+
+## Fase 3: Opciones para ir
+- Estructura de monorepo
+  - Opción A: workspaces en `packages/*` (estándar npm/yarn) → Decisión: A.
+  - Opción B: mantener `projects/*` y ajustar `package.json` → Requiere más cambios colaterales.
+- Nodos Node-RED
+  - Opción A: TypeScript + build a CommonJS para Node-RED → Decisión: A.
+  - Opción B: JavaScript puro → menos tipos y mantenibilidad.
+- UI Angular
+  - Opción A: clonar patrón de `threejs-gamify-ui` con postinstall → Decisión: A.
+  - Opción B: webapp mínima sin distribución automatizada.
+
+## Fase 4: Vamos (Ejecución)
+- Pasos técnicos previstos para Iteración 2 (sin ejecutar ahora)
+  1) Normalizar workspaces a `packages/*` y crear:
+     - packages/node-red-contrib-alephscript/
+     - packages/node-red-gamify-ui/
+  2) Tooling TS: tsconfig base, build y jest en contrib.
+  3) Scaffolding Angular para UI y preparar script postinstall.
+  4) Esqueleto de nodos: Bot, App/Sys/UI, Orchestrator (interfaces + pruebas mínimas).
+- Pruebas rápidas previstas
+  - Lint/build vacíos pasan. E2E con socket-gym en iteraciones siguientes.
+
+## Fase 5: A dónde hemos llegado
+- Resultados
+  - Mapa de codebase y roles documentado.
+  - Plan y checklist publicados.
+  - Riesgos conocidos anotados (workspaces, Dashboard2.0, protocolo Socket.IO).
+- Limitaciones
+  - Sin código implementado aún (decisión consciente para consensuar plan).
+- Próximos pasos
+  - Aprobación del plan y arranque de Iteración 2 (scaffolding + toolchain).
+
+---
+
+## Metadatos
+- Fecha Inicio: 2025-09-03
+- Fecha Fin: 2025-09-03
+- Responsable: Agente
+- Estado: Completada
+- Confianza: 8/10
+# Iteración 1: Análisis y Planificación del SDK Node-RED AlephScript
+
+## Estado del Progreso
+ - [ ] Fase 1: De dónde venimos
+ - [ ] Fase 2: Dónde queremos ir
+ - [ ] Fase 3: Opciones para ir
+ - [ ] Fase 4: Vamos (Ejecución)
+ - [ ] Fase 5: A dónde hemos llegado
 
 ---
 

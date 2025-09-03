@@ -1,0 +1,112 @@
+<script type="text/javascript">
+    RED.nodes.registerType('alephscript-bot', {
+        category: 'AlephScript',
+        color: '#3498db',
+        defaults: {
+            name: { value: '' },
+            botName: { value: 'NodeRedBot', required: true },
+            serverUrl: { value: 'http://localhost:3000', required: true },
+            namespace: { value: '/runtime', required: true },
+            autoConnect: { value: true },
+            features: { value: ['messaging', 'node-red-integration'] }
+        },
+        inputs: 1,
+        outputs: 1,
+        icon: 'font-awesome/fa-robot',
+        label: function() {
+            return this.name || this.botName || 'AlephScript Bot';
+        },
+        labelStyle: function() {
+            return this.name ? 'node_label_italic' : '';
+        },
+        paletteLabel: 'AlephScript Bot',
+        oneditprepare: function() {
+            // Initialize features as comma-separated string for editing
+            const features = this.features || ['messaging', 'node-red-integration'];
+            $('#node-input-features-display').val(features.join(', '));
+        },
+        oneditsave: function() {
+            // Convert features back to array
+            const featuresStr = $('#node-input-features-display').val();
+            this.features = featuresStr ? featuresStr.split(',').map(f => f.trim()) : [];
+        }
+    });
+</script>
+
+<script type="text/html" data-template-name="alephscript-bot">
+    <div class="form-row">
+        <label for="node-input-name"><i class="fa fa-tag"></i> Name</label>
+        <input type="text" id="node-input-name" placeholder="Optional display name">
+    </div>
+    
+    <div class="form-row">
+        <label for="node-input-botName"><i class="fa fa-robot"></i> Bot Name</label>
+        <input type="text" id="node-input-botName" placeholder="Unique bot identifier">
+    </div>
+    
+    <div class="form-row">
+        <label for="node-input-serverUrl"><i class="fa fa-server"></i> Server URL</label>
+        <input type="text" id="node-input-serverUrl" placeholder="http://localhost:3000">
+    </div>
+    
+    <div class="form-row">
+        <label for="node-input-namespace"><i class="fa fa-sitemap"></i> Namespace</label>
+        <select id="node-input-namespace">
+            <option value="/runtime">/runtime (default)</option>
+            <option value="/admin">/admin</option>
+            <option value="/">/</option>
+        </select>
+    </div>
+    
+    <div class="form-row">
+        <label for="node-input-autoConnect"><i class="fa fa-plug"></i> Auto Connect</label>
+        <input type="checkbox" id="node-input-autoConnect" style="display:inline-block; width:auto; vertical-align:top;">
+        <span style="margin-left:10px;">Connect automatically on deploy</span>
+    </div>
+    
+    <div class="form-row">
+        <label for="node-input-features-display"><i class="fa fa-list"></i> Features</label>
+        <input type="text" id="node-input-features-display" placeholder="messaging, node-red-integration">
+        <div class="form-tips">Comma-separated list of bot capabilities</div>
+    </div>
+</script>
+
+<script type="text/html" data-help-name="alephscript-bot">
+    <p>AlephScript Bot node for connecting Node-RED to the AlephScript ecosystem.</p>
+    
+    <h3>Inputs</h3>
+    <dl class="message-properties">
+        <dt>payload <span class="property-type">any</span></dt>
+        <dd>Data to send to AlephScript server and other connected bots</dd>
+        <dt>topic <span class="property-type">string</span></dt>
+        <dd>Optional message type for categorization</dd>
+    </dl>
+
+    <h3>Outputs</h3>
+    <dl class="message-properties">
+        <dt>payload <span class="property-type">object</span></dt>
+        <dd>Messages received from AlephScript server and other bots</dd>
+        <dt>topic <span class="property-type">string</span></dt>
+        <dd>Message category: 'alephscript-event', 'room-message', 'sys-health', 'sys-error', 'sys-warning'</dd>
+    </dl>
+
+    <h3>Details</h3>
+    <p>This node implements the AlephScript protocol for bot registration and communication:</p>
+    <ol>
+        <li><strong>CLIENT_REGISTER</strong>: Registers the bot with name and features</li>
+        <li><strong>CLIENT_SUSCRIBE</strong>: Joins the ENGINE_THREADS room automatically</li>
+        <li><strong>ROOM_MESSAGE</strong>: Sends messages to all bots in the room</li>
+    </ol>
+    
+    <p><strong>Bot Name</strong>: Unique identifier for this bot instance</p>
+    <p><strong>Server URL</strong>: AlephScript server address (default: http://localhost:3000)</p>
+    <p><strong>Namespace</strong>: Socket.IO namespace (/runtime for bot communication)</p>
+    <p><strong>Features</strong>: Capabilities advertised to other bots and the server</p>
+
+    <h3>Status</h3>
+    <ul>
+        <li><strong>Green dot</strong>: Connected to AlephScript server</li>
+        <li><strong>Red ring</strong>: Disconnected</li>
+        <li><strong>Red dot</strong>: Connection error</li>
+    </ul>
+</script>

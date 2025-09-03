@@ -1,0 +1,236 @@
+<script type="text/javascript">
+    RED.nodes.registerType('app-channel', {
+        category: 'AlephScript',
+        color: '#4CAF50',
+        defaults: {
+            name: { value: '' },
+            serverUrl: { value: 'http://localhost:3000', required: true },
+            namespace: { value: '/runtime', required: true },
+            autoConnect: { value: true },
+            componentId: { value: 'node-red-app-channel', required: true },
+            stateFilters: { value: [] },
+            actionFilters: { value: [] }
+        },
+        inputs: 1,
+        outputs: 2,
+        outputLabels: ['State Messages', 'Action Messages'],
+        icon: 'aleph-app.svg',
+        label: function() {
+            return this.name || 'App Channel';
+        },
+        labelStyle: function() {
+            return this.name ? 'node_label_italic' : '';
+        },
+        oneditprepare: function() {
+            // Initialize arrays for filters
+            if (!this.stateFilters) this.stateFilters = [];
+            if (!this.actionFilters) this.actionFilters = [];
+
+            // State Filters management
+            $('#state-filters-container').editableList({
+                addButton: 'Add State Filter',
+                removable: true,
+                height: 'auto',
+                addItem: function(container, i, opt) {
+                    var row = $('<div/>').appendTo(container);
+                    $('<input/>', {
+                        type: 'text',
+                        placeholder: 'e.g., initial, running, completed',
+                        style: 'width: 100%'
+                    }).appendTo(row);
+                },
+                removeItem: function(opt) {
+                    // Item removed automatically
+                }
+            });
+
+            // Populate existing state filters
+            for (var i = 0; i < this.stateFilters.length; i++) {
+                $('#state-filters-container').editableList('addItem', { value: this.stateFilters[i] });
+            }
+
+            // Action Filters management
+            $('#action-filters-container').editableList({
+                addButton: 'Add Action Filter',
+                removable: true,
+                height: 'auto',
+                addItem: function(container, i, opt) {
+                    var row = $('<div/>').appendTo(container);
+                    $('<input/>', {
+                        type: 'text',
+                        placeholder: 'e.g., get_state, reset_state, execute_action',
+                        style: 'width: 100%'
+                    }).appendTo(row);
+                },
+                removeItem: function(opt) {
+                    // Item removed automatically
+                }
+            });
+
+            // Populate existing action filters
+            for (var i = 0; i < this.actionFilters.length; i++) {
+                $('#action-filters-container').editableList('addItem', { value: this.actionFilters[i] });
+            }
+
+            // Set existing values
+            if (this.stateFilters.length > 0) {
+                var stateItems = $('#state-filters-container').editableList('items');
+                stateItems.each(function(i) {
+                    $(this).find('input').val(this.value || '');
+                });
+            }
+
+            if (this.actionFilters.length > 0) {
+                var actionItems = $('#action-filters-container').editableList('items');
+                actionItems.each(function(i) {
+                    $(this).find('input').val(this.value || '');
+                });
+            }
+        },
+        oneditsave: function() {
+            // Save state filters
+            var stateFilters = [];
+            $('#state-filters-container').editableList('items').each(function(i) {
+                var value = $(this).find('input').val().trim();
+                if (value) {
+                    stateFilters.push(value);
+                }
+            });
+            this.stateFilters = stateFilters;
+
+            // Save action filters
+            var actionFilters = [];
+            $('#action-filters-container').editableList('items').each(function(i) {
+                var value = $(this).find('input').val().trim();
+                if (value) {
+                    actionFilters.push(value);
+                }
+            });
+            this.actionFilters = actionFilters;
+        }
+    });
+</script>
+
+<script type="text/html" data-template-name="app-channel">
+    <div class="form-row">
+        <label for="node-input-name"><i class="fa fa-tag"></i> Name</label>
+        <input type="text" id="node-input-name" placeholder="App Channel">
+    </div>
+    
+    <div class="form-row">
+        <label for="node-input-serverUrl"><i class="fa fa-server"></i> Server URL</label>
+        <input type="text" id="node-input-serverUrl" placeholder="http://localhost:3000">
+    </div>
+    
+    <div class="form-row">
+        <label for="node-input-namespace"><i class="fa fa-sitemap"></i> Namespace</label>
+        <input type="text" id="node-input-namespace" placeholder="/runtime">
+    </div>
+    
+    <div class="form-row">
+        <label for="node-input-componentId"><i class="fa fa-id-card"></i> Component ID</label>
+        <input type="text" id="node-input-componentId" placeholder="node-red-app-channel">
+    </div>
+    
+    <div class="form-row">
+        <input type="checkbox" id="node-input-autoConnect" style="display: inline-block; width: auto; vertical-align: top;">
+        <label for="node-input-autoConnect" style="width: 70%;"> Auto-connect on deploy</label>
+    </div>
+
+    <div class="form-row">
+        <label><i class="fa fa-filter"></i> State Filters</label>
+        <div id="state-filters-container" style="min-height: 100px; margin-top: 5px;"></div>
+        <div class="form-tips">
+            <strong>State Filters:</strong> Only process state_transition messages for these target states. 
+            Leave empty to process all state transitions.
+        </div>
+    </div>
+
+    <div class="form-row">
+        <label><i class="fa fa-cogs"></i> Action Filters</label>
+        <div id="action-filters-container" style="min-height: 100px; margin-top: 5px;"></div>
+        <div class="form-tips">
+            <strong>Action Filters:</strong> Only process action_request/action_result messages for these action types. 
+            Leave empty to process all actions.
+        </div>
+    </div>
+</script>
+
+<script type="text/html" data-help-name="app-channel">
+    <p>The <strong>App Channel</strong> node provides integration with AlephScript's application communication channel.</p>
+    
+    <h3>Configuration</h3>
+    <dl class="message-properties">
+        <dt>Server URL <span class="property-type">string</span></dt>
+        <dd>AlephScript server WebSocket URL</dd>
+        
+        <dt>Namespace <span class="property-type">string</span></dt>
+        <dd>Socket.IO namespace (typically /runtime)</dd>
+        
+        <dt>Component ID <span class="property-type">string</span></dt>
+        <dd>Unique identifier for this app channel component</dd>
+        
+        <dt>State Filters <span class="property-type">array</span></dt>
+        <dd>List of target states to filter for state_transition messages</dd>
+        
+        <dt>Action Filters <span class="property-type">array</span></dt>
+        <dd>List of action types to filter for action_request/action_result messages</dd>
+    </dl>
+
+    <h3>Inputs</h3>
+    <dl class="message-properties">
+        <dt>msg.topic <span class="property-type">string</span></dt>
+        <dd>Message type: "state_transition", "action_request", or generic</dd>
+        
+        <dt>msg.payload <span class="property-type">object</span></dt>
+        <dd>Message data depending on topic type</dd>
+    </dl>
+
+    <h3>Outputs</h3>
+    <ol class="node-ports">
+        <li><strong>State Messages</strong>
+            <dl class="message-properties">
+                <dt>msg.topic <span class="property-type">string</span></dt>
+                <dd>Always "state_transition"</dd>
+                <dt>msg.payload <span class="property-type">object</span></dt>
+                <dd>State transition data with targetState</dd>
+                <dt>msg.appChannel <span class="property-type">object</span></dt>
+                <dd>Additional context including currentState and stateHistory</dd>
+            </dl>
+        </li>
+        <li><strong>Action Messages</strong>
+            <dl class="message-properties">
+                <dt>msg.topic <span class="property-type">string</span></dt>
+                <dd>"action_request" or "action_result"</dd>
+                <dt>msg.payload <span class="property-type">object</span></dt>
+                <dd>Action data with actionType and actionParams/result</dd>
+                <dt>msg.appChannel <span class="property-type">object</span></dt>
+                <dd>Additional context and metadata</dd>
+            </dl>
+        </li>
+    </ol>
+
+    <h3>Message Examples</h3>
+    
+    <h4>State Transition Input:</h4>
+    <pre>{
+  "topic": "state_transition",
+  "payload": {
+    "targetState": "running"
+  }
+}</pre>
+
+    <h4>Action Request Input:</h4>
+    <pre>{
+  "topic": "action_request", 
+  "payload": {
+    "actionType": "get_state",
+    "actionParams": {}
+  }
+}</pre>
+
+    <h3>Details</h3>
+    <p>This node connects to AlephScript's app communication channel to handle state management and action coordination. It automatically manages state transitions and provides filtered message routing based on your configuration.</p>
+    
+    <p>The node maintains internal state tracking and provides comprehensive context in outgoing messages through the <code>msg.appChannel</code> property.</p>
+</script>

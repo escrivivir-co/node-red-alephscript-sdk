@@ -1,0 +1,44 @@
+{
+  "name": "node-red-gamify-ui",
+  "version": "0.1.0",
+  "description": "Angular UI application for Node-RED management with AlephScript integration",
+  "main": "dist/index.js",
+  "scripts": {
+    "ng": "ng",
+    "start": "ng serve",
+    "build": "ng build",
+    "build:lib": "ng build node-red-gamify-ui",
+    "test": "ng test",
+    "lint": "ng lint",
+    "e2e": "ng e2e",
+    "postinstall": "node scripts/postinstall.cjs || echo 'Postinstall completed'"
+  },
+  "keywords": [
+    "angular",
+    "node-red",
+    "alephscript",
+    "gamification-ui",
+    "socket.io"
+  ],
+  "dependencies": {
+    "@angular/animations": "^17.0.0",
+    "@angular/common": "^17.0.0",
+    "@angular/compiler": "^17.0.0",
+    "@angular/core": "^17.0.0",
+    "@angular/forms": "^17.0.0",
+    "@angular/platform-browser": "^17.0.0",
+    "@angular/platform-browser-dynamic": "^17.0.0",
+    "@angular/router": "^17.0.0",
+    "socket.io-client": "^4.7.2",
+    "rxjs": "^7.8.1",
+    "tslib": "^2.3.0"
+  },
+  "devDependencies": {
+    "@angular-devkit/build-angular": "^17.0.0",
+    "@angular/cli": "^17.0.0",
+    "@angular/compiler-cli": "^17.0.0",
+    "@types/node": "^20.0.0",
+    "typescript": "~5.2.0"
+  },
+  "license": "MIT"
+}
