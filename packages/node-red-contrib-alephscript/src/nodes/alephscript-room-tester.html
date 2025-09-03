@@ -1,0 +1,492 @@
+<script type="text/html" data-template-name="alephscript-room-tester">
+    <div class="form-row">
+        <label for="node-input-name"><i class="fa fa-tag"></i> Name</label>
+        <input type="text" id="node-input-name" placeholder="Room Tester">
+    </div>
+    <div class="form-row">
+        <label for="node-input-config"><i class="fa fa-cog"></i> Server</label>
+        <input type="text" id="node-input-config">
+    </div>
+    <div class="form-row">
+        <label for="node-input-group"><i class="fa fa-table"></i> Group</label>
+        <input type="text" id="node-input-group">
+    </div>
+    <div class="form-row">
+        <label for="node-input-width"><i class="fa fa-arrows-h"></i> Width</label>
+        <select id="node-input-width">
+            <option value="0">auto</option>
+            <option value="1">1</option>
+            <option value="2">2</option>
+            <option value="3">3</option>
+            <option value="4">4</option>
+            <option value="5">5</option>
+            <option value="6" selected>6</option>
+            <option value="7">7</option>
+            <option value="8">8</option>
+            <option value="9">9</option>
+            <option value="10">10</option>
+            <option value="11">11</option>
+            <option value="12">12</option>
+        </select>
+        <label for="node-input-height" style="margin-left: 20px;"><i class="fa fa-arrows-v"></i> Height</label>
+        <input type="number" id="node-input-height" placeholder="auto" style="width:80px">
+    </div>
+</script>
+
+<script type="text/html" data-help-name="alephscript-room-tester">
+    <p><strong>AlephScript Room Cross-Communication Tester</strong></p>
+    <p>Dashboard 2.0 widget for testing cross-room communication between AlephScript bots.</p>
+    
+    <h3>Properties</h3>
+    <dl class="message-properties">
+        <dt>Name <span class="property-type">string</span></dt>
+        <dd>Display name for this widget</dd>
+        
+        <dt>Server <span class="property-type">config</span></dt>
+        <dd>AlephScript server configuration node</dd>
+        
+        <dt>Group <span class="property-type">string</span></dt>
+        <dd>Dashboard 2.0 group to place this widget in</dd>
+        
+        <dt>Width <span class="property-type">number</span></dt>
+        <dd>Widget width (1-12 columns, 0=auto)</dd>
+        
+        <dt>Height <span class="property-type">number</span></dt>
+        <dd>Widget height in units</dd>
+    </dl>
+    
+    <h3>Outputs</h3>
+    <ol class="node-ports">
+        <li>Room events
+            <dl class="message-properties">
+                <dt>topic <span class="property-type">string</span></dt>
+                <dd>Event type: "join_attempt", "leave_attempt", "message_sent", "room_joined", "room_left", "message_received", "status"</dd>
+                <dt>payload <span class="property-type">object</span></dt>
+                <dd>Event data including bot, room, and message information</dd>
+            </dl>
+        </li>
+    </ol>
+    
+    <h3>Inputs</h3>
+    <ol class="node-ports">
+        <li>Room commands
+            <dl class="message-properties">
+                <dt>payload.command <span class="property-type">string</span></dt>
+                <dd>"join_room", "leave_room", "send_test_message", or "get_status"</dd>
+                <dt>payload.currentBot <span class="property-type">string</span></dt>
+                <dd>Current bot name (required for join_room)</dd>
+                <dt>payload.targetRoom <span class="property-type">string</span></dt>
+                <dd>Target room to join (required for join_room)</dd>
+                <dt>payload.testMessage <span class="property-type">string</span></dt>
+                <dd>Test message to send (required for send_test_message)</dd>
+            </dl>
+        </li>
+    </ol>
+    
+    <h3>Details</h3>
+    <p>This widget provides a Dashboard 2.0 interface for testing the core requirement:</p>
+    <blockquote>"poder probar que un bot pueda entrar en una room de otro y desde entonces su stream recibe los mensajes y si sale deja"</blockquote>
+    
+    <h3>Features</h3>
+    <ul>
+        <li><strong>Cross-Room Join</strong> - Make one bot join another bot's room</li>
+        <li><strong>Message Stream Testing</strong> - Send test messages and verify reception</li>
+        <li><strong>Leave Room Testing</strong> - Test that leaving stops message reception</li>
+        <li><strong>Real-time Status</strong> - Visual feedback of current room state</li>
+        <li><strong>Message History</strong> - Log of sent/received messages</li>
+    </ul>
+    
+    <h3>Testing Workflow</h3>
+    <ol>
+        <li>Select current bot and target room</li>
+        <li>Click "Join Target Room" to enter another bot's room</li>
+        <li>Send test messages to verify stream reception</li>
+        <li>Click "Leave Room" to stop receiving messages</li>
+        <li>Verify that message stream stops after leaving</li>
+    </ol>
+</script>
+
+<script type="text/javascript">
+    RED.nodes.registerType('alephscript-room-tester', {
+        category: 'dashboard',
+        color: '#FF9800',
+        defaults: {
+            name: { value: "" },
+            config: { value: "", type: "alephscript-config", required: true },
+            group: { value: "", type: "ui-group", required: true },
+            width: { value: 6, validate: RED.validators.number() },
+            height: { value: 0, validate: RED.validators.number() },
+            format: { value: "" }
+        },
+        inputs: 1,
+        outputs: 1,
+        icon: "font-awesome/fa-exchange",
+        label: function() {
+            return this.name || "Room Tester";
+        },
+        labelStyle: function() {
+            return this.name ? "node_label_italic" : "";
+        },
+        oneditprepare: function() {
+            this.format = `
+<div id="alephscript-room-tester-{{$id}}" class="alephscript-room-tester">
+    <style>
+        .alephscript-room-tester {
+            padding: 10px;
+            font-family: Arial, sans-serif;
+        }
+        .room-tester-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #FF9800;
+        }
+        .connection-status {
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 12px;
+            font-weight: bold;
+        }
+        .connection-status.connected {
+            background-color: #4CAF50;
+            color: white;
+        }
+        .connection-status.disconnected {
+            background-color: #F44336;
+            color: white;
+        }
+        .room-controls {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            margin-bottom: 15px;
+            padding: 10px;
+            background-color: #f5f5f5;
+            border-radius: 5px;
+        }
+        .room-controls input {
+            padding: 6px;
+            border: 1px solid #ddd;
+            border-radius: 3px;
+        }
+        .room-controls button {
+            padding: 8px 12px;
+            border: none;
+            border-radius: 3px;
+            cursor: pointer;
+            font-weight: bold;
+            margin: 2px;
+        }
+        .btn-join {
+            background-color: #4CAF50;
+            color: white;
+        }
+        .btn-leave {
+            background-color: #F44336;
+            color: white;
+        }
+        .btn-send {
+            background-color: #2196F3;
+            color: white;
+        }
+        .btn-join:disabled, .btn-leave:disabled, .btn-send:disabled {
+            background-color: #ccc;
+            cursor: not-allowed;
+        }
+        .status-display {
+            padding: 10px;
+            margin-bottom: 15px;
+            border-radius: 5px;
+            border: 2px solid #ddd;
+        }
+        .status-display.in-room {
+            border-color: #4CAF50;
+            background-color: #e8f5e8;
+        }
+        .status-display.not-in-room {
+            border-color: #ccc;
+            background-color: #f9f9f9;
+        }
+        .status-text {
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+        .status-details {
+            font-size: 12px;
+            color: #666;
+        }
+        .message-test {
+            margin-bottom: 15px;
+        }
+        .message-test input {
+            width: 70%;
+            padding: 6px;
+            border: 1px solid #ddd;
+            border-radius: 3px;
+        }
+        .message-log {
+            max-height: 200px;
+            overflow-y: auto;
+            border: 1px solid #ddd;
+            border-radius: 3px;
+            padding: 10px;
+            background-color: white;
+        }
+        .message-entry {
+            padding: 5px;
+            margin-bottom: 5px;
+            border-radius: 3px;
+            font-size: 12px;
+        }
+        .message-entry.sent {
+            background-color: #e3f2fd;
+            border-left: 3px solid #2196F3;
+        }
+        .message-entry.received {
+            background-color: #e8f5e8;
+            border-left: 3px solid #4CAF50;
+        }
+        .message-entry.event {
+            background-color: #fff3e0;
+            border-left: 3px solid #FF9800;
+        }
+        .message-timestamp {
+            color: #666;
+            font-size: 10px;
+        }
+    </style>
+    
+    <div class="room-tester-header">
+        <h3 style="margin: 0; color: #FF9800;">Room Cross-Communication Tester</h3>
+        <div>
+            <span class="connection-status" id="connection-status-{{$id}}">Connecting...</span>
+        </div>
+    </div>
+    
+    <div class="room-controls">
+        <input type="text" id="current-bot-{{$id}}" placeholder="Current Bot Name">
+        <input type="text" id="target-room-{{$id}}" placeholder="Target Room">
+        <button type="button" class="btn-join" id="join-btn-{{$id}}" onclick="joinRoom('{{$id}}')">
+            Join Target Room
+        </button>
+        <button type="button" class="btn-leave" id="leave-btn-{{$id}}" onclick="leaveRoom('{{$id}}')" disabled>
+            Leave Room
+        </button>
+    </div>
+    
+    <div class="status-display not-in-room" id="status-display-{{$id}}">
+        <div class="status-text" id="status-text-{{$id}}">
+            Not in target room
+        </div>
+        <div class="status-details" id="status-details-{{$id}}">
+            Select bot and target room, then click "Join Target Room"
+        </div>
+    </div>
+    
+    <div class="message-test">
+        <input type="text" id="test-message-{{$id}}" placeholder="Test message to send" disabled>
+        <button type="button" class="btn-send" id="send-btn-{{$id}}" onclick="sendTestMessage('{{$id}}')" disabled>
+            Send Test
+        </button>
+    </div>
+    
+    <div class="message-log" id="message-log-{{$id}}">
+        <div class="message-entry event">
+            <div>Room tester initialized</div>
+            <div class="message-timestamp">Ready to test cross-room communication</div>
+        </div>
+    </div>
+</div>
+
+<script>
+(function() {
+    var widgetId = '{{$id}}';
+    var connected = false;
+    var isInTargetRoom = false;
+    var currentBot = '';
+    var targetRoom = '';
+    
+    // Join room function
+    window.joinRoom = function(id) {
+        if (id !== widgetId) return;
+        
+        var botName = document.getElementById('current-bot-' + id).value.trim();
+        var roomName = document.getElementById('target-room-' + id).value.trim();
+        
+        if (!botName || !roomName) {
+            addMessageToLog('ERROR: Both bot name and target room are required', 'event');
+            return;
+        }
+        
+        send({
+            payload: {
+                command: 'join_room',
+                currentBot: botName,
+                targetRoom: roomName
+            }
+        });
+        
+        addMessageToLog('Attempting to join room: ' + roomName + ' with bot: ' + botName, 'event');
+    };
+    
+    // Leave room function
+    window.leaveRoom = function(id) {
+        if (id !== widgetId) return;
+        
+        send({
+            payload: {
+                command: 'leave_room'
+            }
+        });
+        
+        addMessageToLog('Leaving target room...', 'event');
+    };
+    
+    // Send test message function
+    window.sendTestMessage = function(id) {
+        if (id !== widgetId) return;
+        
+        var message = document.getElementById('test-message-' + id).value.trim();
+        
+        if (!message) {
+            addMessageToLog('ERROR: Test message cannot be empty', 'event');
+            return;
+        }
+        
+        send({
+            payload: {
+                command: 'send_test_message',
+                testMessage: message
+            }
+        });
+        
+        document.getElementById('test-message-' + id).value = '';
+    };
+    
+    // Update connection status
+    function updateConnectionStatus(isConnected) {
+        connected = isConnected;
+        var statusEl = document.getElementById('connection-status-' + widgetId);
+        if (statusEl) {
+            statusEl.textContent = isConnected ? 'Connected' : 'Disconnected';
+            statusEl.className = 'connection-status ' + (isConnected ? 'connected' : 'disconnected');
+        }
+        updateControls();
+    }
+    
+    // Update room status
+    function updateRoomStatus(status) {
+        isInTargetRoom = status.isInTargetRoom;
+        currentBot = status.currentBot || '';
+        targetRoom = status.targetRoom || '';
+        
+        var statusDisplay = document.getElementById('status-display-' + widgetId);
+        var statusText = document.getElementById('status-text-' + widgetId);
+        var statusDetails = document.getElementById('status-details-' + widgetId);
+        
+        if (statusDisplay && statusText && statusDetails) {
+            if (isInTargetRoom) {
+                statusDisplay.className = 'status-display in-room';
+                statusText.textContent = 'In target room: ' + targetRoom;
+                statusDetails.textContent = 'Bot "' + currentBot + '" is receiving messages from this room';
+            } else {
+                statusDisplay.className = 'status-display not-in-room';
+                statusText.textContent = 'Not in target room';
+                statusDetails.textContent = 'Select bot and target room, then click "Join Target Room"';
+            }
+        }
+        
+        updateControls();
+    }
+    
+    // Update button states
+    function updateControls() {
+        var joinBtn = document.getElementById('join-btn-' + widgetId);
+        var leaveBtn = document.getElementById('leave-btn-' + widgetId);
+        var sendBtn = document.getElementById('send-btn-' + widgetId);
+        var testInput = document.getElementById('test-message-' + widgetId);
+        
+        if (joinBtn) joinBtn.disabled = !connected || isInTargetRoom;
+        if (leaveBtn) leaveBtn.disabled = !connected || !isInTargetRoom;
+        if (sendBtn) sendBtn.disabled = !connected || !isInTargetRoom;
+        if (testInput) testInput.disabled = !connected || !isInTargetRoom;
+    }
+    
+    // Add message to log
+    function addMessageToLog(message, type, data) {
+        var logEl = document.getElementById('message-log-' + widgetId);
+        if (logEl) {
+            var messageDiv = document.createElement('div');
+            messageDiv.className = 'message-entry ' + type;
+            
+            var timestamp = new Date().toLocaleTimeString();
+            var messageText = message;
+            if (data && data.from) {
+                messageText = 'From ' + data.from + ': ' + message;
+            }
+            
+            messageDiv.innerHTML = 
+                '<div>' + messageText + '</div>' +
+                '<div class="message-timestamp">' + timestamp + '</div>';
+            
+            logEl.appendChild(messageDiv);
+            logEl.scrollTop = logEl.scrollHeight;
+            
+            // Keep only last 50 messages
+            while (logEl.children.length > 50) {
+                logEl.removeChild(logEl.firstChild);
+            }
+        }
+    }
+    
+    // Handle messages from Node-RED
+    this.scope.msg = {};
+    this.scope.$watch('msg', function(newVal) {
+        if (newVal && newVal.topic) {
+            switch (newVal.topic) {
+                case 'connection':
+                    updateConnectionStatus(newVal.payload.connected);
+                    break;
+                case 'status':
+                    updateRoomStatus(newVal.payload);
+                    break;
+                case 'join_attempt':
+                    addMessageToLog('Join attempt sent for room: ' + newVal.payload.targetRoom, 'event');
+                    break;
+                case 'leave_attempt':
+                    addMessageToLog('Leave attempt sent for room: ' + newVal.payload.targetRoom, 'event');
+                    break;
+                case 'message_sent':
+                    addMessageToLog(newVal.payload.message, 'sent', newVal.payload);
+                    break;
+                case 'message_received':
+                    addMessageToLog(newVal.payload.message || 'Message received', 'received', newVal.payload);
+                    break;
+                case 'room_joined':
+                    addMessageToLog('Successfully joined room!', 'event');
+                    break;
+                case 'room_left':
+                    addMessageToLog('Successfully left room!', 'event');
+                    break;
+                case 'join_error':
+                case 'send_error':
+                    addMessageToLog('ERROR: ' + newVal.payload.error, 'event');
+                    break;
+            }
+        }
+    });
+    
+    // Initial status request
+    send({
+        payload: {
+            command: 'get_status'
+        }
+    });
+})();
+</script>
+            `;
+        }
+    });
+</script>

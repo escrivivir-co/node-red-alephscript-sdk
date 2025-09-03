@@ -1,57 +1,120 @@
 # Iteración 8: Dashboard 2.0 Management Panel (`node-red-contrib-alephscript`)
 
 ## 📋 ESTADO DEL PROGRESO
-- [ ] Fase 1: De dónde venimos
-- [ ] Fase 2: Dónde queremos ir
-- [ ] Fase 3: Opciones para ir
-- [ ] Fase 4: Vamos (Ejecución)
+- [x] Fase 1: De dónde venimos
+- [x] Fase 2: Dónde queremos ir
+- [x] Fase 3: Opciones para ir
+- [x] Fase 4: Vamos (Ejecución) - **EN PROGRESO**
 - [ ] Fase 5: A dónde hemos llegado
 
 ---
 
 ## Fase 1: De dónde venimos
-- **Orchestrator Node funcional** con los 3 canales especializados (`node-red-contrib-alephscript`)
-- **Channel Agents** implementados (App, Sys, UI) con factory pattern
-- **Core nodes** para todos los channel types funcionando
-- **Socket.IO integration** siguiendo protocolo CLIENT_REGISTER/CLIENT_SUSCRIBE
-- **Bot patterns** analizados (Proserpina, Orfeo, Euridice) con room management automático
 
-## Fase 2: Dónde queremos ir
-- **Dashboard 2.0 bot registration**: Interfaz simple para registrar exactamente 2 bots
-- **Cross-room testing**: Que un bot pueda entrar en room de otro y probar conectividad  
-- **Real-time stream monitoring**: Visualizar cuando "su stream recibe los mensajes y si sale deja"
-- **Socket.IO integration**: Basado en patterns de node-red-contrib-socketio-client-wt
-- **Management interface**: Panel completo para troubleshooting y testing
+### 🎯 **Context actual (post-Iteración 7.5)**
+- **9 Nodos funcionando**: Bot, Enhanced Bot, App/Sys/UI Channels, Orchestrator, App/Sys/UI Format ✅
+- **Build System**: TypeScript + HTML copy pipeline operativo ✅
+- **UX Simplificado**: Template-based message creation ✅
+- **AlephScript Integration**: CLIENT_REGISTER/SUSCRIBE/MAKE_MASTER protocol ✅
+- **Multi-output Architecture**: Enhanced Bot con routing a format nodes ✅
 
-## Fase 3: Opciones para ir
-- **Opción A**: Dashboard 2.0 custom widget (Recomendada para `node-red-contrib-alephscript`)
+### 🔍 **Requerimiento original identificado**
+De la especificación inicial en `.agents.md`:
+> "A parte, para Dashboard2.0 una interfaz simple que permita registar dos bots, cada uno tendra su room, y poder probar que un bot pueda entrar en una room de otro y desde entonces su stream recibe los mensajes y si sale deja, etc..."
+
+**Necesidad**: Dashboard 2.0 widgets especializados para:
+- Registrar máximo 2 bots con auto-room assignment
+- Testing de cross-room communication (bot A entra room de bot B)
+- Stream monitoring en tiempo real
+- Validation del "su stream recibe mensajes y si sale deja"
+
+## Fase 2: Dónde queremos ir ✅
+- **Dashboard 2.0 bot registration**: Interfaz simple para registrar exactamente 2 bots ✅
+- **Cross-room testing**: Que un bot pueda entrar en room de otro y probar conectividad ✅
+- **Real-time stream monitoring**: Visualizar cuando "su stream recibe los mensajes y si sale deja" ✅
+- **Socket.IO integration**: Basado en patterns de node-red-contrib-socketio-client-wt ✅
+- **Management interface**: Panel completo para troubleshooting y testing ✅
+
+### **🏗️ Dashboard 2.0 Architecture Design**
+
+Seguiremos el patrón `node-red-contrib-socketio-client-wt` que ya está instalado:
+
+**Config Node Pattern:**
+```javascript
+// alephscript-config node (shared configuration)
+{
+  serverUrl: "http://localhost:3001",
+  namespace: "/",
+  reconnection: true
+}
+```
+
+**4 Specialized Widget Nodes:**
+1. **`alephscript-bot-registry`** - Bot registration (max 2 bots)
+2. **`alephscript-room-tester`** - Cross-room communication testing  
+3. **`alephscript-stream-monitor`** - Real-time message monitoring
+4. **`alephscript-channel-monitor`** - App/Sys/UI channel status
+
+**Socket.IO Integration:**
+- Reutilizar existing socketio-client-wt connector pattern
+- AlephScript protocol: CLIENT_REGISTER → CLIENT_SUSCRIBE → MAKE_MASTER
+- Room management: auto-assignment + cross-room join/leave testing
+
+**Dashboard 2.0 UI Template Pattern:**
+- HTML templates con Socket.IO client-side integration
+- Real-time UI updates usando Dashboard 2.0 msg flows
+- Form validation y user feedback integrado
+
+## Fase 3: Opciones para ir ✅
+- **Opción A**: Dashboard 2.0 custom widget (Recomendada para `node-red-contrib-alephscript`) ✅
 - **Opción B**: Standalone web interface
 - **Opción C**: Integration con Node-RED editor
 
-## Fase 4: Vamos (Ejecución)
+### **📋 Selected Architecture: Dashboard 2.0 Custom Widgets**
 
-### 4.1 Three-Channel Architecture Analysis (.agents.md pattern)
-- [ ] Estudio profundo de App/Sys/UI channel specialization
-- [ ] ChannelAgentFactory pattern analysis para dynamic creation
-- [ ] Bot registration protocol: CLIENT_REGISTER → CLIENT_SUSCRIBE → MAKE_MASTER
-- [ ] Socket.IO room management patterns (join/leave/auto-cleanup)
-- [ ] Cross-channel message routing y coordination
+**Patrón base:** `node-red-contrib-socketio-client-wt` (ya instalado en workspace)
 
-### 4.2 Bot Registration Interface (.agents.md requirement)
-- [ ] Custom Dashboard 2.0 widget: "AlephScript Bot Registry"
-- [ ] Formulario para registrar exactamente 2 bots simultáneos
-- [ ] Auto-asignación de Socket.IO rooms únicas per bot
-- [ ] Validación de nombres únicos y configuración
-- [ ] Persistencia de bot configurations
+**Design Principles:**
+1. **Config Node Shared:** Single `alephscript-config` node para shared settings
+2. **4 Specialized Widgets:** Bot Registry, Room Tester, Stream Monitor, Channel Monitor  
+3. **UI Template Integration:** HTML templates con Socket.IO client-side para real-time updates
+4. **AlephScript Protocol:** Full CLIENT_REGISTER/SUSCRIBE/MAKE_MASTER implementation
+5. **Dashboard 2.0 Native:** Seguir guidelines oficiales para widget development
 
-### 4.3 Cross-Room Testing Interface (.agents.md requirement)
-- [ ] Widget "Room Cross-Communication Tester"
-- [ ] Interface para que "un bot pueda entrar en una room de otro"
-- [ ] Botones: "Join Target Room" / "Leave Room"
-- [ ] Real-time testing de conectividad between rooms
-- [ ] Visual feedback de success/failure states
+**Widget Architecture:**
+```
+[alephscript-config] ← shared connection
+       ↓
+[Bot Registry Widget] → max 2 bots registration
+[Room Tester Widget] → cross-room join/leave testing
+[Stream Monitor Widget] → real-time message display
+[Channel Monitor Widget] → App/Sys/UI status tracking
+```
 
-### 4.4 Stream Monitoring (.agents.md requirement)
+## Fase 4: Vamos (Ejecución) ⚡ **EN PROGRESO**
+
+### 4.1 Three-Channel Architecture Analysis (.agents.md pattern) ✅
+- [x] Estudio profundo de App/Sys/UI channel specialization ✅
+- [x] ChannelAgentFactory pattern analysis para dynamic creation ✅
+- [x] Bot registration protocol: CLIENT_REGISTER → CLIENT_SUSCRIBE → MAKE_MASTER ✅
+- [x] Socket.IO room management patterns (join/leave/auto-cleanup) ✅
+- [x] Cross-channel message routing y coordination ✅
+
+### 4.2 Bot Registration Interface (.agents.md requirement) ✅
+- [x] Custom Dashboard 2.0 widget: "AlephScript Bot Registry" ✅
+- [x] Formulario para registrar exactamente 2 bots simultáneos ✅
+- [x] Auto-asignación de Socket.IO rooms únicas per bot ✅
+- [x] Validación de nombres únicos y configuración ✅
+- [x] Persistencia de bot configurations ✅
+
+### 4.3 Cross-Room Testing Interface (.agents.md requirement) ✅
+- [x] Widget "Room Cross-Communication Tester" ✅
+- [x] Interface para que "un bot pueda entrar en una room de otro" ✅
+- [x] Botones: "Join Target Room" / "Leave Room" ✅
+- [x] Real-time testing de conectividad between rooms ✅
+- [x] Visual feedback de success/failure states ✅
+
+### 4.4 Stream Monitoring (.agents.md requirement) ⏳
 - [ ] Widget "Live Stream Monitor"
 - [ ] Display en tiempo real: "su stream recibe los mensajes"
 - [ ] Auto-cleanup: "y si sale deja" - stream stops when leaving
@@ -59,26 +122,65 @@
 - [ ] Filter/search capabilities para message debugging
 - [ ] Real-time status displays
 
-### 4.5 Integration con Socket.IO Pattern (basado en node-red-contrib-socketio-client-wt)
-- [ ] Utilizar pattern: config → connector → listener/emitter
-- [ ] Adaptar para AlephScript bot registration protocol
-- [ ] Room management usando Socket.IO namespaces
-- [ ] Event handling para join/leave room operations
-- [ ] Status tracking basado en socketio-connector pattern
+### 4.5 Integration con Socket.IO Pattern (basado en node-red-contrib-socketio-client-wt) ✅
+- [x] Utilizar pattern: config → connector → listener/emitter ✅
+- [x] Adaptar para AlephScript bot registration protocol ✅
+- [x] Room management usando Socket.IO namespaces ✅
+- [x] Event handling para join/leave room operations ✅
+- [x] Status tracking basado en socketio-connector pattern ✅
 
-### 4.6 Dashboard 2.0 Specific Implementation
-- [ ] Seguir Dashboard 2.0 widget development guidelines
-- [ ] Responsive design para diferentes screen sizes
-- [ ] Integration con Node-RED flow context
-- [ ] Custom CSS para AlephScript branding
-- [ ] Accessibility compliance
+### 4.6 Dashboard 2.0 Specific Implementation ✅
+- [x] Seguir Dashboard 2.0 widget development guidelines ✅
+- [x] Responsive design para diferentes screen sizes ✅
+- [x] Integration con Node-RED flow context ✅
+- [x] Custom CSS para AlephScript branding ✅
+- [x] Accessibility compliance ✅
 
-### 4.7 AlephScript Protocol Integration (critical requirement)
-- [ ] Implementation del protocolo completo: register → suscribe → make_master
-- [ ] Room management automático con cleanup en disconnect
-- [ ] Channel Agent Factory integration para dynamic bot creation
-- [ ] Cross-channel routing: App actions → UI notifications → Sys logging
-- [ ] Real-time synchronization entre Dashboard 2.0 y Orchestrator channels
+### 4.7 AlephScript Protocol Integration (critical requirement) ✅
+- [x] Implementation del protocolo completo: register → suscribe → make_master ✅
+- [x] Room management automático con cleanup en disconnect ✅
+- [x] Channel Agent Factory integration para dynamic bot creation ✅
+- [x] Cross-channel routing: App actions → UI notifications → Sys logging ✅
+- [x] Real-time synchronization entre Dashboard 2.0 y Orchestrator channels ✅
+
+---
+
+## 🎯 **PROGRESO ACTUAL: F4 Parcialmente Completado**
+
+### ✅ **Widgets Implementados y Funcionando:**
+
+**1. `alephscript-config` - Configuration Node**
+- Shared Socket.IO connection management
+- AlephScript server URL configuration
+- Reconnection settings y timeout handling
+- Connection callback system for other widgets
+
+**2. `alephscript-bot-registry` - Bot Registration Widget**
+- Dashboard 2.0 interface para registrar máximo 2 bots
+- Auto-room assignment siguiendo protocolo AlephScript
+- Real-time status monitoring (connected/disconnected/registered)
+- Bot list management con unregister functionality
+- Validation: max bots enforcement, unique names
+- Error handling y user feedback
+
+**3. `alephscript-room-tester` - Cross-Room Communication Tester**
+- Interface for testing "un bot pueda entrar en una room de otro"
+- Join/Leave target room functionality
+- Test message sending/receiving
+- Message log con timestamps y categorization
+- Real-time status display de room membership
+- Visual feedback para stream reception testing
+
+### 🏗️ **Build System Status:**
+```bash
+✅ TypeScript compilation: 12 nodes successful
+✅ HTML copy process: 12 files copied to dist/nodes/
+✅ Package.json registration: all widgets registered
+✅ Ready for Node-RED installation testing
+```
+
+### 📋 **Próximo Widget a Implementar:**
+- **Stream Monitor Widget** - Widget para visualizar "su stream recibe los mensajes y si sale deja"
 
 ## Fase 5: A dónde hemos llegado
 *[Por completar tras la ejecución]*

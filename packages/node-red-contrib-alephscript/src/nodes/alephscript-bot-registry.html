@@ -1,0 +1,442 @@
+<script type="text/html" data-template-name="alephscript-bot-registry">
+    <div class="form-row">
+        <label for="node-input-name"><i class="fa fa-tag"></i> Name</label>
+        <input type="text" id="node-input-name" placeholder="Bot Registry">
+    </div>
+    <div class="form-row">
+        <label for="node-input-config"><i class="fa fa-cog"></i> Server</label>
+        <input type="text" id="node-input-config">
+    </div>
+    <div class="form-row">
+        <label for="node-input-group"><i class="fa fa-table"></i> Group</label>
+        <input type="text" id="node-input-group">
+    </div>
+    <div class="form-row">
+        <label for="node-input-width"><i class="fa fa-arrows-h"></i> Width</label>
+        <select id="node-input-width">
+            <option value="0">auto</option>
+            <option value="1">1</option>
+            <option value="2">2</option>
+            <option value="3">3</option>
+            <option value="4">4</option>
+            <option value="5">5</option>
+            <option value="6">6</option>
+            <option value="7">7</option>
+            <option value="8">8</option>
+            <option value="9">9</option>
+            <option value="10">10</option>
+            <option value="11">11</option>
+            <option value="12">12</option>
+        </select>
+        <label for="node-input-height" style="margin-left: 20px;"><i class="fa fa-arrows-v"></i> Height</label>
+        <input type="number" id="node-input-height" placeholder="auto" style="width:80px">
+    </div>
+    <div class="form-row">
+        <label for="node-input-maxBots"><i class="fa fa-users"></i> Max Bots</label>
+        <select id="node-input-maxBots">
+            <option value="1">1</option>
+            <option value="2" selected>2</option>
+            <option value="3">3</option>
+            <option value="4">4</option>
+        </select>
+    </div>
+</script>
+
+<script type="text/html" data-help-name="alephscript-bot-registry">
+    <p><strong>AlephScript Bot Registry Widget</strong></p>
+    <p>Dashboard 2.0 widget for registering and managing AlephScript bots (maximum 2 bots per widget).</p>
+    
+    <h3>Properties</h3>
+    <dl class="message-properties">
+        <dt>Name <span class="property-type">string</span></dt>
+        <dd>Display name for this widget</dd>
+        
+        <dt>Server <span class="property-type">config</span></dt>
+        <dd>AlephScript server configuration node</dd>
+        
+        <dt>Group <span class="property-type">string</span></dt>
+        <dd>Dashboard 2.0 group to place this widget in</dd>
+        
+        <dt>Width <span class="property-type">number</span></dt>
+        <dd>Widget width (1-12 columns, 0=auto)</dd>
+        
+        <dt>Height <span class="property-type">number</span></dt>
+        <dd>Widget height in units</dd>
+        
+        <dt>Max Bots <span class="property-type">number</span></dt>
+        <dd>Maximum number of bots that can be registered (default: 2)</dd>
+    </dl>
+    
+    <h3>Outputs</h3>
+    <ol class="node-ports">
+        <li>Bot events
+            <dl class="message-properties">
+                <dt>topic <span class="property-type">string</span></dt>
+                <dd>Event type: "bot_registered", "bot_unregistered", "bot_list", "registration_error", "connection"</dd>
+                <dt>payload <span class="property-type">object</span></dt>
+                <dd>Event data including bot information and status</dd>
+            </dl>
+        </li>
+    </ol>
+    
+    <h3>Inputs</h3>
+    <ol class="node-ports">
+        <li>Bot commands
+            <dl class="message-properties">
+                <dt>payload.command <span class="property-type">string</span></dt>
+                <dd>"register", "unregister", or "status"</dd>
+                <dt>payload.botName <span class="property-type">string</span></dt>
+                <dd>Bot name (required for register/unregister)</dd>
+                <dt>payload.room <span class="property-type">string</span></dt>
+                <dd>Room name (optional, auto-generated if not provided)</dd>
+            </dl>
+        </li>
+    </ol>
+    
+    <h3>Details</h3>
+    <p>This widget provides a Dashboard 2.0 interface for:</p>
+    <ul>
+        <li><strong>Bot Registration</strong> - Register up to 2 bots with the AlephScript server</li>
+        <li><strong>Room Management</strong> - Auto-assign unique rooms for each bot</li>
+        <li><strong>Status Monitoring</strong> - Real-time connection and registration status</li>
+        <li><strong>Bot Control</strong> - Start, stop, and manage registered bots</li>
+    </ul>
+    
+    <h3>Widget Interface</h3>
+    <p>The dashboard interface includes:</p>
+    <ul>
+        <li>Registration form with bot name and optional room</li>
+        <li>Bot list showing status (registered/connected/disconnected)</li>
+        <li>Unregister buttons for each bot</li>
+        <li>Connection status indicator</li>
+        <li>Max bots counter and enforcement</li>
+    </ul>
+    
+    <h3>AlephScript Protocol</h3>
+    <p>Each bot follows the AlephScript protocol:</p>
+    <ol>
+        <li><code>CLIENT_REGISTER</code> - Initial registration with server</li>
+        <li><code>CLIENT_SUSCRIBE</code> - Subscribe to assigned room</li>
+        <li><code>MAKE_MASTER</code> - Establish bot as room master</li>
+    </ol>
+</script>
+
+<script type="text/javascript">
+    RED.nodes.registerType('alephscript-bot-registry', {
+        category: 'dashboard',
+        color: '#3FADB5',
+        defaults: {
+            name: { value: "" },
+            config: { value: "", type: "alephscript-config", required: true },
+            group: { value: "", type: "ui-group", required: true },
+            width: { value: 0, validate: RED.validators.number() },
+            height: { value: 0, validate: RED.validators.number() },
+            maxBots: { value: 2, validate: RED.validators.number() },
+            format: { value: "" } // Will contain the HTML template
+        },
+        inputs: 1,
+        outputs: 1,
+        icon: "font-awesome/fa-users",
+        label: function() {
+            return this.name || "Bot Registry";
+        },
+        labelStyle: function() {
+            return this.name ? "node_label_italic" : "";
+        },
+        oneditprepare: function() {
+            // Populate the HTML template with the dashboard interface
+            this.format = `
+<div id="alephscript-bot-registry-{{$id}}" class="alephscript-bot-registry">
+    <style>
+        .alephscript-bot-registry {
+            padding: 10px;
+            font-family: Arial, sans-serif;
+        }
+        .bot-registry-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #3FADB5;
+        }
+        .connection-status {
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 12px;
+            font-weight: bold;
+        }
+        .connection-status.connected {
+            background-color: #4CAF50;
+            color: white;
+        }
+        .connection-status.disconnected {
+            background-color: #F44336;
+            color: white;
+        }
+        .bot-form {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 15px;
+            padding: 10px;
+            background-color: #f5f5f5;
+            border-radius: 5px;
+        }
+        .bot-form input {
+            flex: 1;
+            padding: 6px;
+            border: 1px solid #ddd;
+            border-radius: 3px;
+        }
+        .bot-form button {
+            padding: 6px 12px;
+            border: none;
+            border-radius: 3px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+        .btn-register {
+            background-color: #3FADB5;
+            color: white;
+        }
+        .btn-register:disabled {
+            background-color: #ccc;
+            cursor: not-allowed;
+        }
+        .bot-list {
+            max-height: 200px;
+            overflow-y: auto;
+        }
+        .bot-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 8px;
+            margin-bottom: 5px;
+            border: 1px solid #ddd;
+            border-radius: 3px;
+            background-color: white;
+        }
+        .bot-info {
+            flex: 1;
+        }
+        .bot-name {
+            font-weight: bold;
+            color: #3FADB5;
+        }
+        .bot-room {
+            font-size: 12px;
+            color: #666;
+        }
+        .bot-status {
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-size: 11px;
+            font-weight: bold;
+            margin-right: 10px;
+        }
+        .bot-status.connected {
+            background-color: #4CAF50;
+            color: white;
+        }
+        .bot-status.registered {
+            background-color: #FF9800;
+            color: white;
+        }
+        .bot-status.disconnected {
+            background-color: #F44336;
+            color: white;
+        }
+        .btn-unregister {
+            background-color: #F44336;
+            color: white;
+            border: none;
+            padding: 4px 8px;
+            border-radius: 3px;
+            cursor: pointer;
+            font-size: 12px;
+        }
+        .error-message {
+            color: #F44336;
+            font-size: 12px;
+            margin-top: 5px;
+            padding: 5px;
+            background-color: #ffe6e6;
+            border-radius: 3px;
+        }
+        .bot-counter {
+            font-size: 12px;
+            color: #666;
+        }
+    </style>
+    
+    <div class="bot-registry-header">
+        <h3 style="margin: 0; color: #3FADB5;">Bot Registry</h3>
+        <div>
+            <span class="connection-status" id="connection-status-{{$id}}">Connecting...</span>
+        </div>
+    </div>
+    
+    <div class="bot-form">
+        <input type="text" id="bot-name-{{$id}}" placeholder="Bot Name" maxlength="20">
+        <input type="text" id="bot-room-{{$id}}" placeholder="Room (optional)" maxlength="20">
+        <button type="button" class="btn-register" id="register-btn-{{$id}}" onclick="registerBot('{{$id}}')">
+            Register Bot
+        </button>
+    </div>
+    
+    <div class="bot-counter" id="bot-counter-{{$id}}">
+        Bots: 0 / {{maxBots}}
+    </div>
+    
+    <div class="bot-list" id="bot-list-{{$id}}">
+        <!-- Bot items will be dynamically added here -->
+    </div>
+    
+    <div class="error-message" id="error-message-{{$id}}" style="display: none;">
+        <!-- Error messages will appear here -->
+    </div>
+</div>
+
+<script>
+(function() {
+    var widgetId = '{{$id}}';
+    var maxBots = {{maxBots}};
+    var bots = [];
+    var connected = false;
+    
+    // Register bot function
+    window.registerBot = function(id) {
+        if (id !== widgetId) return;
+        
+        var botName = document.getElementById('bot-name-' + id).value.trim();
+        var botRoom = document.getElementById('bot-room-' + id).value.trim();
+        
+        if (!botName) {
+            showError('Bot name is required');
+            return;
+        }
+        
+        // Send registration command to Node-RED
+        send({
+            payload: {
+                command: 'register',
+                botName: botName,
+                room: botRoom || undefined
+            }
+        });
+        
+        // Clear form
+        document.getElementById('bot-name-' + id).value = '';
+        document.getElementById('bot-room-' + id).value = '';
+    };
+    
+    // Unregister bot function
+    window.unregisterBot = function(id, botName) {
+        if (id !== widgetId) return;
+        
+        send({
+            payload: {
+                command: 'unregister',
+                botName: botName
+            }
+        });
+    };
+    
+    // Update connection status
+    function updateConnectionStatus(isConnected) {
+        connected = isConnected;
+        var statusEl = document.getElementById('connection-status-' + widgetId);
+        if (statusEl) {
+            statusEl.textContent = isConnected ? 'Connected' : 'Disconnected';
+            statusEl.className = 'connection-status ' + (isConnected ? 'connected' : 'disconnected');
+        }
+        updateRegisterButton();
+    }
+    
+    // Update register button state
+    function updateRegisterButton() {
+        var btnEl = document.getElementById('register-btn-' + widgetId);
+        if (btnEl) {
+            btnEl.disabled = !connected || bots.length >= maxBots;
+            btnEl.textContent = bots.length >= maxBots ? 'Max Bots Reached' : 'Register Bot';
+        }
+    }
+    
+    // Update bot list display
+    function updateBotList(botList) {
+        bots = botList || [];
+        var listEl = document.getElementById('bot-list-' + widgetId);
+        var counterEl = document.getElementById('bot-counter-' + widgetId);
+        
+        if (listEl) {
+            listEl.innerHTML = '';
+            bots.forEach(function(bot) {
+                var botDiv = document.createElement('div');
+                botDiv.className = 'bot-item';
+                botDiv.innerHTML = 
+                    '<div class="bot-info">' +
+                        '<div class="bot-name">' + bot.name + '</div>' +
+                        '<div class="bot-room">Room: ' + bot.room + '</div>' +
+                    '</div>' +
+                    '<div class="bot-status ' + bot.status + '">' + bot.status + '</div>' +
+                    '<button class="btn-unregister" onclick="unregisterBot(\'' + widgetId + '\', \'' + bot.name + '\')">Remove</button>';
+                listEl.appendChild(botDiv);
+            });
+        }
+        
+        if (counterEl) {
+            counterEl.textContent = 'Bots: ' + bots.length + ' / ' + maxBots;
+        }
+        
+        updateRegisterButton();
+    }
+    
+    // Show error message
+    function showError(message) {
+        var errorEl = document.getElementById('error-message-' + widgetId);
+        if (errorEl) {
+            errorEl.textContent = message;
+            errorEl.style.display = 'block';
+            setTimeout(function() {
+                errorEl.style.display = 'none';
+            }, 5000);
+        }
+    }
+    
+    // Handle messages from Node-RED
+    this.scope.msg = {};
+    this.scope.$watch('msg', function(newVal) {
+        if (newVal && newVal.topic) {
+            switch (newVal.topic) {
+                case 'connection':
+                    updateConnectionStatus(newVal.payload.connected);
+                    break;
+                case 'bot_list':
+                    updateBotList(newVal.payload.bots);
+                    break;
+                case 'registration_error':
+                    showError(newVal.payload.error);
+                    break;
+                case 'bot_registered':
+                    // Bot list will be updated via separate bot_list message
+                    break;
+                case 'bot_unregistered':
+                    // Bot list will be updated via separate bot_list message
+                    break;
+            }
+        }
+    });
+    
+    // Initial status request
+    send({
+        payload: {
+            command: 'status'
+        }
+    });
+})();
+</script>
+            `;
+        }
+    });
+</script>

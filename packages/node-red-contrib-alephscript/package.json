@@ -33,7 +33,10 @@
       "alephscript-orchestrator": "dist/nodes/orchestrator-node.js",
       "alephscript-app-format": "dist/nodes/app-format-node.js",
       "alephscript-sys-format": "dist/nodes/sys-format-node.js",
-      "alephscript-ui-format": "dist/nodes/ui-format-node.js"
+      "alephscript-ui-format": "dist/nodes/ui-format-node.js",
+      "alephscript-config": "dist/nodes/alephscript-config.js",
+      "alephscript-bot-registry": "dist/nodes/alephscript-bot-registry.js",
+      "alephscript-room-tester": "dist/nodes/alephscript-room-tester.js"
     }
   },
   "dependencies": {
