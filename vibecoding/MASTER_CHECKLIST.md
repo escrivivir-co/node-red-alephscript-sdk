@@ -1,0 +1,248 @@
+# Master Checklist - node-red-alephscript-sdk
+
+## 📦 ESTRUCTURA DEL PAQUETE
+
+**Paquete Principal:** `node-red-alephscript-sdk`
+- **Librería 1:** `node-red-contrib-alephscript` - Node-RED contrib compatible con Node-RED latest
+- **Librería 2:** `node-red-gamify-ui` - App Angular que implementa patrón GamificationUI
+
+## 🎯 PROGRESO GENERAL DEL PROYECTO
+
+### ✅ **COMPLETADAS**
+- [x] **Iteración 1** - Análisis y Planificación *(3 días)*
+
+### 📋 **PRÓXIMA ITERACIÓN A TRABAJAR**
+- [ ] **Iteración 2** - Foundation & Setup del Proyecto
+
+### ⏳ **PENDIENTES**
+- [ ] **Iteración 3** - Bot Node Implementation (`node-red-contrib-alephscript`)
+- [ ] **Iteración 4** - App Channel Node Implementation (`node-red-contrib-alephscript`)
+- [ ] **Iteración 5** - Sys Channel Node Implementation (`node-red-contrib-alephscript`)
+- [ ] **Iteración 6** - UI Channel Node Implementation (`node-red-contrib-alephscript`)
+- [ ] **Iteración 7** - Orchestrator Node Implementation (`node-red-contrib-alephscript`)
+- [ ] **Iteración 8** - Dashboard 2.0 Management Panel (`node-red-contrib-alephscript`)
+- [ ] **Iteración 9** - Angular UI Application Development (`node-red-gamify-ui`)
+- [ ] **Iteración 10** - Distribution System & Release Preparation (ambas librerías)
+
+---
+
+## 📚 ENTREGABLES POR LIBRERÍA
+
+### **node-red-contrib-alephscript** (Iteraciones 2-8)
+- [x] Project setup y estructura base
+- [ ] Bot Node (AlephScriptClient wrapper)
+- [ ] App Channel Node (app-channel-agent integration)
+- [ ] Sys Channel Node (sys-channel-agent integration) 
+- [ ] UI Channel Node (ui-channel-agent integration)
+- [ ] Orchestrator Node (pipeline de streams)
+- [ ] Dashboard 2.0 widgets (bot registry + room tester)
+
+### **node-red-gamify-ui** (Iteración 9)
+- [ ] Angular app setup
+- [ ] GamificationUI implementation
+- [ ] Node-RED network manager interface
+- [ ] Dashboard 2.0 integration
+- [ ] Distribution via public_templates
+
+### **Distribución Conjunta** (Iteración 10)
+- [ ] Package.json unificado
+- [ ] Scripts de build para ambas librerías
+- [ ] Postinstall automation
+- [ ] Release preparation
+
+---
+
+## Checklist de Iteraciones
+
+### ✅ Iteración 1: Análisis y Planificación (COMPLETADA)
+- [x] **F1**: Análisis del ecosistema AlephScript existente
+- [x] **F2**: Definición de objetivos y componentes target
+- [x] **F3**: Evaluación de opciones de desarrollo y decisión arquitectónica
+- [ ] **F4**: *Pendiente - Ejecución del Sprint 1*
+- [ ] **F5**: *Pendiente - Documentación de resultados*
+
+**Entregables completados:**
+- [x] Documentación completa del análisis de codebase
+- [x] Plan de implementación en 10 iteraciones detalladas
+- [x] Identificación de componentes core (AlephScriptClient, Channel Agents, Orchestrator)
+- [x] Análisis de patrones GamificationUI para distribución
+- [x] Definición de arquitectura para node-red-contrib-alephscript + node-red-gamify-ui
+
+**Referencias clave identificadas:**
+- AlephScript Core: `state-machine-mcp-driver/src/clients/alephscript-client.ts`
+- Channel Agents: `state-machine-mcp-driver/src/orchestration/channel/`
+- Socket Server: `socket-gym/ws-server/src/alephscript/socket-server.ts`
+- Distribution Pattern: `threejs-gamify-ui/scripts/postinstall.cjs`
+- Patrón GamificationUI para distribución Angular
+- Arquitectura 3-canal (App/Sys/UI) para orquestación dinámica
+
+### ⏳ Iteración 2: Foundation & Setup del Proyecto (`node-red-contrib-alephscript`)
+- [ ] **F1**: Análisis de estructura base necesaria
+- [ ] **F2**: Configuración de paquetes duales y build system
+- [ ] **F3**: Selección de herramientas y frameworks
+- [ ] **F4**: Setup completo de proyecto con workspaces
+- [ ] **F5**: Validación de estructura y testing framework
+
+**Entregables target:**
+- [ ] Estructura monorepo con workspaces configurada
+- [ ] Build system TypeScript para `node-red-contrib-alephscript`
+- [ ] Testing framework (Jest) configurado
+- [ ] Scripts de desarrollo y producción
+
+### ⏳ Iteración 3: Bot Node Implementation (`node-red-contrib-alephscript`)
+- [ ] **F1**: Análisis detallado de AlephScriptClient base
+- [ ] **F2**: Diseño de Bot Node para Node-RED
+- [ ] **F3**: Implementación de protocolo Socket.IO
+- [ ] **F4**: Development y testing del Bot Node
+- [ ] **F5**: Validación con socket-gym/ws-server
+
+**Entregables target:**
+- [ ] Bot Node funcional con UI de configuración
+- [ ] Registro automático con AlephScript Server
+- [ ] Gestión de rooms y comunicación Socket.IO
+- [ ] Testing completo y documentación
+
+### ⏳ Iteración 4: App Channel Node Implementation (`node-red-contrib-alephscript`)
+- [ ] **F1**: Análisis de app-channel-agent existente
+- [ ] **F2**: Diseño de App Channel Node
+- [ ] **F3**: Implementación de action requests y state transitions
+- [ ] **F4**: Development y UI configuration
+- [ ] **F5**: Testing de scenarios de aplicación
+
+**Entregables target:**
+- [ ] App Channel Node para acciones y estados
+- [ ] UI configuración de action types
+- [ ] Integration con app-channel-agent
+- [ ] Testing de transiciones de estado
+
+### ⏳ Iteración 5: Sys Channel Node Implementation (`node-red-contrib-alephscript`)
+- [ ] **F1**: Análisis de sys-channel-agent existente
+- [ ] **F2**: Diseño de Sys Channel Node
+- [ ] **F3**: Implementación de health checks y monitoring
+- [ ] **F4**: Development de error reporting
+- [ ] **F5**: Testing de system scenarios
+
+**Entregables target:**
+- [ ] Sys Channel Node para eventos de sistema
+- [ ] Health monitoring y alerting
+- [ ] Dashboard widgets para status
+- [ ] Integration con system metrics
+
+### ⏳ Iteración 6: UI Channel Node Implementation (`node-red-contrib-alephscript`)
+- [ ] **F1**: Análisis de ui-channel-agent existente
+- [ ] **F2**: Diseño de UI Channel Node
+- [ ] **F3**: Implementación de notifications y phases
+- [ ] **F4**: Integration con Dashboard 2.0
+- [ ] **F5**: Testing de user interaction flows
+
+**Entregables target:**
+- [ ] UI Channel Node para eventos de interfaz
+- [ ] Notifications y phase changes
+- [ ] Dashboard 2.0 integration
+- [ ] User interaction bidireccional
+
+### ⏳ Iteración 7: Orchestrator Node Implementation (`node-red-contrib-alephscript`)
+- [ ] **F1**: Análisis de orchestrator.ts original
+- [ ] **F2**: Diseño de Orchestrator Node central
+- [ ] **F3**: Implementation de RxJS pipeline en Node-RED
+- [ ] **F4**: Cross-channel routing y coordination
+- [ ] **F5**: Multi-bot scenario testing
+
+**Entregables target:**
+- [ ] Orchestrator Node como hub central
+- [ ] Pipeline RxJS streams adaptation
+- [ ] Message routing y coordination
+- [ ] Multi-bot management
+
+### ⏳ Iteración 8: Dashboard 2.0 Management Panel (`node-red-contrib-alephscript`)
+- [ ] **F1**: Análisis de Dashboard 2.0 widget system + Socket.IO patterns
+- [ ] **F2**: Diseño específico para bot registration interface (2 bots max)
+- [ ] **F3**: Implementation de widgets: Bot Registry, Cross-Room Tester, Stream Monitor
+- [ ] **F4**: Testing "un bot pueda entrar en una room de otro" + stream monitoring
+- [ ] **F5**: Validation completa del requirement "su stream recibe mensajes y si sale deja"
+
+**Entregables target (refinados con 3-channel architecture):**
+- [ ] Widget "AlephScript Bot Registry" (max 2 bots, auto-room assignment per protocol)
+- [ ] Widget "Room Cross-Communication Tester" (bot join/leave other's room + channel routing)
+- [ ] Widget "Live Stream Monitor" (real-time message display + auto-cleanup + channel filtering)
+- [ ] Widget "Channel Agent Monitor" (App/Sys/UI channel status + message flows)
+- [ ] Integration completa con ChannelAgentFactory pattern + Socket.IO protocol
+
+### ⏳ Iteración 9: Angular UI Application Development (`node-red-gamify-ui`)
+- [ ] **F1**: Package distribution setup (postinstall.cjs + public_templates pattern in consumers of this library)
+- [ ] **F2**: Angular application con AlephScript integration (3-channel routing)
+- [ ] **F3**: Node-RED discovery service + multi-instance management
+- [ ] **F4**: AlephScriptWebUI class + MultiUIGameManager integration
+- [ ] **F5**: Configuration testing + deployment validation
+
+**Entregables target (ampliados con distribución):**
+- [ ] Angular application completa con Node-RED management UI
+- [ ] Package distribution process: build → postinstall → public_templates
+- [ ] AlephScriptWebUI class extending GamificationUI
+- [ ] Network discovery service para Node-RED instances
+- [ ] Configuration example para xplus1-config.json integration
+- [ ] Documentation completa del installation process
+- [ ] Iframe management (editor/dashboard modes)  
+- [ ] Integration con AlephScript ecosystem
+- [ ] **Tiempo Estimado**: 3-4 días (increased para package complexity)
+- [ ] **Key Risk**: Package distribution process + Angular build integration
+
+### ⏳ Iteración 10: Distribution System & Release Preparation (ambas librerías)
+- [ ] **F1**: Análisis de patrones distribution existentes
+- [ ] **F2**: Postinstall script development (node-red-alephscript-sdk)
+- [ ] **F3**: Package configuration y build optimization (dual-library setup)
+- [ ] **F4**: Documentation complete y testing final (tanto contrib como ui)
+- [ ] **F5**: Release preparation y validation (npm publish ready)
+
+**Entregables target:**
+- [ ] Sistema postinstall automático para ambas librerías
+- [ ] Distribución via npm install (node-red-alephscript-sdk → contrib + ui)
+- [ ] Documentación completa de instalación y uso
+- [ ] Release candidate production-ready
+
+---
+
+## 📋 NOTAS TÉCNICAS Y ARQUITECTURA
+
+### 🎯 **Patrón de Distribución GamificationUI**
+Patrón identificado en `threejs-gamify-ui` aplicable a `node-red-gamify-ui`:
+1. **Build**: Angular app → `dist/`
+2. **Distribution**: `postinstall.cjs` copia assets → `public_templates/`  
+3. **Integration**: GamificationUI extiende clase base, sirve via Express
+4. **AlephScript**: Integración con ProserpinaBot para comunicación Socket.IO
+
+### 🔧 **Componentes Core AlephScript** 
+- **AlephScriptClient**: Base para todos los bots (Proserpina, Orfeo, Euridice)
+- **3-Channel System**: Canales especializados (app, sys, ui) con agentes específicos
+- **ChannelAgentFactory**: Patrón para creación dinámica de objetos por canal
+- **Orchestrator**: Hub RxJS central para routing de mensajes multi-canal
+- **Socket.IO Server**: `socket-gym/ws-server` maneja rooms y broadcasting
+
+### 🏗️ **Arquitectura Target: node-red-contrib-alephscript**
+```
+Node-RED Flow (Contrib Nodes):
+[Bot Node] → [App Channel] → [Orchestrator] → Socket.IO Server
+     ↓            ↓              ↓
+[UI Channel] ← [Sys Channel] ← [Dashboard 2.0 Panel]
+```
+
+### 🎨 **Arquitectura Target: node-red-gamify-ui**
+```
+Angular App (GamificationUI Wrapper):
+├── Node-RED Discovery Service
+├── Multi-Instance Manager  
+├── IFrame Router (Editor/Dashboard modes)
+├── AlephScriptWebUI Class (extends GamificationUI)
+└── Channel Integration Layer (App/Sys/UI routing)
+```
+
+### 📦 **Estrategia de Distribución Dual**
+```
+node-red-alephscript-sdk/
+├── package.json (main package)
+├── projects/
+│   ├── node-red-contrib-alephscript/ (Node-RED contrib)
+│   └── node-red-gamify-ui/ (Angular UI wrapper)
+└── scripts/
+    └── postinstall.cjs (distribution automation)
+```
