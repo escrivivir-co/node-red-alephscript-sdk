@@ -1,0 +1,210 @@
+<script type="text/javascript">
+    RED.nodes.registerType('alephscript-app-format', {
+        category: 'AlephScript',
+        color: '#FF9800',
+        defaults: {
+            name: { value: "" },
+            messageType: { value: "app_event", required: true },
+            // Fields for state_transition
+            stateId: { value: "" },
+            targetState: { value: "" },
+            // Fields for action_request/action_result
+            actionType: { value: "" },
+            actionParams: { value: "{}" },
+            result: { value: "{}" },
+            success: { value: true },
+            // Fields for agent_command
+            agentId: { value: "" },
+            command: { value: "{}" },
+            // Fields for app_event
+            data: { value: "{}" },
+            // Source configuration
+            sourceId: { value: "" }
+        },
+        inputs: 1,
+        outputs: 1,
+        icon: "parser-json.png",
+        label: function() {
+            return this.name || ("App Format: " + this.messageType);
+        },
+        labelStyle: function() {
+            return this.name ? "node_label_italic" : "";
+        },
+        oneditprepare: function() {
+            // Show/hide fields based on message type
+            $("#node-input-messageType").change(function() {
+                var messageType = $(this).val();
+                
+                // Hide all field groups first
+                $(".field-group").hide();
+                
+                // Show relevant fields based on type
+                switch (messageType) {
+                    case 'state_transition':
+                        $("#state-transition-fields").show();
+                        break;
+                    case 'action_request':
+                        $("#action-request-fields").show();
+                        break;
+                    case 'action_result':
+                        $("#action-result-fields").show();
+                        break;
+                    case 'agent_command':
+                        $("#agent-command-fields").show();
+                        break;
+                    case 'app_event':
+                    default:
+                        $("#app-event-fields").show();
+                        break;
+                }
+                
+                // Update help text
+                updateHelpText(messageType);
+            }).trigger('change');
+            
+            function updateHelpText(messageType) {
+                var helpTexts = {
+                    'state_transition': 'Formats messages for state machine transitions',
+                    'action_request': 'Formats messages requesting specific actions',
+                    'action_result': 'Formats messages containing action results',
+                    'agent_command': 'Formats commands directed to specific agents',
+                    'app_event': 'Formats general application events and data'
+                };
+                
+                $("#message-type-help").text(helpTexts[messageType] || '');
+            }
+        }
+    });
+</script>
+
+<script type="text/html" data-template-name="alephscript-app-format">
+    <div class="form-row">
+        <label for="node-input-name"><i class="fa fa-tag"></i> Name</label>
+        <input type="text" id="node-input-name" placeholder="Name">
+    </div>
+    
+    <div class="form-row">
+        <label for="node-input-messageType"><i class="fa fa-code"></i> Message Type</label>
+        <select id="node-input-messageType">
+            <option value="app_event">App Event</option>
+            <option value="state_transition">State Transition</option>
+            <option value="action_request">Action Request</option>
+            <option value="action_result">Action Result</option>
+            <option value="agent_command">Agent Command</option>
+        </select>
+        <div id="message-type-help" style="font-size: 0.8em; color: #666; margin-top: 5px;"></div>
+    </div>
+    
+    <div class="form-row">
+        <label for="node-input-sourceId"><i class="fa fa-source"></i> Source ID</label>
+        <input type="text" id="node-input-sourceId" placeholder="Leave empty to use node ID">
+    </div>
+
+    <hr>
+    
+    <!-- State Transition Fields -->
+    <div id="state-transition-fields" class="field-group">
+        <h4>State Transition Configuration</h4>
+        <div class="form-row">
+            <label for="node-input-stateId"><i class="fa fa-circle"></i> Current State ID</label>
+            <input type="text" id="node-input-stateId" placeholder="current_state">
+        </div>
+        <div class="form-row">
+            <label for="node-input-targetState"><i class="fa fa-arrow-right"></i> Target State</label>
+            <input type="text" id="node-input-targetState" placeholder="target_state">
+        </div>
+    </div>
+    
+    <!-- Action Request Fields -->
+    <div id="action-request-fields" class="field-group">
+        <h4>Action Request Configuration</h4>
+        <div class="form-row">
+            <label for="node-input-actionType"><i class="fa fa-play"></i> Action Type</label>
+            <input type="text" id="node-input-actionType" placeholder="action_name">
+        </div>
+        <div class="form-row">
+            <label for="node-input-actionParams"><i class="fa fa-cogs"></i> Action Parameters (JSON)</label>
+            <input type="text" id="node-input-actionParams" placeholder='{"param1": "value1"}'>
+        </div>
+    </div>
+    
+    <!-- Action Result Fields -->
+    <div id="action-result-fields" class="field-group">
+        <h4>Action Result Configuration</h4>
+        <div class="form-row">
+            <label for="node-input-actionType"><i class="fa fa-play"></i> Action Type</label>
+            <input type="text" id="node-input-actionType" placeholder="action_name">
+        </div>
+        <div class="form-row">
+            <label for="node-input-result"><i class="fa fa-check"></i> Result (JSON)</label>
+            <input type="text" id="node-input-result" placeholder='{"status": "completed"}'>
+        </div>
+        <div class="form-row">
+            <label for="node-input-success"></label>
+            <input type="checkbox" id="node-input-success" style="display: inline-block; width: auto; vertical-align: top;">
+            <label for="node-input-success" style="width: 70%;">Success</label>
+        </div>
+    </div>
+    
+    <!-- Agent Command Fields -->
+    <div id="agent-command-fields" class="field-group">
+        <h4>Agent Command Configuration</h4>
+        <div class="form-row">
+            <label for="node-input-agentId"><i class="fa fa-user"></i> Agent ID</label>
+            <input type="text" id="node-input-agentId" placeholder="agent_name">
+        </div>
+        <div class="form-row">
+            <label for="node-input-command"><i class="fa fa-terminal"></i> Command (JSON)</label>
+            <input type="text" id="node-input-command" placeholder='{"action": "start", "params": {}}'>
+        </div>
+    </div>
+    
+    <!-- App Event Fields -->
+    <div id="app-event-fields" class="field-group">
+        <h4>App Event Configuration</h4>
+        <div class="form-row">
+            <label for="node-input-data"><i class="fa fa-database"></i> Event Data (JSON)</label>
+            <input type="text" id="node-input-data" placeholder='{"event": "user_action", "details": {}}'>
+        </div>
+    </div>
+</script>
+
+<script type="text/html" data-help-name="alephscript-app-format">
+    <p>Formats input data into proper <code>AppMessage</code> structures for AlephScript App Channel.</p>
+    
+    <h3>Input</h3>
+    <dl class="message-properties">
+        <dt>payload <span class="property-type">any</span></dt>
+        <dd>Raw data to be formatted. Can override configured fields.</dd>
+    </dl>
+
+    <h3>Output</h3>
+    <dl class="message-properties">
+        <dt>payload <span class="property-type">AppMessage</span></dt>
+        <dd>Properly formatted AppMessage with id, timestamp, source, type, and payload</dd>
+        <dt>topic <span class="property-type">string</span></dt>
+        <dd>Set to "app-channel-formatted"</dd>
+        <dt>appMessageType <span class="property-type">string</span></dt>
+        <dd>The message type for routing</dd>
+    </dl>
+
+    <h3>Message Types</h3>
+    <ul>
+        <li><b>app_event:</b> General application events and data</li>
+        <li><b>state_transition:</b> State machine transitions (requires stateId, targetState)</li>
+        <li><b>action_request:</b> Action requests (requires actionType, actionParams)</li>
+        <li><b>action_result:</b> Action results (requires actionType, result, success)</li>
+        <li><b>agent_command:</b> Agent commands (requires agentId, command)</li>
+    </ul>
+
+    <h3>Configuration Priority</h3>
+    <p>Values are selected in this order:</p>
+    <ol>
+        <li>Configured values in the node</li>
+        <li>Values from input message payload</li>
+        <li>Default values</li>
+    </ol>
+
+    <h3>Usage</h3>
+    <p>Connect this node between an Enhanced Bot Node and an App Channel Node to automatically format messages according to the AppMessage interface.</p>
+</script>

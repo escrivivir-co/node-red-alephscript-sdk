@@ -1,0 +1,222 @@
+<script type="text/javascript">
+    RED.nodes.registerType('alephscript-sys-format', {
+        category: 'AlephScript',
+        color: '#2196F3',
+        defaults: {
+            name: { value: "" },
+            messageType: { value: "info", required: true },
+            level: { value: "info" },
+            message: { value: "" },
+            serviceId: { value: "" },
+            // Health check fields
+            health: { value: true },
+            // Service status fields
+            status: { value: "online" },
+            // Config change fields
+            configKey: { value: "" },
+            configValue: { value: "{}" },
+            // Error fields
+            errorMessage: { value: "" },
+            // Source configuration
+            sourceId: { value: "" }
+        },
+        inputs: 1,
+        outputs: 1,
+        icon: "alert.png",
+        label: function() {
+            return this.name || ("Sys Format: " + this.messageType);
+        },
+        labelStyle: function() {
+            return this.name ? "node_label_italic" : "";
+        },
+        oneditprepare: function() {
+            // Show/hide fields based on message type
+            $("#node-input-messageType").change(function() {
+                var messageType = $(this).val();
+                
+                // Hide all field groups first
+                $(".field-group").hide();
+                $("#common-fields").show(); // Always show common fields
+                
+                // Show relevant fields based on type
+                switch (messageType) {
+                    case 'health_check':
+                        $("#health-check-fields").show();
+                        break;
+                    case 'error':
+                        $("#error-fields").show();
+                        $("#level-field").show();
+                        break;
+                    case 'warning':
+                    case 'info':
+                        $("#level-field").show();
+                        break;
+                    case 'config_change':
+                        $("#config-change-fields").show();
+                        break;
+                    case 'service_status':
+                        $("#service-status-fields").show();
+                        break;
+                }
+                
+                // Update help text
+                updateHelpText(messageType);
+            }).trigger('change');
+            
+            function updateHelpText(messageType) {
+                var helpTexts = {
+                    'health_check': 'Formats health check messages with status indicators',
+                    'error': 'Formats error messages with severity levels',
+                    'warning': 'Formats warning messages for system alerts',
+                    'info': 'Formats informational system messages',
+                    'config_change': 'Formats configuration change notifications',
+                    'service_status': 'Formats service status updates'
+                };
+                
+                $("#message-type-help").text(helpTexts[messageType] || '');
+            }
+        }
+    });
+</script>
+
+<script type="text/html" data-template-name="alephscript-sys-format">
+    <div class="form-row">
+        <label for="node-input-name"><i class="fa fa-tag"></i> Name</label>
+        <input type="text" id="node-input-name" placeholder="Name">
+    </div>
+    
+    <div class="form-row">
+        <label for="node-input-messageType"><i class="fa fa-cog"></i> Message Type</label>
+        <select id="node-input-messageType">
+            <option value="info">Info</option>
+            <option value="health_check">Health Check</option>
+            <option value="error">Error</option>
+            <option value="warning">Warning</option>
+            <option value="config_change">Config Change</option>
+            <option value="service_status">Service Status</option>
+        </select>
+        <div id="message-type-help" style="font-size: 0.8em; color: #666; margin-top: 5px;"></div>
+    </div>
+    
+    <div class="form-row">
+        <label for="node-input-sourceId"><i class="fa fa-source"></i> Source ID</label>
+        <input type="text" id="node-input-sourceId" placeholder="Leave empty to use node ID">
+    </div>
+
+    <hr>
+    
+    <!-- Common Fields -->
+    <div id="common-fields" class="field-group">
+        <div class="form-row">
+            <label for="node-input-message"><i class="fa fa-comment"></i> Message</label>
+            <input type="text" id="node-input-message" placeholder="System message">
+        </div>
+        <div class="form-row">
+            <label for="node-input-serviceId"><i class="fa fa-server"></i> Service ID</label>
+            <input type="text" id="node-input-serviceId" placeholder="service_name">
+        </div>
+    </div>
+    
+    <!-- Level Field (for error, warning, info) -->
+    <div id="level-field" class="field-group">
+        <div class="form-row">
+            <label for="node-input-level"><i class="fa fa-level-up"></i> Level</label>
+            <select id="node-input-level">
+                <option value="debug">Debug</option>
+                <option value="info">Info</option>
+                <option value="warn">Warning</option>
+                <option value="error">Error</option>
+                <option value="fatal">Fatal</option>
+            </select>
+        </div>
+    </div>
+    
+    <!-- Health Check Fields -->
+    <div id="health-check-fields" class="field-group">
+        <h4>Health Check Configuration</h4>
+        <div class="form-row">
+            <label for="node-input-health"></label>
+            <input type="checkbox" id="node-input-health" style="display: inline-block; width: auto; vertical-align: top;">
+            <label for="node-input-health" style="width: 70%;">Healthy Status</label>
+        </div>
+    </div>
+    
+    <!-- Error Fields -->
+    <div id="error-fields" class="field-group">
+        <h4>Error Configuration</h4>
+        <div class="form-row">
+            <label for="node-input-errorMessage"><i class="fa fa-exclamation-triangle"></i> Error Message</label>
+            <input type="text" id="node-input-errorMessage" placeholder="Error description">
+        </div>
+    </div>
+    
+    <!-- Config Change Fields -->
+    <div id="config-change-fields" class="field-group">
+        <h4>Configuration Change</h4>
+        <div class="form-row">
+            <label for="node-input-configKey"><i class="fa fa-key"></i> Config Key</label>
+            <input type="text" id="node-input-configKey" placeholder="config.setting.name">
+        </div>
+        <div class="form-row">
+            <label for="node-input-configValue"><i class="fa fa-value"></i> Config Value (JSON)</label>
+            <input type="text" id="node-input-configValue" placeholder='{"enabled": true}'>
+        </div>
+    </div>
+    
+    <!-- Service Status Fields -->
+    <div id="service-status-fields" class="field-group">
+        <h4>Service Status Configuration</h4>
+        <div class="form-row">
+            <label for="node-input-status"><i class="fa fa-status"></i> Status</label>
+            <select id="node-input-status">
+                <option value="online">Online</option>
+                <option value="offline">Offline</option>
+                <option value="degraded">Degraded</option>
+            </select>
+        </div>
+    </div>
+</script>
+
+<script type="text/html" data-help-name="alephscript-sys-format">
+    <p>Formats input data into proper <code>SysMessage</code> structures for AlephScript Sys Channel.</p>
+    
+    <h3>Input</h3>
+    <dl class="message-properties">
+        <dt>payload <span class="property-type">any</span></dt>
+        <dd>Raw data to be formatted. Can override configured fields.</dd>
+    </dl>
+
+    <h3>Output</h3>
+    <dl class="message-properties">
+        <dt>payload <span class="property-type">SysMessage</span></dt>
+        <dd>Properly formatted SysMessage with id, timestamp, source, type, and payload</dd>
+        <dt>topic <span class="property-type">string</span></dt>
+        <dd>Set to "sys-channel-formatted"</dd>
+        <dt>sysMessageType <span class="property-type">string</span></dt>
+        <dd>The message type for routing</dd>
+        <dt>level <span class="property-type">string</span></dt>
+        <dd>Log level for filtering</dd>
+    </dl>
+
+    <h3>Message Types</h3>
+    <ul>
+        <li><b>info:</b> General system information messages</li>
+        <li><b>health_check:</b> Service health monitoring (requires serviceId, health status)</li>
+        <li><b>error:</b> Error reporting with levels (requires error message, level)</li>
+        <li><b>warning:</b> Warning messages for system alerts</li>
+        <li><b>config_change:</b> Configuration updates (requires configKey, configValue)</li>
+        <li><b>service_status:</b> Service status updates (requires serviceId, status)</li>
+    </ul>
+
+    <h3>Status Indicators</h3>
+    <p>Node status color indicates message type:</p>
+    <ul>
+        <li><span style="color: green;">●</span> Health Check / Online</li>
+        <li><span style="color: blue;">●</span> Info / Config Change</li>
+        <li><span style="color: orange;">●</span> Warning / Degraded</li>
+        <li><span style="color: red;">●</span> Error / Offline</li>
+    </ul>
+
+    <h3>Usage</h3>
+    <p>Connect this node between an Enhanced Bot Node and a Sys Channel Node to automatically format system messages according to the SysMessage interface.</p>
+</script>

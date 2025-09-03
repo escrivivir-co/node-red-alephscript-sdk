@@ -1,0 +1,252 @@
+<script type="text/javascript">
+    RED.nodes.registerType('alephscript-ui-format', {
+        category: 'AlephScript',
+        color: '#9C27B0',
+        defaults: {
+            name: { value: "" },
+            messageType: { value: "notification", required: true },
+            // User input fields
+            input: { value: "" },
+            command: { value: "" },
+            args: { value: "[]" },
+            // Display update / notification fields
+            displayType: { value: "info" },
+            title: { value: "" },
+            message: { value: "" },
+            component: { value: "" },
+            // Phase change fields
+            phase: { value: "" },
+            uiState: { value: "{}" },
+            // Render request fields
+            renderData: { value: "{}" },
+            // UI event fields
+            eventData: { value: "{}" },
+            // Source configuration
+            sourceId: { value: "" }
+        },
+        inputs: 1,
+        outputs: 1,
+        icon: "ui_ui.png",
+        label: function() {
+            return this.name || ("UI Format: " + this.messageType);
+        },
+        labelStyle: function() {
+            return this.name ? "node_label_italic" : "";
+        },
+        oneditprepare: function() {
+            // Show/hide fields based on message type
+            $("#node-input-messageType").change(function() {
+                var messageType = $(this).val();
+                
+                // Hide all field groups first
+                $(".field-group").hide();
+                
+                // Show relevant fields based on type
+                switch (messageType) {
+                    case 'user_input':
+                        $("#user-input-fields").show();
+                        break;
+                    case 'display_update':
+                        $("#display-update-fields").show();
+                        break;
+                    case 'notification':
+                        $("#notification-fields").show();
+                        break;
+                    case 'ui_event':
+                        $("#ui-event-fields").show();
+                        break;
+                    case 'phase_change':
+                        $("#phase-change-fields").show();
+                        break;
+                    case 'render_request':
+                        $("#render-request-fields").show();
+                        break;
+                }
+                
+                // Update help text
+                updateHelpText(messageType);
+            }).trigger('change');
+            
+            function updateHelpText(messageType) {
+                var helpTexts = {
+                    'user_input': 'Formats user input messages with commands and arguments',
+                    'display_update': 'Formats display updates for UI components',
+                    'notification': 'Formats notification messages with titles and types',
+                    'ui_event': 'Formats general UI events and interactions',
+                    'phase_change': 'Formats phase transition messages with state',
+                    'render_request': 'Formats render requests for UI components'
+                };
+                
+                $("#message-type-help").text(helpTexts[messageType] || '');
+            }
+        }
+    });
+</script>
+
+<script type="text/html" data-template-name="alephscript-ui-format">
+    <div class="form-row">
+        <label for="node-input-name"><i class="fa fa-tag"></i> Name</label>
+        <input type="text" id="node-input-name" placeholder="Name">
+    </div>
+    
+    <div class="form-row">
+        <label for="node-input-messageType"><i class="fa fa-desktop"></i> Message Type</label>
+        <select id="node-input-messageType">
+            <option value="notification">Notification</option>
+            <option value="user_input">User Input</option>
+            <option value="display_update">Display Update</option>
+            <option value="ui_event">UI Event</option>
+            <option value="phase_change">Phase Change</option>
+            <option value="render_request">Render Request</option>
+        </select>
+        <div id="message-type-help" style="font-size: 0.8em; color: #666; margin-top: 5px;"></div>
+    </div>
+    
+    <div class="form-row">
+        <label for="node-input-sourceId"><i class="fa fa-source"></i> Source ID</label>
+        <input type="text" id="node-input-sourceId" placeholder="Leave empty to use node ID">
+    </div>
+
+    <hr>
+    
+    <!-- User Input Fields -->
+    <div id="user-input-fields" class="field-group">
+        <h4>User Input Configuration</h4>
+        <div class="form-row">
+            <label for="node-input-input"><i class="fa fa-keyboard-o"></i> Input Text</label>
+            <input type="text" id="node-input-input" placeholder="User input text">
+        </div>
+        <div class="form-row">
+            <label for="node-input-command"><i class="fa fa-terminal"></i> Command</label>
+            <input type="text" id="node-input-command" placeholder="command_name">
+        </div>
+        <div class="form-row">
+            <label for="node-input-args"><i class="fa fa-list"></i> Arguments (JSON Array)</label>
+            <input type="text" id="node-input-args" placeholder='["arg1", "arg2"]'>
+        </div>
+    </div>
+    
+    <!-- Display Update Fields -->
+    <div id="display-update-fields" class="field-group">
+        <h4>Display Update Configuration</h4>
+        <div class="form-row">
+            <label for="node-input-component"><i class="fa fa-puzzle-piece"></i> Component</label>
+            <input type="text" id="node-input-component" placeholder="component_name">
+        </div>
+        <div class="form-row">
+            <label for="node-input-displayType"><i class="fa fa-exclamation"></i> Display Type</label>
+            <select id="node-input-displayType">
+                <option value="info">Info</option>
+                <option value="success">Success</option>
+                <option value="warning">Warning</option>
+                <option value="error">Error</option>
+            </select>
+        </div>
+        <div class="form-row">
+            <label for="node-input-message"><i class="fa fa-comment"></i> Message</label>
+            <input type="text" id="node-input-message" placeholder="Display message">
+        </div>
+    </div>
+    
+    <!-- Notification Fields -->
+    <div id="notification-fields" class="field-group">
+        <h4>Notification Configuration</h4>
+        <div class="form-row">
+            <label for="node-input-title"><i class="fa fa-header"></i> Title</label>
+            <input type="text" id="node-input-title" placeholder="Notification title">
+        </div>
+        <div class="form-row">
+            <label for="node-input-message"><i class="fa fa-comment"></i> Message</label>
+            <input type="text" id="node-input-message" placeholder="Notification message">
+        </div>
+        <div class="form-row">
+            <label for="node-input-displayType"><i class="fa fa-exclamation"></i> Display Type</label>
+            <select id="node-input-displayType">
+                <option value="info">Info</option>
+                <option value="success">Success</option>
+                <option value="warning">Warning</option>
+                <option value="error">Error</option>
+            </select>
+        </div>
+    </div>
+    
+    <!-- UI Event Fields -->
+    <div id="ui-event-fields" class="field-group">
+        <h4>UI Event Configuration</h4>
+        <div class="form-row">
+            <label for="node-input-eventData"><i class="fa fa-code"></i> Event Data (JSON)</label>
+            <input type="text" id="node-input-eventData" placeholder='{"type": "click", "target": "button1"}'>
+        </div>
+    </div>
+    
+    <!-- Phase Change Fields -->
+    <div id="phase-change-fields" class="field-group">
+        <h4>Phase Change Configuration</h4>
+        <div class="form-row">
+            <label for="node-input-phase"><i class="fa fa-step-forward"></i> Phase</label>
+            <input type="text" id="node-input-phase" placeholder="phase_name">
+        </div>
+        <div class="form-row">
+            <label for="node-input-uiState"><i class="fa fa-state"></i> UI State (JSON)</label>
+            <input type="text" id="node-input-uiState" placeholder='{"currentStep": 2, "totalSteps": 5}'>
+        </div>
+    </div>
+    
+    <!-- Render Request Fields -->
+    <div id="render-request-fields" class="field-group">
+        <h4>Render Request Configuration</h4>
+        <div class="form-row">
+            <label for="node-input-component"><i class="fa fa-puzzle-piece"></i> Component</label>
+            <input type="text" id="node-input-component" placeholder="component_name">
+        </div>
+        <div class="form-row">
+            <label for="node-input-renderData"><i class="fa fa-paint-brush"></i> Render Data (JSON)</label>
+            <input type="text" id="node-input-renderData" placeholder='{"template": "chart", "data": []}'>
+        </div>
+    </div>
+</script>
+
+<script type="text/html" data-help-name="alephscript-ui-format">
+    <p>Formats input data into proper <code>UIMessage</code> structures for AlephScript UI Channel.</p>
+    
+    <h3>Input</h3>
+    <dl class="message-properties">
+        <dt>payload <span class="property-type">any</span></dt>
+        <dd>Raw data to be formatted. Can override configured fields.</dd>
+    </dl>
+
+    <h3>Output</h3>
+    <dl class="message-properties">
+        <dt>payload <span class="property-type">UIMessage</span></dt>
+        <dd>Properly formatted UIMessage with id, timestamp, source, type, and payload</dd>
+        <dt>topic <span class="property-type">string</span></dt>
+        <dd>Set to "ui-channel-formatted"</dd>
+        <dt>uiMessageType <span class="property-type">string</span></dt>
+        <dd>The message type for routing</dd>
+        <dt>displayType <span class="property-type">string</span></dt>
+        <dd>Display type for UI styling</dd>
+    </dl>
+
+    <h3>Message Types</h3>
+    <ul>
+        <li><b>notification:</b> User notifications with titles and severity levels</li>
+        <li><b>user_input:</b> User interactions (requires input, command, args)</li>
+        <li><b>display_update:</b> Component updates (requires component, displayType, message)</li>
+        <li><b>ui_event:</b> General UI events and interactions</li>
+        <li><b>phase_change:</b> UI phase transitions (requires phase, uiState)</li>
+        <li><b>render_request:</b> Component rendering (requires component, renderData)</li>
+    </ul>
+
+    <h3>Status Indicators</h3>
+    <p>Node status color indicates message severity:</p>
+    <ul>
+        <li><span style="color: green;">●</span> Success / User Input</li>
+        <li><span style="color: blue;">●</span> Info / Phase Change</li>
+        <li><span style="color: orange;">●</span> Warning</li>
+        <li><span style="color: red;">●</span> Error</li>
+        <li><span style="color: grey;">●</span> Other Events</li>
+    </ul>
+
+    <h3>Usage</h3>
+    <p>Connect this node between an Enhanced Bot Node and a UI Channel Node to automatically format user interface messages according to the UIMessage interface.</p>
+</script>

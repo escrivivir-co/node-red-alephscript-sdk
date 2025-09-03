@@ -178,6 +178,22 @@ Documento de la iteración: [docs/iteration_01.md](docs/iteration_01.md)
 - [ ] Message routing y coordination
 - [ ] Multi-bot management
 
+### ✅ Iteración 7.5: Message Format Nodes (EXTRA - UX Improvement) (COMPLETADA)
+- [x] **F1**: Análisis de interfaces AppMessage/SysMessage/UIMessage desde types.ts
+- [x] **F2**: Enhanced Bot Node (multi-output inject capabilities)
+- [x] **F3**: App/Sys/UI Message Format Nodes (template-based)
+- [x] **F4**: UI Forms con validation y payload preview
+- [x] **F5**: Build integration y testing completo
+
+**Entregables completados (UX simplification):**
+- [x] Enhanced Bot Node como inject avanzado con 4 outputs (App/Sys/UI/Debug)
+- [x] App Format Node para AppMessage templates (state_transition, action_request, etc.)
+- [x] Sys Format Node para SysMessage templates (health_check, error, warning, etc.)
+- [x] UI Format Node para UIMessage templates (notification, display_update, etc.)
+- [x] Forms de configuración con dropdown de types + validation automática
+- [x] Build system para 9 nodos total (5 originales + 4 format helpers)
+- [x] Build exitoso: 9 HTML files copied successfully
+
 ### ⏳ Iteración 8: Dashboard 2.0 Management Panel (`node-red-contrib-alephscript`)
 - [ ] **F1**: Análisis de Dashboard 2.0 widget system + Socket.IO patterns
 - [ ] **F2**: Diseño específico para bot registration interface (2 bots max)

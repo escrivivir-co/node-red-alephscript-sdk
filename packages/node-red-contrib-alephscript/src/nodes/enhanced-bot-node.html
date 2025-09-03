@@ -1,0 +1,203 @@
+<script type="text/javascript">
+    RED.nodes.registerType('alephscript-enhanced-bot', {
+        category: 'AlephScript',
+        color: '#4CAF50',
+        defaults: {
+            name: { value: "" },
+            botName: { value: "NodeRedBot", required: true },
+            serverUrl: { value: "http://localhost:3000", required: true },
+            namespace: { value: "/runtime", required: true },
+            autoConnect: { value: true },
+            features: { value: ["messaging", "node-red-integration"] },
+            // Enhanced properties
+            outputSelection: { value: ["debug"] },
+            triggerMode: { value: "manual" },
+            intervalSeconds: { value: 5 },
+            payloadType: { value: "timestamp" },
+            payload: { value: "" }
+        },
+        inputs: 1,
+        outputs: 4, // App, Sys, UI, Debug
+        outputLabels: ["App Channel", "Sys Channel", "UI Channel", "Debug"],
+        icon: "inject.png",
+        label: function() {
+            return this.name || ("Enhanced Bot: " + this.botName);
+        },
+        labelStyle: function() {
+            return this.name ? "node_label_italic" : "";
+        },
+        oneditprepare: function() {
+            // Initialize output selection checkboxes
+            var outputSelection = this.outputSelection || ["debug"];
+            $("#node-input-output-app").prop('checked', outputSelection.includes('app'));
+            $("#node-input-output-sys").prop('checked', outputSelection.includes('sys'));
+            $("#node-input-output-ui").prop('checked', outputSelection.includes('ui'));
+            $("#node-input-output-debug").prop('checked', outputSelection.includes('debug'));
+
+            // Show/hide interval options based on trigger mode
+            $("#node-input-triggerMode").change(function() {
+                if ($(this).val() === 'interval') {
+                    $("#interval-options").show();
+                } else {
+                    $("#interval-options").hide();
+                }
+            }).trigger('change');
+
+            // Show/hide payload input based on payload type
+            $("#node-input-payloadType").change(function() {
+                if ($(this).val() === 'timestamp') {
+                    $("#payload-input").hide();
+                } else {
+                    $("#payload-input").show();
+                }
+            }).trigger('change');
+        },
+        oneditsave: function() {
+            // Save output selection
+            var outputs = [];
+            if ($("#node-input-output-app").prop('checked')) outputs.push('app');
+            if ($("#node-input-output-sys").prop('checked')) outputs.push('sys');
+            if ($("#node-input-output-ui").prop('checked')) outputs.push('ui');
+            if ($("#node-input-output-debug").prop('checked')) outputs.push('debug');
+            this.outputSelection = outputs;
+        }
+    });
+</script>
+
+<script type="text/html" data-template-name="alephscript-enhanced-bot">
+    <div class="form-row">
+        <label for="node-input-name"><i class="fa fa-tag"></i> Name</label>
+        <input type="text" id="node-input-name" placeholder="Name">
+    </div>
+    
+    <div class="form-row">
+        <label for="node-input-botName"><i class="fa fa-robot"></i> Bot Name</label>
+        <input type="text" id="node-input-botName" placeholder="NodeRedBot">
+    </div>
+    
+    <div class="form-row">
+        <label for="node-input-serverUrl"><i class="fa fa-server"></i> Server URL</label>
+        <input type="text" id="node-input-serverUrl" placeholder="http://localhost:3000">
+    </div>
+    
+    <div class="form-row">
+        <label for="node-input-namespace"><i class="fa fa-sitemap"></i> Namespace</label>
+        <input type="text" id="node-input-namespace" placeholder="/runtime">
+    </div>
+    
+    <div class="form-row">
+        <label for="node-input-autoConnect"></label>
+        <input type="checkbox" id="node-input-autoConnect" style="display: inline-block; width: auto; vertical-align: top;">
+        <label for="node-input-autoConnect" style="width: 70%;">Auto Connect</label>
+    </div>
+
+    <hr>
+    <h4>Output Configuration</h4>
+    
+    <div class="form-row">
+        <label>Output Channels:</label>
+        <div style="margin-left: 20px;">
+            <input type="checkbox" id="node-input-output-app" style="display: inline-block; width: auto;">
+            <label for="node-input-output-app" style="width: auto; margin-right: 20px;">App Channel</label>
+            
+            <input type="checkbox" id="node-input-output-sys" style="display: inline-block; width: auto;">
+            <label for="node-input-output-sys" style="width: auto; margin-right: 20px;">Sys Channel</label>
+            
+            <input type="checkbox" id="node-input-output-ui" style="display: inline-block; width: auto;">
+            <label for="node-input-output-ui" style="width: auto; margin-right: 20px;">UI Channel</label>
+            
+            <input type="checkbox" id="node-input-output-debug" style="display: inline-block; width: auto;">
+            <label for="node-input-output-debug" style="width: auto;">Debug</label>
+        </div>
+    </div>
+
+    <hr>
+    <h4>Trigger Configuration</h4>
+    
+    <div class="form-row">
+        <label for="node-input-triggerMode"><i class="fa fa-clock-o"></i> Trigger Mode</label>
+        <select id="node-input-triggerMode">
+            <option value="manual">Manual (Input Required)</option>
+            <option value="interval">Interval</option>
+            <option value="external">External Only</option>
+        </select>
+    </div>
+    
+    <div id="interval-options" style="display: none;">
+        <div class="form-row">
+            <label for="node-input-intervalSeconds"><i class="fa fa-hourglass"></i> Interval (seconds)</label>
+            <input type="number" id="node-input-intervalSeconds" min="1" max="3600" step="1">
+        </div>
+        
+        <div class="form-row">
+            <label for="node-input-payloadType"><i class="fa fa-code"></i> Payload Type</label>
+            <select id="node-input-payloadType">
+                <option value="timestamp">Timestamp</option>
+                <option value="string">String</option>
+                <option value="json">JSON</option>
+                <option value="number">Number</option>
+            </select>
+        </div>
+        
+        <div class="form-row" id="payload-input">
+            <label for="node-input-payload"><i class="fa fa-file-code-o"></i> Payload</label>
+            <input type="text" id="node-input-payload" placeholder="Enter payload value">
+        </div>
+    </div>
+</script>
+
+<script type="text/html" data-help-name="alephscript-enhanced-bot">
+    <p>Enhanced AlephScript Bot node with multi-output capabilities and advanced triggering options.</p>
+    
+    <h3>Outputs</h3>
+    <ol class="node-ports">
+        <li>App Channel
+            <dl class="message-properties">
+                <dt>payload <span class="property-type">any</span></dt>
+                <dd>Data ready for App Channel formatting</dd>
+                <dt>channelType <span class="property-type">string</span></dt>
+                <dd>Set to "app"</dd>
+            </dl>
+        </li>
+        <li>Sys Channel
+            <dl class="message-properties">
+                <dt>payload <span class="property-type">any</span></dt>
+                <dd>Data ready for Sys Channel formatting</dd>
+                <dt>channelType <span class="property-type">string</span></dt>
+                <dd>Set to "sys"</dd>
+            </dl>
+        </li>
+        <li>UI Channel
+            <dl class="message-properties">
+                <dt>payload <span class="property-type">any</span></dt>
+                <dd>Data ready for UI Channel formatting</dd>
+                <dt>channelType <span class="property-type">string</span></dt>
+                <dd>Set to "ui"</dd>
+            </dl>
+        </li>
+        <li>Debug
+            <dl class="message-properties">
+                <dt>payload <span class="property-type">any</span></dt>
+                <dd>Debug information and AlephScript events</dd>
+            </dl>
+        </li>
+    </ol>
+
+    <h3>Configuration</h3>
+    <p><b>Output Channels:</b> Select which outputs to activate. Connect only to the format nodes you need.</p>
+    <p><b>Trigger Mode:</b></p>
+    <ul>
+        <li><b>Manual:</b> Requires input message to trigger</li>
+        <li><b>Interval:</b> Automatically triggers at specified intervals</li>
+        <li><b>External:</b> Only responds to external input messages</li>
+    </ul>
+
+    <h3>Usage</h3>
+    <p>Connect the appropriate outputs to their corresponding format nodes:</p>
+    <ul>
+        <li>App Channel → App Format Node → App Channel Node</li>
+        <li>Sys Channel → Sys Format Node → Sys Channel Node</li>
+        <li>UI Channel → UI Format Node → UI Channel Node</li>
+        <li>Debug → Debug Node</li>
+    </ul>
+</script>

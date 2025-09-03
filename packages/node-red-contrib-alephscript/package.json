@@ -26,10 +26,14 @@
   "node-red": {
     "nodes": {
       "alephscript-bot": "dist/nodes/bot-node.js",
+      "alephscript-enhanced-bot": "dist/nodes/enhanced-bot-node.js",
       "alephscript-app-channel": "dist/nodes/app-channel-node.js",
       "alephscript-sys-channel": "dist/nodes/sys-channel-node.js",
       "alephscript-ui-channel": "dist/nodes/ui-channel-node.js",
-      "alephscript-orchestrator": "dist/nodes/orchestrator-node.js"
+      "alephscript-orchestrator": "dist/nodes/orchestrator-node.js",
+      "alephscript-app-format": "dist/nodes/app-format-node.js",
+      "alephscript-sys-format": "dist/nodes/sys-format-node.js",
+      "alephscript-ui-format": "dist/nodes/ui-format-node.js"
     }
   },
   "dependencies": {
