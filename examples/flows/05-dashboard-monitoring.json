@@ -1,0 +1,428 @@
+[
+    {
+        "id": "f5",
+        "type": "tab",
+        "label": "Dashboard Monitoring",
+        "disabled": false,
+        "info": "# Dashboard 2.0 Monitoring Flow\n\nThis flow showcases the Dashboard 2.0 widgets for AlephScript monitoring:\n\n- **Bot Registry**: Displays all connected bots and their status\n- **Room Tester**: Interactive widget for testing room operations\n- **Stream Monitor**: Real-time visualization of message streams\n- **Configuration Panel**: Central configuration management\n\n## Dashboard Features:\n- Real-time bot status monitoring\n- Interactive room management\n- Message flow visualization\n- System health dashboards",
+        "env": []
+    },
+    {
+        "id": "bot-registry-widget",
+        "type": "alephscript-bot-registry",
+        "z": "f5",
+        "name": "Bot Registry Dashboard",
+        "serverUrl": "http://localhost:3000",
+        "namespace": "/runtime",
+        "refreshInterval": 5000,
+        "showOfflineBots": true,
+        "enableBotControl": true,
+        "x": 200,
+        "y": 100,
+        "wires": [
+            ["debug-registry", "bot-status-processor"]
+        ]
+    },
+    {
+        "id": "room-tester-widget",
+        "type": "alephscript-room-tester",
+        "z": "f5",
+        "name": "Room Management Dashboard",
+        "serverUrl": "http://localhost:3000",
+        "namespace": "/runtime",
+        "enableCrossRoom": true,
+        "monitorRooms": ["alpha", "beta", "gamma", "monitoring"],
+        "autoReconnect": true,
+        "dashboardMode": true,
+        "x": 200,
+        "y": 160,
+        "wires": [
+            ["debug-room-dashboard", "room-stats-processor"]
+        ]
+    },
+    {
+        "id": "stream-monitor-widget",
+        "type": "alephscript-stream-monitor",
+        "z": "f5",
+        "name": "Stream Monitor Dashboard",
+        "serverUrl": "http://localhost:3000",
+        "namespace": "/runtime",
+        "monitorTypes": ["all"],
+        "enableLogging": true,
+        "logLevel": "info",
+        "dashboardMode": true,
+        "maxLogEntries": 100,
+        "x": 200,
+        "y": 220,
+        "wires": [
+            ["debug-stream-dashboard", "stream-analytics"]
+        ]
+    },
+    {
+        "id": "config-widget",
+        "type": "alephscript-config",
+        "z": "f5",
+        "name": "Configuration Dashboard",
+        "serverUrl": "http://localhost:3000",
+        "namespace": "/runtime",
+        "configScope": "global",
+        "enableRemoteConfig": true,
+        "dashboardMode": true,
+        "x": 200,
+        "y": 280,
+        "wires": [
+            ["debug-config-dashboard"]
+        ]
+    },
+    {
+        "id": "bot-status-processor",
+        "type": "function",
+        "z": "f5",
+        "name": "Bot Status Analytics",
+        "func": "// Process bot registry data for dashboard\nconst bots = msg.payload.bots || [];\nconst stats = {\n    totalBots: bots.length,\n    onlineBots: bots.filter(bot => bot.status === 'online').length,\n    offlineBots: bots.filter(bot => bot.status === 'offline').length,\n    rooms: [...new Set(bots.map(bot => bot.room).filter(Boolean))],\n    lastUpdate: new Date().toISOString()\n};\n\nstats.uptime = stats.totalBots > 0 ? \n    Math.round((stats.onlineBots / stats.totalBots) * 100) : 0;\n\nmsg.dashboard = {\n    type: 'bot-stats',\n    data: stats,\n    bots: bots\n};\n\nreturn msg;",
+        "outputs": 1,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 480,
+        "y": 100,
+        "wires": [
+            ["ui-bot-chart"]
+        ]
+    },
+    {
+        "id": "room-stats-processor",
+        "type": "function",
+        "z": "f5",
+        "name": "Room Statistics",
+        "func": "// Process room data for dashboard\nconst payload = msg.payload;\nconst roomStats = context.get('roomStats') || {};\n\nif (payload.type === 'room_activity') {\n    const room = payload.room;\n    if (!roomStats[room]) {\n        roomStats[room] = {\n            messageCount: 0,\n            lastActivity: null,\n            participants: new Set()\n        };\n    }\n    \n    roomStats[room].messageCount++;\n    roomStats[room].lastActivity = new Date().toISOString();\n    \n    if (payload.bot) {\n        roomStats[room].participants.add(payload.bot);\n    }\n}\n\ncontext.set('roomStats', roomStats);\n\n// Convert Set to Array for JSON serialization\nconst processedStats = {};\nObject.keys(roomStats).forEach(room => {\n    processedStats[room] = {\n        ...roomStats[room],\n        participants: Array.from(roomStats[room].participants)\n    };\n});\n\nmsg.dashboard = {\n    type: 'room-stats',\n    data: processedStats,\n    totalRooms: Object.keys(processedStats).length\n};\n\nreturn msg;",
+        "outputs": 1,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 480,
+        "y": 160,
+        "wires": [
+            ["ui-room-chart"]
+        ]
+    },
+    {
+        "id": "stream-analytics",
+        "type": "function",
+        "z": "f5",
+        "name": "Stream Analytics",
+        "func": "// Analyze message streams for dashboard\nconst analytics = context.get('analytics') || {\n    messagesPerMinute: 0,\n    channelDistribution: { app: 0, sys: 0, ui: 0 },\n    errorRate: 0,\n    peakHours: {},\n    lastReset: new Date().toISOString()\n};\n\nconst payload = msg.payload;\nconst currentHour = new Date().getHours();\n\n// Update analytics\nanalyticsมessagesPerMinute++;\n\nif (payload.channel) {\n    analytics.channelDistribution[payload.channel]++;\n}\n\nif (payload.type === 'error') {\n    analytics.errorRate++;\n}\n\nanalytics.peakHours[currentHour] = (analytics.peakHours[currentHour] || 0) + 1;\n\n// Reset counters every minute\nconst now = new Date();\nconst lastReset = new Date(analytics.lastReset);\nif (now.getTime() - lastReset.getTime() > 60000) {\n    analytics.messagesPerMinute = 0;\n    analytics.lastReset = now.toISOString();\n}\n\ncontext.set('analytics', analytics);\n\nmsg.dashboard = {\n    type: 'stream-analytics',\n    data: analytics\n};\n\nreturn msg;",
+        "outputs": 1,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 470,
+        "y": 220,
+        "wires": [
+            ["ui-stream-chart"]
+        ]
+    },
+    {
+        "id": "ui-bot-chart",
+        "type": "ui-chart",
+        "z": "f5",
+        "name": "Bot Status Chart",
+        "group": "dashboard-group",
+        "order": 1,
+        "width": 6,
+        "height": 4,
+        "label": "Bot Status Overview",
+        "chartType": "doughnut",
+        "legend": "true",
+        "xformat": "HH:mm:ss",
+        "interpolate": "linear",
+        "nodata": "No bot data",
+        "dot": false,
+        "ymin": "",
+        "ymax": "",
+        "removeOlder": "1",
+        "removeOlderPoints": "",
+        "removeOlderUnit": "3600",
+        "cutout": 30,
+        "useOneColor": false,
+        "useUTC": false,
+        "colors": ["#1f77b4", "#ff7f0e", "#2ca02c", "#d62728"],
+        "outputs": 1,
+        "useDifferentColor": false,
+        "className": "",
+        "x": 720,
+        "y": 100,
+        "wires": [
+            ["debug-ui-bot"]
+        ]
+    },
+    {
+        "id": "ui-room-chart",
+        "type": "ui-chart",
+        "z": "f5",
+        "name": "Room Activity Chart",
+        "group": "dashboard-group",
+        "order": 2,
+        "width": 6,
+        "height": 4,
+        "label": "Room Activity",
+        "chartType": "bar",
+        "legend": "true",
+        "xformat": "HH:mm:ss",
+        "interpolate": "linear",
+        "nodata": "No room data",
+        "dot": false,
+        "ymin": "",
+        "ymax": "",
+        "removeOlder": "1",
+        "removeOlderPoints": "",
+        "removeOlderUnit": "3600",
+        "cutout": 0,
+        "useOneColor": false,
+        "useUTC": false,
+        "colors": ["#1f77b4", "#ff7f0e", "#2ca02c", "#d62728"],
+        "outputs": 1,
+        "useDifferentColor": false,
+        "className": "",
+        "x": 720,
+        "y": 160,
+        "wires": [
+            ["debug-ui-room"]
+        ]
+    },
+    {
+        "id": "ui-stream-chart",
+        "type": "ui-chart",
+        "z": "f5",
+        "name": "Stream Analytics Chart",
+        "group": "dashboard-group",
+        "order": 3,
+        "width": 12,
+        "height": 6,
+        "label": "Message Stream Analytics",
+        "chartType": "line",
+        "legend": "true",
+        "xformat": "HH:mm:ss",
+        "interpolate": "linear",
+        "nodata": "No stream data",
+        "dot": false,
+        "ymin": "",
+        "ymax": "",
+        "removeOlder": "1",
+        "removeOlderPoints": "",
+        "removeOlderUnit": "3600",
+        "cutout": 0,
+        "useOneColor": false,
+        "useUTC": false,
+        "colors": ["#1f77b4", "#ff7f0e", "#2ca02c", "#d62728"],
+        "outputs": 1,
+        "useDifferentColor": false,
+        "className": "",
+        "x": 730,
+        "y": 220,
+        "wires": [
+            ["debug-ui-stream"]
+        ]
+    },
+    {
+        "id": "debug-registry",
+        "type": "debug",
+        "z": "f5",
+        "name": "Bot Registry",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "payload",
+        "targetType": "msg",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 470,
+        "y": 60,
+        "wires": []
+    },
+    {
+        "id": "debug-room-dashboard",
+        "type": "debug",
+        "z": "f5",
+        "name": "Room Dashboard",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "payload",
+        "targetType": "msg",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 480,
+        "y": 120,
+        "wires": []
+    },
+    {
+        "id": "debug-stream-dashboard",
+        "type": "debug",
+        "z": "f5",
+        "name": "Stream Dashboard",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "payload",
+        "targetType": "msg",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 490,
+        "y": 180,
+        "wires": []
+    },
+    {
+        "id": "debug-config-dashboard",
+        "type": "debug",
+        "z": "f5",
+        "name": "Config Dashboard",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "payload",
+        "targetType": "msg",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 490,
+        "y": 280,
+        "wires": []
+    },
+    {
+        "id": "debug-ui-bot",
+        "type": "debug",
+        "z": "f5",
+        "name": "UI Bot Chart",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "payload",
+        "targetType": "msg",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 940,
+        "y": 100,
+        "wires": []
+    },
+    {
+        "id": "debug-ui-room",
+        "type": "debug",
+        "z": "f5",
+        "name": "UI Room Chart",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "payload",
+        "targetType": "msg",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 940,
+        "y": 160,
+        "wires": []
+    },
+    {
+        "id": "debug-ui-stream",
+        "type": "debug",
+        "z": "f5",
+        "name": "UI Stream Chart",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "payload",
+        "targetType": "msg",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 950,
+        "y": 220,
+        "wires": []
+    },
+    {
+        "id": "simulate-bot-data",
+        "type": "inject",
+        "z": "f5",
+        "name": "Simulate Bot Data",
+        "props": [
+            {
+                "p": "payload"
+            }
+        ],
+        "repeat": "10",
+        "crontab": "",
+        "once": true,
+        "onceDelay": 0.1,
+        "topic": "",
+        "payload": "{\"bots\":[{\"name\":\"BotAlpha\",\"status\":\"online\",\"room\":\"alpha\",\"lastSeen\":\"2025-09-04T02:00:00Z\"},{\"name\":\"BotBeta\",\"status\":\"online\",\"room\":\"beta\",\"lastSeen\":\"2025-09-04T02:00:00Z\"},{\"name\":\"BotGamma\",\"status\":\"offline\",\"room\":null,\"lastSeen\":\"2025-09-04T01:45:00Z\"}]}",
+        "payloadType": "json",
+        "x": 150,
+        "y": 380,
+        "wires": [
+            ["bot-registry-widget"]
+        ]
+    },
+    {
+        "id": "simulate-room-activity",
+        "type": "inject",
+        "z": "f5",
+        "name": "Simulate Room Activity",
+        "props": [
+            {
+                "p": "payload"
+            }
+        ],
+        "repeat": "5",
+        "crontab": "",
+        "once": true,
+        "onceDelay": 0.1,
+        "topic": "",
+        "payload": "{\"type\":\"room_activity\",\"room\":\"alpha\",\"bot\":\"BotAlpha\",\"activity\":\"message_sent\"}",
+        "payloadType": "json",
+        "x": 160,
+        "y": 420,
+        "wires": [
+            ["room-tester-widget"]
+        ]
+    },
+    {
+        "id": "simulate-stream-data",
+        "type": "inject",
+        "z": "f5",
+        "name": "Simulate Stream Data",
+        "props": [
+            {
+                "p": "payload"
+            }
+        ],
+        "repeat": "3",
+        "crontab": "",
+        "once": true,
+        "onceDelay": 0.1,
+        "topic": "",
+        "payload": "{\"type\":\"message\",\"channel\":\"app\",\"timestamp\":\"2025-09-04T02:00:00Z\",\"data\":{\"messageId\":\"msg123\"}}",
+        "payloadType": "json",
+        "x": 160,
+        "y": 460,
+        "wires": [
+            ["stream-monitor-widget"]
+        ]
+    },
+    {
+        "id": "comment5",
+        "type": "comment",
+        "z": "f5",
+        "name": "Dashboard 2.0 Monitoring Demo",
+        "info": "This flow demonstrates:\n- Bot registry dashboard widget\n- Room management dashboard\n- Stream monitoring dashboard\n- Configuration dashboard\n- Real-time charts and analytics\n- Data simulation for testing",
+        "x": 190,
+        "y": 20,
+        "wires": []
+    }
+]

@@ -1,0 +1,76 @@
+[
+    {
+        "id": "f1",
+        "type": "tab",
+        "label": "Basic Bot Connection",
+        "disabled": false,
+        "info": "# Basic Bot Connection Flow\n\nThis flow demonstrates the simplest possible AlephScript bot connection:\n\n1. **Bot Node**: Creates an AlephScript client that connects to the server\n2. **Debug Output**: Shows connection status and received messages\n3. **Inject Node**: Sends test messages to the bot\n\n## Setup:\n1. Make sure AlephScript server is running on localhost:3000\n2. Deploy this flow\n3. Check debug messages for connection status\n4. Click inject button to send test messages",
+        "env": []
+    },
+    {
+        "id": "bot1",
+        "type": "alephscript-bot",
+        "z": "f1",
+        "name": "Demo Bot",
+        "botName": "DemoBot",
+        "serverUrl": "http://localhost:3000",
+        "namespace": "/runtime",
+        "autoConnect": true,
+        "features": ["CLIENT_REGISTER", "ROOM_MANAGEMENT"],
+        "x": 200,
+        "y": 100,
+        "wires": [
+            ["debug1"]
+        ]
+    },
+    {
+        "id": "debug1",
+        "type": "debug",
+        "z": "f1",
+        "name": "Bot Messages",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "payload",
+        "targetType": "msg",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 420,
+        "y": 100,
+        "wires": []
+    },
+    {
+        "id": "inject1",
+        "type": "inject",
+        "z": "f1",
+        "name": "Send Test Message",
+        "props": [
+            {
+                "p": "payload"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "",
+        "payload": "{\"type\":\"test\",\"message\":\"Hello from Node-RED!\"}",
+        "payloadType": "json",
+        "x": 150,
+        "y": 180,
+        "wires": [
+            ["bot1"]
+        ]
+    },
+    {
+        "id": "comment1",
+        "type": "comment",
+        "z": "f1",
+        "name": "Basic AlephScript Bot Connection Demo",
+        "info": "This flow shows how to:\n- Connect a bot to AlephScript server\n- Send messages through the bot\n- Receive and debug responses",
+        "x": 200,
+        "y": 40,
+        "wires": []
+    }
+]

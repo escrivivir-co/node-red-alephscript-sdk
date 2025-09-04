@@ -1,0 +1,381 @@
+[
+    {
+        "id": "f4",
+        "type": "tab",
+        "label": "Cross-Room Communication",
+        "disabled": false,
+        "info": "# Cross-Room Communication Flow\n\nThis flow demonstrates two bots communicating across different Socket.IO rooms:\n\n- **Bot A**: Connects to Room 'alpha'\n- **Bot B**: Connects to Room 'beta'\n- **Room Tester**: Manages cross-room message routing\n- **Stream Monitor**: Tracks all cross-room communications\n\n## Features:\n- Room join/leave operations\n- Cross-room message broadcasting\n- Message routing between rooms\n- Communication monitoring and logging",
+        "env": []
+    },
+    {
+        "id": "botA",
+        "type": "alephscript-enhanced-bot",
+        "z": "f4",
+        "name": "Bot Alpha",
+        "botName": "BotAlpha",
+        "serverUrl": "http://localhost:3000",
+        "namespace": "/runtime",
+        "autoConnect": true,
+        "room": "alpha",
+        "features": ["CLIENT_REGISTER", "ROOM_MANAGEMENT", "CROSS_ROOM_COMM"],
+        "x": 120,
+        "y": 100,
+        "wires": [
+            ["debug-botA", "room-tester"]
+        ]
+    },
+    {
+        "id": "botB",
+        "type": "alephscript-enhanced-bot",
+        "z": "f4",
+        "name": "Bot Beta",
+        "botName": "BotBeta",
+        "serverUrl": "http://localhost:3000",
+        "namespace": "/runtime",
+        "autoConnect": true,
+        "room": "beta",
+        "features": ["CLIENT_REGISTER", "ROOM_MANAGEMENT", "CROSS_ROOM_COMM"],
+        "x": 120,
+        "y": 160,
+        "wires": [
+            ["debug-botB", "room-tester"]
+        ]
+    },
+    {
+        "id": "room-tester",
+        "type": "alephscript-room-tester",
+        "z": "f4",
+        "name": "Room Manager",
+        "serverUrl": "http://localhost:3000",
+        "namespace": "/runtime",
+        "enableCrossRoom": true,
+        "monitorRooms": ["alpha", "beta", "gamma"],
+        "autoReconnect": true,
+        "x": 380,
+        "y": 130,
+        "wires": [
+            ["debug-room-manager", "stream-monitor", "cross-room-processor"]
+        ]
+    },
+    {
+        "id": "stream-monitor",
+        "type": "alephscript-stream-monitor",
+        "z": "f4",
+        "name": "Communication Monitor",
+        "serverUrl": "http://localhost:3000",
+        "namespace": "/runtime",
+        "monitorTypes": ["room_join", "room_leave", "cross_room_message", "direct_message"],
+        "enableLogging": true,
+        "logLevel": "info",
+        "x": 600,
+        "y": 100,
+        "wires": [
+            ["debug-monitor"]
+        ]
+    },
+    {
+        "id": "cross-room-processor",
+        "type": "function",
+        "z": "f4",
+        "name": "Cross-Room Processor",
+        "func": "// Process cross-room messages\nconst payload = msg.payload;\n\n// Add routing information\nif (payload.type === 'room_message') {\n    msg.crossRoom = {\n        sourceRoom: payload.sourceRoom,\n        targetRoom: payload.targetRoom,\n        messageId: Math.random().toString(36).substr(2, 9),\n        timestamp: new Date().toISOString(),\n        hops: (payload.hops || 0) + 1\n    };\n    \n    // Route message to target room\n    if (payload.targetRoom === 'alpha') {\n        msg.targetBot = 'BotAlpha';\n    } else if (payload.targetRoom === 'beta') {\n        msg.targetBot = 'BotBeta';\n    }\n}\n\nreturn msg;",
+        "outputs": 1,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 600,
+        "y": 160,
+        "wires": [
+            ["message-router"]
+        ]
+    },
+    {
+        "id": "message-router",
+        "type": "switch",
+        "z": "f4",
+        "name": "Message Router",
+        "property": "targetBot",
+        "propertyType": "msg",
+        "rules": [
+            {
+                "t": "eq",
+                "v": "BotAlpha",
+                "vt": "str"
+            },
+            {
+                "t": "eq",
+                "v": "BotBeta",
+                "vt": "str"
+            },
+            {
+                "t": "else"
+            }
+        ],
+        "checkall": "true",
+        "repair": false,
+        "outputs": 3,
+        "x": 810,
+        "y": 160,
+        "wires": [
+            ["to-alpha"],
+            ["to-beta"],
+            ["debug-unrouted"]
+        ]
+    },
+    {
+        "id": "to-alpha",
+        "type": "function",
+        "z": "f4",
+        "name": "→ Alpha Room",
+        "func": "// Prepare message for Alpha room\nmsg.room = 'alpha';\nmsg.recipient = 'BotAlpha';\nreturn msg;",
+        "outputs": 1,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 990,
+        "y": 120,
+        "wires": [
+            ["debug-to-alpha"]
+        ]
+    },
+    {
+        "id": "to-beta",
+        "type": "function",
+        "z": "f4",
+        "name": "→ Beta Room",
+        "func": "// Prepare message for Beta room\nmsg.room = 'beta';\nmsg.recipient = 'BotBeta';\nreturn msg;",
+        "outputs": 1,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 990,
+        "y": 160,
+        "wires": [
+            ["debug-to-beta"]
+        ]
+    },
+    {
+        "id": "debug-botA",
+        "type": "debug",
+        "z": "f4",
+        "name": "Bot Alpha Messages",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "payload",
+        "targetType": "msg",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 310,
+        "y": 60,
+        "wires": []
+    },
+    {
+        "id": "debug-botB",
+        "type": "debug",
+        "z": "f4",
+        "name": "Bot Beta Messages",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "payload",
+        "targetType": "msg",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 310,
+        "y": 200,
+        "wires": []
+    },
+    {
+        "id": "debug-room-manager",
+        "type": "debug",
+        "z": "f4",
+        "name": "Room Events",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "payload",
+        "targetType": "msg",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 580,
+        "y": 60,
+        "wires": []
+    },
+    {
+        "id": "debug-monitor",
+        "type": "debug",
+        "z": "f4",
+        "name": "Stream Monitor",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "payload",
+        "targetType": "msg",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 820,
+        "y": 100,
+        "wires": []
+    },
+    {
+        "id": "debug-to-alpha",
+        "type": "debug",
+        "z": "f4",
+        "name": "→ Alpha Room",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "true",
+        "targetType": "full",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 1170,
+        "y": 120,
+        "wires": []
+    },
+    {
+        "id": "debug-to-beta",
+        "type": "debug",
+        "z": "f4",
+        "name": "→ Beta Room",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "true",
+        "targetType": "full",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 1170,
+        "y": 160,
+        "wires": []
+    },
+    {
+        "id": "debug-unrouted",
+        "type": "debug",
+        "z": "f4",
+        "name": "Unrouted Messages",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "payload",
+        "targetType": "msg",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 1000,
+        "y": 200,
+        "wires": []
+    },
+    {
+        "id": "send-alpha-to-beta",
+        "type": "inject",
+        "z": "f4",
+        "name": "Alpha → Beta",
+        "props": [
+            {
+                "p": "payload"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "",
+        "payload": "{\"type\":\"room_message\",\"sourceRoom\":\"alpha\",\"targetRoom\":\"beta\",\"message\":\"Hello from Alpha room!\",\"data\":{\"timestamp\":\"2025-09-04T02:00:00Z\"}}",
+        "payloadType": "json",
+        "x": 130,
+        "y": 280,
+        "wires": [
+            ["room-tester"]
+        ]
+    },
+    {
+        "id": "send-beta-to-alpha",
+        "type": "inject",
+        "z": "f4",
+        "name": "Beta → Alpha",
+        "props": [
+            {
+                "p": "payload"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "",
+        "payload": "{\"type\":\"room_message\",\"sourceRoom\":\"beta\",\"targetRoom\":\"alpha\",\"message\":\"Greetings from Beta room!\",\"data\":{\"timestamp\":\"2025-09-04T02:00:00Z\"}}",
+        "payloadType": "json",
+        "x": 130,
+        "y": 320,
+        "wires": [
+            ["room-tester"]
+        ]
+    },
+    {
+        "id": "join-room-gamma",
+        "type": "inject",
+        "z": "f4",
+        "name": "Join Gamma Room",
+        "props": [
+            {
+                "p": "payload"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "",
+        "payload": "{\"type\":\"room_join\",\"room\":\"gamma\",\"bot\":\"BotAlpha\"}",
+        "payloadType": "json",
+        "x": 140,
+        "y": 360,
+        "wires": [
+            ["room-tester"]
+        ]
+    },
+    {
+        "id": "leave-room",
+        "type": "inject",
+        "z": "f4",
+        "name": "Leave Room",
+        "props": [
+            {
+                "p": "payload"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "",
+        "payload": "{\"type\":\"room_leave\",\"room\":\"gamma\",\"bot\":\"BotAlpha\"}",
+        "payloadType": "json",
+        "x": 120,
+        "y": 400,
+        "wires": [
+            ["room-tester"]
+        ]
+    },
+    {
+        "id": "comment4",
+        "type": "comment",
+        "z": "f4",
+        "name": "Cross-Room Communication Demo",
+        "info": "This flow demonstrates:\n- Multiple bots in different rooms\n- Cross-room message routing\n- Room join/leave operations\n- Stream monitoring of communications\n- Message routing and processing",
+        "x": 190,
+        "y": 20,
+        "wires": []
+    }
+]

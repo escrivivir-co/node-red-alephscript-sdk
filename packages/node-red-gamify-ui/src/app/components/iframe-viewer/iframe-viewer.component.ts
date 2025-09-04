@@ -31,7 +31,7 @@ import { NodeRedInstance } from '../../models/interfaces';
             {{ instance.name }} - {{ viewType === 'editor' ? 'Editor' : 'Dashboard' }}
           </mat-card-title>
           <mat-card-subtitle>
-            {{ instance.url }}{{ viewType === 'ui' ? '/ui' : '' }}
+            {{ instance.url }}{{ viewType === 'ui' ? '/dashboard' : '' }}
           </mat-card-subtitle>
           <div class="header-actions">
             <button mat-icon-button 

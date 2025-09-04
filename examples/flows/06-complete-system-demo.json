@@ -1,0 +1,708 @@
+[
+    {
+        "id": "f6",
+        "type": "tab",
+        "label": "Complete System Demo",
+        "disabled": false,
+        "info": "# Complete AlephScript System Demo\n\nThis flow demonstrates the full capabilities of the AlephScript Node-RED integration:\n\n## System Components:\n- **Multiple Bots**: Enhanced bots with full feature sets\n- **All Channels**: App, Sys, and UI channels working together\n- **Orchestrator**: Central message routing and processing\n- **Cross-Room Communication**: Multi-room bot interactions\n- **Dashboard Monitoring**: Real-time system monitoring\n- **Stream Analytics**: Complete message flow analysis\n\n## Use Case Scenario:\nA multi-bot system managing a distributed application with:\n- Production monitoring (BotProd)\n- Development environment (BotDev) \n- User interface management (BotUI)\n- System orchestration and cross-communication",
+        "env": []
+    },
+    {
+        "id": "bot-prod",
+        "type": "alephscript-enhanced-bot",
+        "z": "f6",
+        "name": "Production Bot",
+        "botName": "BotProduction",
+        "serverUrl": "http://localhost:3000",
+        "namespace": "/runtime",
+        "autoConnect": true,
+        "room": "production",
+        "features": ["CLIENT_REGISTER", "ROOM_MANAGEMENT", "MULTI_CHANNEL", "ORCHESTRATION"],
+        "x": 150,
+        "y": 100,
+        "wires": [
+            ["orchestrator-main", "debug-prod"]
+        ]
+    },
+    {
+        "id": "bot-dev",
+        "type": "alephscript-enhanced-bot",
+        "z": "f6",
+        "name": "Development Bot",
+        "botName": "BotDevelopment",
+        "serverUrl": "http://localhost:3000",
+        "namespace": "/runtime",
+        "autoConnect": true,
+        "room": "development", 
+        "features": ["CLIENT_REGISTER", "ROOM_MANAGEMENT", "MULTI_CHANNEL", "CROSS_ROOM_COMM"],
+        "x": 150,
+        "y": 160,
+        "wires": [
+            ["orchestrator-main", "debug-dev"]
+        ]
+    },
+    {
+        "id": "bot-ui",
+        "type": "alephscript-enhanced-bot",
+        "z": "f6",
+        "name": "UI Management Bot",
+        "botName": "BotUIManager",
+        "serverUrl": "http://localhost:3000",
+        "namespace": "/runtime",
+        "autoConnect": true,
+        "room": "ui-management",
+        "features": ["CLIENT_REGISTER", "ROOM_MANAGEMENT", "UI_FOCUS"],
+        "x": 150,
+        "y": 220,
+        "wires": [
+            ["orchestrator-main", "debug-ui-bot"]
+        ]
+    },
+    {
+        "id": "orchestrator-main",
+        "type": "orchestrator-node",
+        "z": "f6",
+        "name": "System Orchestrator",
+        "serverUrl": "http://localhost:3000",
+        "namespace": "/runtime",
+        "routingRules": [
+            {
+                "from": "production",
+                "to": "ui-management",
+                "condition": "alert"
+            },
+            {
+                "from": "development",
+                "to": "production",
+                "condition": "deployment_ready"
+            },
+            {
+                "from": "ui-management",
+                "to": "production",
+                "condition": "user_action"
+            }
+        ],
+        "enablePipeline": true,
+        "x": 380,
+        "y": 160,
+        "wires": [
+            ["message-classifier", "system-monitor"]
+        ]
+    },
+    {
+        "id": "message-classifier",
+        "type": "function",
+        "z": "f6",
+        "name": "Message Classifier",
+        "func": "// Classify messages for appropriate channel routing\nconst payload = msg.payload;\nconst sourceBot = msg.sourceBot || 'unknown';\n\n// Determine message type and priority\nlet messageType = 'app'; // default\nlet priority = 'normal';\n\nif (payload.type === 'error' || payload.type === 'alert') {\n    messageType = 'sys';\n    priority = 'high';\n} else if (payload.type === 'notification' || payload.type === 'user_action') {\n    messageType = 'ui';\n    priority = 'medium';\n} else if (payload.type === 'state_change' || payload.type === 'deployment') {\n    messageType = 'app';\n    priority = payload.type === 'deployment' ? 'high' : 'normal';\n}\n\nmsg.classification = {\n    messageType: messageType,\n    priority: priority,\n    sourceBot: sourceBot,\n    timestamp: new Date().toISOString(),\n    messageId: Math.random().toString(36).substr(2, 9)\n};\n\nreturn msg;",
+        "outputs": 1,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 600,
+        "y": 120,
+        "wires": [
+            ["channel-router"]
+        ]
+    },
+    {
+        "id": "channel-router",
+        "type": "switch",
+        "z": "f6",
+        "name": "Channel Router",
+        "property": "classification.messageType",
+        "propertyType": "msg",
+        "rules": [
+            {
+                "t": "eq",
+                "v": "app",
+                "vt": "str"
+            },
+            {
+                "t": "eq",
+                "v": "sys",
+                "vt": "str"
+            },
+            {
+                "t": "eq",
+                "v": "ui",
+                "vt": "str"
+            }
+        ],
+        "checkall": "true",
+        "repair": false,
+        "outputs": 3,
+        "x": 800,
+        "y": 120,
+        "wires": [
+            ["app-channel-main"],
+            ["sys-channel-main"],
+            ["ui-channel-main"]
+        ]
+    },
+    {
+        "id": "app-channel-main",
+        "type": "app-channel-node",
+        "z": "f6",
+        "name": "System App Channel",
+        "botRef": "orchestrator-main",
+        "stateFilters": ["initial", "running", "completed", "error", "deploying"],
+        "actionFilters": ["get_state", "set_state", "reset_state", "deploy", "rollback"],
+        "x": 1000,
+        "y": 80,
+        "wires": [
+            ["app-format-main"]
+        ]
+    },
+    {
+        "id": "sys-channel-main",
+        "type": "sys-channel-node",
+        "z": "f6",
+        "name": "System Sys Channel",
+        "botRef": "orchestrator-main",
+        "healthMonitoring": true,
+        "errorReporting": true,
+        "alertThresholds": {
+            "cpu": 80,
+            "memory": 85,
+            "disk": 90
+        },
+        "x": 1000,
+        "y": 120,
+        "wires": [
+            ["sys-format-main"]
+        ]
+    },
+    {
+        "id": "ui-channel-main",
+        "type": "ui-channel-node",
+        "z": "f6",
+        "name": "System UI Channel",
+        "botRef": "orchestrator-main",
+        "notificationTypes": ["info", "warning", "error", "success"],
+        "phaseChangeTracking": true,
+        "userActionLogging": true,
+        "x": 1000,
+        "y": 160,
+        "wires": [
+            ["ui-format-main"]
+        ]
+    },
+    {
+        "id": "app-format-main",
+        "type": "alephscript-app-format",
+        "z": "f6",
+        "name": "App Formatter",
+        "outputFormat": "alephscript",
+        "includeTimestamp": true,
+        "includeMetadata": true,
+        "x": 1200,
+        "y": 80,
+        "wires": [
+            ["debug-app-channel", "analytics-collector"]
+        ]
+    },
+    {
+        "id": "sys-format-main",
+        "type": "alephscript-sys-format",
+        "z": "f6",
+        "name": "Sys Formatter",
+        "outputFormat": "alephscript",
+        "includeSystemInfo": true,
+        "includeHealthMetrics": true,
+        "x": 1200,
+        "y": 120,
+        "wires": [
+            ["debug-sys-channel", "analytics-collector"]
+        ]
+    },
+    {
+        "id": "ui-format-main",
+        "type": "alephscript-ui-format",
+        "z": "f6",
+        "name": "UI Formatter",
+        "outputFormat": "alephscript",
+        "includeUIContext": true,
+        "includeUserInfo": true,
+        "x": 1200,
+        "y": 160,
+        "wires": [
+            ["debug-ui-channel", "analytics-collector"]
+        ]
+    },
+    {
+        "id": "system-monitor",
+        "type": "alephscript-stream-monitor",
+        "z": "f6",
+        "name": "System Stream Monitor",
+        "serverUrl": "http://localhost:3000",
+        "namespace": "/runtime",
+        "monitorTypes": ["all"],
+        "enableLogging": true,
+        "logLevel": "info",
+        "maxLogEntries": 500,
+        "enableAlerts": true,
+        "x": 380,
+        "y": 240,
+        "wires": [
+            ["debug-system-monitor", "alert-processor"]
+        ]
+    },
+    {
+        "id": "room-manager",
+        "type": "alephscript-room-tester",
+        "z": "f6",
+        "name": "Multi-Room Manager",
+        "serverUrl": "http://localhost:3000",
+        "namespace": "/runtime",
+        "enableCrossRoom": true,
+        "monitorRooms": ["production", "development", "ui-management", "monitoring"],
+        "autoReconnect": true,
+        "x": 380,
+        "y": 300,
+        "wires": [
+            ["debug-room-manager", "cross-room-coordinator"]
+        ]
+    },
+    {
+        "id": "alephscript-bot-registry",
+        "type": "alephscript-bot-registry",
+        "z": "f6",
+        "name": "System Bot Registry",
+        "serverUrl": "http://localhost:3000",
+        "namespace": "/runtime",
+        "refreshInterval": 3000,
+        "showOfflineBots": true,
+        "enableBotControl": true,
+        "x": 380,
+        "y": 360,
+        "wires": [
+            ["debug-bot-registry", "bot-health-checker"]
+        ]
+    },
+    {
+        "id": "analytics-collector",
+        "type": "function",
+        "z": "f6",
+        "name": "System Analytics",
+        "func": "// Collect comprehensive system analytics\nconst analytics = context.get('systemAnalytics') || {\n    totalMessages: 0,\n    channelStats: { app: 0, sys: 0, ui: 0 },\n    botStats: {},\n    errorCount: 0,\n    alertCount: 0,\n    performanceMetrics: {\n        avgResponseTime: 0,\n        peakLoad: 0,\n        uptime: 100\n    },\n    lastUpdate: new Date().toISOString()\n};\n\n// Update message statistics\nanalyticsมessageCount++;\nconst channel = msg.classification?.messageType || 'unknown';\nif (analytics.channelStats[channel] !== undefined) {\n    analytics.channelStats[channel]++;\n}\n\n// Update bot statistics\nconst sourceBot = msg.classification?.sourceBot || 'unknown';\nif (!analytics.botStats[sourceBot]) {\n    analytics.botStats[sourceBot] = {\n        messageCount: 0,\n        lastSeen: null,\n        errorCount: 0\n    };\n}\nanalytics.botStats[sourceBot].messageCount++;\nanalytics.botStats[sourceBot].lastSeen = new Date().toISOString();\n\n// Track errors\nif (msg.payload.type === 'error') {\n    analytics.errorCount++;\n    analytics.botStats[sourceBot].errorCount++;\n}\n\n// Track alerts\nif (msg.payload.type === 'alert') {\n    analytics.alertCount++;\n}\n\n// Calculate performance metrics\nconst now = Date.now();\nconst messageTime = new Date(msg.classification?.timestamp || now).getTime();\nconst responseTime = now - messageTime;\nanalytics.performanceMetrics.avgResponseTime = \n    (analytics.performanceMetrics.avgResponseTime + responseTime) / 2;\n\nif (responseTime > analytics.performanceMetrics.peakLoad) {\n    analytics.performanceMetrics.peakLoad = responseTime;\n}\n\nanalytics.lastUpdate = new Date().toISOString();\ncontext.set('systemAnalytics', analytics);\n\nmsg.analytics = analytics;\nreturn msg;",
+        "outputs": 1,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 1420,
+        "y": 120,
+        "wires": [
+            ["debug-analytics"]
+        ]
+    },
+    {
+        "id": "alert-processor",
+        "type": "function",
+        "z": "f6",
+        "name": "Alert Processor",
+        "func": "// Process system alerts and notifications\nconst payload = msg.payload;\nconst alerts = context.get('activeAlerts') || [];\n\nif (payload.type === 'alert' || payload.level === 'error') {\n    const alert = {\n        id: Math.random().toString(36).substr(2, 9),\n        type: payload.type || 'system_alert',\n        message: payload.message || 'System alert triggered',\n        severity: payload.severity || 'medium',\n        source: payload.source || 'system',\n        timestamp: new Date().toISOString(),\n        acknowledged: false\n    };\n    \n    alerts.push(alert);\n    \n    // Keep only last 50 alerts\n    if (alerts.length > 50) {\n        alerts.splice(0, alerts.length - 50);\n    }\n    \n    context.set('activeAlerts', alerts);\n    \n    // Send urgent alerts to UI channel\n    if (alert.severity === 'high') {\n        msg.urgentAlert = alert;\n        return [msg, msg]; // Send to both outputs\n    }\n}\n\nmsg.alerts = alerts;\nreturn [msg, null];",
+        "outputs": 2,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 620,
+        "y": 240,
+        "wires": [
+            ["debug-alerts"],
+            ["urgent-alert-handler"]
+        ]
+    },
+    {
+        "id": "urgent-alert-handler",
+        "type": "function",
+        "z": "f6",
+        "name": "Urgent Alert Handler",
+        "func": "// Handle urgent alerts requiring immediate attention\nconst alert = msg.urgentAlert;\n\nif (alert) {\n    // Prepare urgent notification for UI\n    msg.payload = {\n        type: 'urgent_notification',\n        alert: alert,\n        requiresAcknowledgment: true,\n        autoEscalate: true,\n        escalationDelay: 300000 // 5 minutes\n    };\n    \n    // Set high priority\n    msg.priority = 'urgent';\n    msg.classification = {\n        messageType: 'ui',\n        priority: 'urgent',\n        sourceBot: 'SystemMonitor',\n        timestamp: new Date().toISOString()\n    };\n    \n    return msg;\n}\n\nreturn null;",
+        "outputs": 1,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 850,
+        "y": 280,
+        "wires": [
+            ["ui-channel-main"]
+        ]
+    },
+    {
+        "id": "cross-room-coordinator",
+        "type": "function",
+        "z": "f6",
+        "name": "Cross-Room Coordinator",
+        "func": "// Coordinate messages between different rooms\nconst payload = msg.payload;\n\nif (payload.type === 'cross_room_request') {\n    const coordination = {\n        sourceRoom: payload.sourceRoom,\n        targetRoom: payload.targetRoom,\n        messageType: payload.messageType || 'coordination',\n        coordinationId: Math.random().toString(36).substr(2, 9),\n        timestamp: new Date().toISOString()\n    };\n    \n    // Route based on coordination rules\n    if (payload.sourceRoom === 'development' && payload.targetRoom === 'production') {\n        // Development to Production: Deployment coordination\n        msg.deploymentCoordination = {\n            ...coordination,\n            action: 'prepare_deployment',\n            requiresApproval: true\n        };\n    } else if (payload.sourceRoom === 'production' && payload.targetRoom === 'ui-management') {\n        // Production to UI: Status updates\n        msg.statusCoordination = {\n            ...coordination,\n            action: 'status_update',\n            displayLevel: 'info'\n        };\n    }\n    \n    msg.coordination = coordination;\n}\n\nreturn msg;",
+        "outputs": 1,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 630,
+        "y": 300,
+        "wires": [
+            ["debug-coordination"]
+        ]
+    },
+    {
+        "id": "bot-health-checker",
+        "type": "function",
+        "z": "f6",
+        "name": "Bot Health Checker",
+        "func": "// Monitor bot health and performance\nconst bots = msg.payload.bots || [];\nconst healthReport = {\n    totalBots: bots.length,\n    healthyBots: 0,\n    unhealthyBots: 0,\n    offlineBots: 0,\n    performanceIssues: [],\n    timestamp: new Date().toISOString()\n};\n\nbots.forEach(bot => {\n    if (bot.status === 'offline') {\n        healthReport.offlineBots++;\n    } else if (bot.health && bot.health.status === 'healthy') {\n        healthReport.healthyBots++;\n    } else {\n        healthReport.unhealthyBots++;\n        \n        // Check for performance issues\n        if (bot.performance) {\n            if (bot.performance.responseTime > 1000) {\n                healthReport.performanceIssues.push({\n                    bot: bot.name,\n                    issue: 'high_response_time',\n                    value: bot.performance.responseTime\n                });\n            }\n            if (bot.performance.memoryUsage > 80) {\n                healthReport.performanceIssues.push({\n                    bot: bot.name,\n                    issue: 'high_memory_usage',\n                    value: bot.performance.memoryUsage\n                });\n            }\n        }\n    }\n});\n\n// Generate alerts for unhealthy bots\nif (healthReport.unhealthyBots > 0) {\n    msg.healthAlert = {\n        type: 'bot_health_alert',\n        severity: healthReport.unhealthyBots > 2 ? 'high' : 'medium',\n        message: `${healthReport.unhealthyBots} bot(s) reporting health issues`,\n        details: healthReport\n    };\n}\n\nmsg.healthReport = healthReport;\nreturn msg;",
+        "outputs": 1,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 630,
+        "y": 360,
+        "wires": [
+            ["debug-bot-health"]
+        ]
+    },
+    {
+        "id": "debug-prod",
+        "type": "debug",
+        "z": "f6",
+        "name": "Production Bot",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "payload",
+        "targetType": "msg",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 340,
+        "y": 60,
+        "wires": []
+    },
+    {
+        "id": "debug-dev",
+        "type": "debug",
+        "z": "f6",
+        "name": "Development Bot",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "payload",
+        "targetType": "msg",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 350,
+        "y": 100,
+        "wires": []
+    },
+    {
+        "id": "debug-ui-bot",
+        "type": "debug",
+        "z": "f6",
+        "name": "UI Bot",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "payload",
+        "targetType": "msg",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 320,
+        "y": 140,
+        "wires": []
+    },
+    {
+        "id": "debug-app-channel",
+        "type": "debug",
+        "z": "f6",
+        "name": "App Channel Output",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "payload",
+        "targetType": "msg",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 1430,
+        "y": 80,
+        "wires": []
+    },
+    {
+        "id": "debug-sys-channel",
+        "type": "debug",
+        "z": "f6",
+        "name": "Sys Channel Output", 
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "payload",
+        "targetType": "msg",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 1430,
+        "y": 120,
+        "wires": []
+    },
+    {
+        "id": "debug-ui-channel",
+        "type": "debug",
+        "z": "f6",
+        "name": "UI Channel Output",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "payload",
+        "targetType": "msg",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 1430,
+        "y": 160,
+        "wires": []
+    },
+    {
+        "id": "debug-analytics",
+        "type": "debug",
+        "z": "f6",
+        "name": "System Analytics",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "analytics",
+        "targetType": "msg",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 1630,
+        "y": 120,
+        "wires": []
+    },
+    {
+        "id": "debug-system-monitor",
+        "type": "debug",
+        "z": "f6",
+        "name": "System Monitor",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "payload",
+        "targetType": "msg",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 620,
+        "y": 200,
+        "wires": []
+    },
+    {
+        "id": "debug-alerts",
+        "type": "debug",
+        "z": "f6",
+        "name": "System Alerts",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "alerts",
+        "targetType": "msg",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 810,
+        "y": 240,
+        "wires": []
+    },
+    {
+        "id": "debug-room-manager",
+        "type": "debug",
+        "z": "f6",
+        "name": "Room Manager",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "payload",
+        "targetType": "msg",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 620,
+        "y": 260,
+        "wires": []
+    },
+    {
+        "id": "debug-coordination",
+        "type": "debug",
+        "z": "f6",
+        "name": "Room Coordination",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "coordination",
+        "targetType": "msg",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 840,
+        "y": 300,
+        "wires": []
+    },
+    {
+        "id": "debug-bot-registry",
+        "type": "debug",
+        "z": "f6",
+        "name": "Bot Registry",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "payload",
+        "targetType": "msg",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 610,
+        "y": 320,
+        "wires": []
+    },
+    {
+        "id": "debug-bot-health",
+        "type": "debug",
+        "z": "f6",
+        "name": "Bot Health",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "healthReport",
+        "targetType": "msg",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 820,
+        "y": 360,
+        "wires": []
+    },
+    {
+        "id": "scenario-prod-alert",
+        "type": "inject",
+        "z": "f6",
+        "name": "🚨 Production Alert",
+        "props": [
+            {
+                "p": "payload"
+            },
+            {
+                "p": "sourceBot",
+                "v": "BotProduction",
+                "vt": "str"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "",
+        "payload": "{\"type\":\"alert\",\"severity\":\"high\",\"message\":\"Database connection failure detected\",\"source\":\"production\",\"details\":{\"service\":\"primary-db\",\"errorCode\":\"CONN_TIMEOUT\"}}",
+        "payloadType": "json",
+        "x": 160,
+        "y": 450,
+        "wires": [
+            ["orchestrator-main"]
+        ]
+    },
+    {
+        "id": "scenario-dev-deploy",
+        "type": "inject",
+        "z": "f6",
+        "name": "🚀 Deployment Ready",
+        "props": [
+            {
+                "p": "payload"
+            },
+            {
+                "p": "sourceBot",
+                "v": "BotDevelopment",
+                "vt": "str"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "",
+        "payload": "{\"type\":\"deployment_ready\",\"version\":\"v2.1.4\",\"environment\":\"production\",\"changes\":[\"Bug fixes\",\"Performance improvements\",\"New user dashboard\"]}",
+        "payloadType": "json",
+        "x": 160,
+        "y": 490,
+        "wires": [
+            ["orchestrator-main"]
+        ]
+    },
+    {
+        "id": "scenario-user-action",
+        "type": "inject",
+        "z": "f6",
+        "name": "👤 User Action",
+        "props": [
+            {
+                "p": "payload"
+            },
+            {
+                "p": "sourceBot",
+                "v": "BotUIManager",
+                "vt": "str"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "",
+        "payload": "{\"type\":\"user_action\",\"action\":\"emergency_shutdown\",\"user\":\"admin\",\"reason\":\"Maintenance window\",\"estimatedDuration\":\"30 minutes\"}",
+        "payloadType": "json",
+        "x": 140,
+        "y": 530,
+        "wires": [
+            ["orchestrator-main"]
+        ]
+    },
+    {
+        "id": "scenario-cross-room",
+        "type": "inject",
+        "z": "f6",
+        "name": "🔄 Cross-Room Message",
+        "props": [
+            {
+                "p": "payload"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "",
+        "payload": "{\"type\":\"cross_room_request\",\"sourceRoom\":\"development\",\"targetRoom\":\"production\",\"messageType\":\"deployment_coordination\",\"details\":{\"buildId\":\"build-2024-001\"}}",
+        "payloadType": "json",
+        "x": 170,
+        "y": 570,
+        "wires": [
+            ["room-manager"]
+        ]
+    },
+    {
+        "id": "comment6",
+        "type": "comment",
+        "z": "f6",
+        "name": "Complete AlephScript System Demo - Production Scenario",
+        "info": "This comprehensive flow demonstrates:\n- Multi-bot production system\n- Complete channel integration (App/Sys/UI)\n- Central orchestration and routing\n- Cross-room communication\n- Real-time monitoring and analytics\n- Alert processing and escalation\n- Bot health monitoring\n- System coordination scenarios",
+        "x": 260,
+        "y": 20,
+        "wires": []
+    }
+]

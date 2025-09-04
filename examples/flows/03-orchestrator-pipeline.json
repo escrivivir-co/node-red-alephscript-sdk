@@ -1,0 +1,323 @@
+[
+    {
+        "id": "f3",
+        "type": "tab",
+        "label": "Orchestrator Pipeline",
+        "disabled": false,
+        "info": "# Orchestrator Pipeline Flow\n\nThis flow demonstrates the AlephScript Orchestrator node acting as a central message routing hub:\n\n- **Message Routing**: Routes messages between different channels\n- **Pipeline Processing**: Transforms and processes messages in sequence\n- **Cross-Channel Communication**: Enables communication between App, Sys, and UI channels\n- **Stream Management**: Manages RxJS observables for reactive processing",
+        "env": []
+    },
+    {
+        "id": "orchestrator1",
+        "type": "alephscript-orchestrator",
+        "z": "f3",
+        "name": "Message Hub",
+        "serverUrl": "http://localhost:3000",
+        "namespace": "/runtime",
+        "routingRules": [
+            {
+                "from": "app",
+                "to": "sys",
+                "condition": "error"
+            },
+            {
+                "from": "sys",
+                "to": "ui",
+                "condition": "status_update"
+            }
+        ],
+        "enablePipeline": true,
+        "x": 400,
+        "y": 200,
+        "wires": [
+            ["debug-orchestrator", "route-processor"]
+        ]
+    },
+    {
+        "id": "bot3",
+        "type": "alephscript-enhanced-bot",
+        "z": "f3",
+        "name": "Pipeline Bot",
+        "botName": "PipelineBot",
+        "serverUrl": "http://localhost:3000",
+        "namespace": "/runtime",
+        "autoConnect": true,
+        "features": ["CLIENT_REGISTER", "ROOM_MANAGEMENT", "ORCHESTRATION"],
+        "x": 150,
+        "y": 120,
+        "wires": [
+            ["orchestrator1"]
+        ]
+    },
+    {
+        "id": "app-input",
+        "type": "inject",
+        "z": "f3",
+        "name": "App Error",
+        "props": [
+            {
+                "p": "payload"
+            },
+            {
+                "p": "channel",
+                "v": "app",
+                "vt": "str"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "",
+        "payload": "{\"type\":\"error\",\"message\":\"Database connection failed\",\"severity\":\"high\"}",
+        "payloadType": "json",
+        "x": 120,
+        "y": 260,
+        "wires": [
+            ["orchestrator1"]
+        ]
+    },
+    {
+        "id": "sys-input",
+        "type": "inject",
+        "z": "f3",
+        "name": "System Status",
+        "props": [
+            {
+                "p": "payload"
+            },
+            {
+                "p": "channel",
+                "v": "sys",
+                "vt": "str"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "",
+        "payload": "{\"type\":\"status_update\",\"service\":\"database\",\"status\":\"recovering\",\"eta\":120}",
+        "payloadType": "json",
+        "x": 130,
+        "y": 300,
+        "wires": [
+            ["orchestrator1"]
+        ]
+    },
+    {
+        "id": "ui-input",
+        "type": "inject",
+        "z": "f3",
+        "name": "User Action",
+        "props": [
+            {
+                "p": "payload"
+            },
+            {
+                "p": "channel",
+                "v": "ui",
+                "vt": "str"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "",
+        "payload": "{\"type\":\"user_action\",\"action\":\"retry_connection\",\"user\":\"admin\"}",
+        "payloadType": "json",
+        "x": 120,
+        "y": 340,
+        "wires": [
+            ["orchestrator1"]
+        ]
+    },
+    {
+        "id": "route-processor",
+        "type": "function",
+        "z": "f3",
+        "name": "Route Processor",
+        "func": "// Process routed messages\nconst channel = msg.channel || 'unknown';\nconst payload = msg.payload;\n\n// Add routing metadata\nmsg.routing = {\n    originalChannel: channel,\n    processedAt: new Date().toISOString(),\n    routingId: Math.random().toString(36).substr(2, 9)\n};\n\n// Route based on message type\nif (payload.type === 'error') {\n    msg.targetChannel = 'sys';\n    msg.priority = 'high';\n} else if (payload.type === 'status_update') {\n    msg.targetChannel = 'ui';\n    msg.priority = 'medium';\n} else {\n    msg.targetChannel = 'app';\n    msg.priority = 'low';\n}\n\nreturn msg;",
+        "outputs": 1,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 600,
+        "y": 200,
+        "wires": [
+            ["switch-router"]
+        ]
+    },
+    {
+        "id": "switch-router",
+        "type": "switch",
+        "z": "f3",
+        "name": "Channel Router",
+        "property": "targetChannel",
+        "propertyType": "msg",
+        "rules": [
+            {
+                "t": "eq",
+                "v": "app",
+                "vt": "str"
+            },
+            {
+                "t": "eq",
+                "v": "sys",
+                "vt": "str"
+            },
+            {
+                "t": "eq",
+                "v": "ui",
+                "vt": "str"
+            }
+        ],
+        "checkall": "true",
+        "repair": false,
+        "outputs": 3,
+        "x": 780,
+        "y": 200,
+        "wires": [
+            ["debug-app-route"],
+            ["debug-sys-route"],
+            ["debug-ui-route"]
+        ]
+    },
+    {
+        "id": "debug-orchestrator",
+        "type": "debug",
+        "z": "f3",
+        "name": "Orchestrator Flow",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "true",
+        "targetType": "full",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 620,
+        "y": 140,
+        "wires": []
+    },
+    {
+        "id": "debug-app-route",
+        "type": "debug",
+        "z": "f3",
+        "name": "→ App Channel",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "payload",
+        "targetType": "msg",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 970,
+        "y": 160,
+        "wires": []
+    },
+    {
+        "id": "debug-sys-route",
+        "type": "debug",
+        "z": "f3",
+        "name": "→ Sys Channel",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "payload",
+        "targetType": "msg",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 970,
+        "y": 200,
+        "wires": []
+    },
+    {
+        "id": "debug-ui-route",
+        "type": "debug",
+        "z": "f3",
+        "name": "→ UI Channel",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "payload",
+        "targetType": "msg",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 960,
+        "y": 240,
+        "wires": []
+    },
+    {
+        "id": "metrics-collector",
+        "type": "function",
+        "z": "f3",
+        "name": "Pipeline Metrics",
+        "func": "// Collect pipeline metrics\nconst metrics = context.get('metrics') || {\n    totalMessages: 0,\n    channelCounts: { app: 0, sys: 0, ui: 0 },\n    errorCount: 0,\n    lastProcessed: null\n};\n\nmetrics.totalMessages++;\nmetrics.channelCounts[msg.channel] = (metrics.channelCounts[msg.channel] || 0) + 1;\n\nif (msg.payload.type === 'error') {\n    metrics.errorCount++;\n}\n\nmetrics.lastProcessed = new Date().toISOString();\ncontext.set('metrics', metrics);\n\nmsg.metrics = metrics;\nreturn msg;",
+        "outputs": 1,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 400,
+        "y": 380,
+        "wires": [
+            ["debug-metrics"]
+        ]
+    },
+    {
+        "id": "debug-metrics",
+        "type": "debug",
+        "z": "f3",
+        "name": "Pipeline Metrics",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "metrics",
+        "targetType": "msg",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 630,
+        "y": 380,
+        "wires": []
+    },
+    {
+        "id": "inject-metrics",
+        "type": "inject",
+        "z": "f3",
+        "name": "Get Metrics",
+        "props": [
+            {
+                "p": "payload"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "",
+        "payload": "{}",
+        "payloadType": "json",
+        "x": 130,
+        "y": 380,
+        "wires": [
+            ["metrics-collector"]
+        ]
+    },
+    {
+        "id": "comment3",
+        "type": "comment",
+        "z": "f3",
+        "name": "AlephScript Orchestrator Pipeline Demo",
+        "info": "This flow demonstrates:\n- Central message routing hub\n- Cross-channel message processing\n- Pipeline transformations\n- Routing rules and conditions\n- Metrics collection",
+        "x": 230,
+        "y": 40,
+        "wires": []
+    }
+]

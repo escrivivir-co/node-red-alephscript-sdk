@@ -1,0 +1,270 @@
+[
+    {
+        "id": "9d1dcdc20db99dfa",
+        "type": "tab",
+        "label": "ALEPHSCRIPT DEMO",
+        "disabled": false,
+        "info": "",
+        "env": []
+    },
+    {
+        "id": "c88c98d835ca9338",
+        "type": "alephscript-bot",
+        "z": "9d1dcdc20db99dfa",
+        "name": "",
+        "botName": "NodeRedBot",
+        "serverUrl": "http://localhost:3000",
+        "namespace": "/runtime",
+        "autoConnect": true,
+        "features": [
+            "messaging",
+            "node-red-integration"
+        ],
+        "x": 350,
+        "y": 100,
+        "wires": [
+            [
+                "4cebbaf677240c03"
+            ]
+        ]
+    },
+    {
+        "id": "33ef4bccbab46227",
+        "type": "alephscript-enhanced-bot",
+        "z": "9d1dcdc20db99dfa",
+        "name": "",
+        "botName": "NodeRedBot",
+        "serverUrl": "http://localhost:3000",
+        "namespace": "/runtime",
+        "autoConnect": true,
+        "features": [
+            "messaging",
+            "node-red-integration"
+        ],
+        "outputSelection": [
+            "debug"
+        ],
+        "triggerMode": "manual",
+        "intervalSeconds": 5,
+        "payloadType": "timestamp",
+        "payload": "",
+        "x": 400,
+        "y": 180,
+        "wires": [
+            [
+                "20b57241f7f86056"
+            ],
+            [],
+            [],
+            []
+        ]
+    },
+    {
+        "id": "f88aa65407f4a435",
+        "type": "app-channel",
+        "z": "9d1dcdc20db99dfa",
+        "name": "",
+        "serverUrl": "http://localhost:3000",
+        "namespace": "/runtime",
+        "autoConnect": true,
+        "componentId": "node-red-app-channel",
+        "stateFilters": [],
+        "actionFilters": [],
+        "x": 290,
+        "y": 500,
+        "wires": [
+            [
+                "162086b2a0c6f1f8"
+            ],
+            [
+                "162086b2a0c6f1f8"
+            ]
+        ]
+    },
+    {
+        "id": "3dc5da8926c4b89b",
+        "type": "orchestrator-node",
+        "z": "9d1dcdc20db99dfa",
+        "name": "",
+        "serverUrl": "http://localhost:3000",
+        "clientName": "orchestrator-node",
+        "roomName": "orchestrator-node_ROOM",
+        "enableAppChannel": true,
+        "enableSysChannel": true,
+        "enableUIChannel": true,
+        "enableCrossChannelRouting": true,
+        "messageTimeout": 5000,
+        "syncInterval": 1000,
+        "enableStatistics": true,
+        "enableLogging": true,
+        "x": 290,
+        "y": 560,
+        "wires": [
+            [
+                "162086b2a0c6f1f8"
+            ],
+            [
+                "162086b2a0c6f1f8"
+            ],
+            [
+                "162086b2a0c6f1f8"
+            ],
+            [
+                "162086b2a0c6f1f8"
+            ]
+        ]
+    },
+    {
+        "id": "4cebbaf677240c03",
+        "type": "alephscript-app-format",
+        "z": "9d1dcdc20db99dfa",
+        "name": "",
+        "messageType": "app_event",
+        "stateId": "",
+        "targetState": "",
+        "actionType": "",
+        "actionParams": "{}",
+        "result": "{}",
+        "success": true,
+        "agentId": "",
+        "command": "{}",
+        "data": "{}",
+        "sourceId": "",
+        "x": 510,
+        "y": 320,
+        "wires": [
+            [
+                "3dc5da8926c4b89b"
+            ]
+        ]
+    },
+    {
+        "id": "20b57241f7f86056",
+        "type": "alephscript-sys-format",
+        "z": "9d1dcdc20db99dfa",
+        "name": "",
+        "messageType": "info",
+        "level": "info",
+        "message": "",
+        "serviceId": "",
+        "health": true,
+        "status": "online",
+        "configKey": "",
+        "configValue": "{}",
+        "errorMessage": "",
+        "sourceId": "",
+        "x": 480,
+        "y": 360,
+        "wires": [
+            [
+                "3dc5da8926c4b89b"
+            ]
+        ]
+    },
+    {
+        "id": "06b7276212bd616d",
+        "type": "inject",
+        "z": "9d1dcdc20db99dfa",
+        "name": "",
+        "props": [
+            {
+                "p": "payload"
+            },
+            {
+                "p": "topic",
+                "vt": "str"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "",
+        "payload": "",
+        "payloadType": "date",
+        "x": 140,
+        "y": 180,
+        "wires": [
+            [
+                "33ef4bccbab46227"
+            ]
+        ]
+    },
+    {
+        "id": "d9788ec7473a53d7",
+        "type": "inject",
+        "z": "9d1dcdc20db99dfa",
+        "name": "",
+        "props": [
+            {
+                "p": "payload"
+            },
+            {
+                "p": "topic",
+                "vt": "str"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "",
+        "payload": "",
+        "payloadType": "date",
+        "x": 160,
+        "y": 100,
+        "wires": [
+            [
+                "c88c98d835ca9338"
+            ]
+        ]
+    },
+    {
+        "id": "458bedfa1d21d961",
+        "type": "alephscript-ui-format",
+        "z": "9d1dcdc20db99dfa",
+        "name": "",
+        "messageType": "notification",
+        "input": "",
+        "command": "",
+        "args": "[]",
+        "displayType": "info",
+        "title": "",
+        "message": "",
+        "component": "",
+        "phase": "",
+        "uiState": "{}",
+        "renderData": "{}",
+        "eventData": "{}",
+        "sourceId": "",
+        "x": 500,
+        "y": 400,
+        "wires": [
+            []
+        ]
+    },
+    {
+        "id": "162086b2a0c6f1f8",
+        "type": "debug",
+        "z": "9d1dcdc20db99dfa",
+        "name": "debug 1",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "false",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 540,
+        "y": 560,
+        "wires": []
+    },
+    {
+        "id": "bc2eca360e2b3b1e",
+        "type": "global-config",
+        "env": [],
+        "modules": {
+            "node-red-contrib-alephscript": "0.1.0"
+        }
+    }
+]

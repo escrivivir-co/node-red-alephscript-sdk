@@ -1,0 +1,254 @@
+[
+    {
+        "id": "f2",
+        "type": "tab",
+        "label": "Multi-Channel Bot",
+        "disabled": false,
+        "info": "# Multi-Channel Bot Flow\n\nThis flow demonstrates a bot using all three AlephScript channels:\n\n- **App Channel**: For application-level state management\n- **Sys Channel**: For system health monitoring\n- **UI Channel**: For user interface notifications\n\n## Architecture:\n1. One bot connects to the server\n2. Three channel nodes connect to the same bot\n3. Each channel handles different types of messages\n4. Format nodes prepare messages for each channel",
+        "env": []
+    },
+    {
+        "id": "bot2",
+        "type": "alephscript-enhanced-bot",
+        "z": "f2",
+        "name": "Multi-Channel Bot",
+        "botName": "MultiChannelBot",
+        "serverUrl": "http://localhost:3000",
+        "namespace": "/runtime",
+        "autoConnect": true,
+        "features": ["CLIENT_REGISTER", "ROOM_MANAGEMENT", "MULTI_CHANNEL"],
+        "x": 180,
+        "y": 120,
+        "wires": [
+            ["debug2"]
+        ]
+    },
+    {
+        "id": "app-channel1",
+        "type": "alephscript-app-channel",
+        "z": "f2",
+        "name": "App Channel",
+        "botRef": "bot2",
+        "stateFilters": ["initial", "running", "completed"],
+        "actionFilters": ["get_state", "set_state", "reset_state"],
+        "x": 400,
+        "y": 80,
+        "wires": [
+            ["app-format1"]
+        ]
+    },
+    {
+        "id": "sys-channel1",
+        "type": "alephscript-sys-channel",
+        "z": "f2",
+        "name": "Sys Channel",
+        "botRef": "bot2",
+        "healthMonitoring": true,
+        "errorReporting": true,
+        "x": 400,
+        "y": 120,
+        "wires": [
+            ["sys-format1"]
+        ]
+    },
+    {
+        "id": "ui-channel1",
+        "type": "alephscript-ui-channel",
+        "z": "f2",
+        "name": "UI Channel",
+        "botRef": "bot2",
+        "notificationTypes": ["info", "warning", "error"],
+        "phaseChangeTracking": true,
+        "x": 400,
+        "y": 160,
+        "wires": [
+            ["ui-format1"]
+        ]
+    },
+    {
+        "id": "app-format1",
+        "type": "alephscript-app-format",
+        "z": "f2",
+        "name": "App Formatter",
+        "outputFormat": "alephscript",
+        "includeTimestamp": true,
+        "x": 580,
+        "y": 80,
+        "wires": [
+            ["debug-app"]
+        ]
+    },
+    {
+        "id": "sys-format1",
+        "type": "alephscript-sys-format",
+        "z": "f2",
+        "name": "Sys Formatter",
+        "outputFormat": "alephscript",
+        "includeSystemInfo": true,
+        "x": 580,
+        "y": 120,
+        "wires": [
+            ["debug-sys"]
+        ]
+    },
+    {
+        "id": "ui-format1",
+        "type": "alephscript-ui-format",
+        "z": "f2",
+        "name": "UI Formatter",
+        "outputFormat": "alephscript",
+        "includeUIContext": true,
+        "x": 580,
+        "y": 160,
+        "wires": [
+            ["debug-ui"]
+        ]
+    },
+    {
+        "id": "debug2",
+        "type": "debug",
+        "z": "f2",
+        "name": "Bot Status",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "payload",
+        "targetType": "msg",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 370,
+        "y": 120,
+        "wires": []
+    },
+    {
+        "id": "debug-app",
+        "type": "debug",
+        "z": "f2",
+        "name": "App Messages",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "payload",
+        "targetType": "msg",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 750,
+        "y": 80,
+        "wires": []
+    },
+    {
+        "id": "debug-sys",
+        "type": "debug",
+        "z": "f2",
+        "name": "Sys Messages",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "payload",
+        "targetType": "msg",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 750,
+        "y": 120,
+        "wires": []
+    },
+    {
+        "id": "debug-ui",
+        "type": "debug",
+        "z": "f2",
+        "name": "UI Messages",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "payload",
+        "targetType": "msg",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 750,
+        "y": 160,
+        "wires": []
+    },
+    {
+        "id": "inject-app",
+        "type": "inject",
+        "z": "f2",
+        "name": "App State Change",
+        "props": [
+            {
+                "p": "payload"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "",
+        "payload": "{\"action\":\"set_state\",\"state\":\"running\",\"data\":{\"progress\":50}}",
+        "payloadType": "json",
+        "x": 160,
+        "y": 220,
+        "wires": [
+            ["app-channel1"]
+        ]
+    },
+    {
+        "id": "inject-sys",
+        "type": "inject",
+        "z": "f2",
+        "name": "System Health Check",
+        "props": [
+            {
+                "p": "payload"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "",
+        "payload": "{\"type\":\"health_check\",\"cpu\":45,\"memory\":68,\"status\":\"healthy\"}",
+        "payloadType": "json",
+        "x": 170,
+        "y": 260,
+        "wires": [
+            ["sys-channel1"]
+        ]
+    },
+    {
+        "id": "inject-ui",
+        "type": "inject",
+        "z": "f2",
+        "name": "UI Notification",
+        "props": [
+            {
+                "p": "payload"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "",
+        "payload": "{\"type\":\"notification\",\"level\":\"info\",\"message\":\"Operation completed successfully\"}",
+        "payloadType": "json",
+        "x": 150,
+        "y": 300,
+        "wires": [
+            ["ui-channel1"]
+        ]
+    },
+    {
+        "id": "comment2",
+        "type": "comment",
+        "z": "f2",
+        "name": "Multi-Channel AlephScript Bot Demo",
+        "info": "This flow demonstrates:\n- Enhanced bot with multiple channels\n- App, Sys, and UI channel separation\n- Format nodes for each channel type\n- Independent message flows per channel",
+        "x": 200,
+        "y": 40,
+        "wires": []
+    }
+]

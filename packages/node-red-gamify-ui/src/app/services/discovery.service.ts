@@ -265,7 +265,7 @@ export class DiscoveryService {
   
   private async checkUIAvailability(baseUrl: string): Promise<boolean> {
     try {
-      const response = await this.http.get(`${baseUrl}/ui`, { 
+      const response = await this.http.get(`${baseUrl}/dashboard`, { 
         responseType: 'text' as 'json'
       }).pipe(
         timeout(2000),
