@@ -5,7 +5,7 @@
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "scripts": {
-    "build": "tsc",
+    "build": "rm -rf dist tsconfig.tsbuildinfo && tsc --build",
     "build:full": "npm run clean && npm run build && npm run copy:html",
     "copy:html": "node scripts/postbuild.cjs",
     "dev": "npm run dev:ts & npm run watch:html",
