@@ -1,0 +1,1 @@
+export const UI_TERRA_RED_BOT = "UI_Terra_RED_BOT.ts"
