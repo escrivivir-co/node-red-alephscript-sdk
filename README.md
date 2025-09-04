@@ -6,12 +6,14 @@ A comprehensive Node-RED integration system for the AlephScript ecosystem featur
 
 Node-RED AlephScript SDK is a dual-library integration platform that bridges Node-RED flows with AlephScript's multi-channel bot orchestration system. The SDK features:
 
-- **Node-RED Contrib Nodes**: Custom nodes for Bot, App Channel, Sys Channel, UI Channel, and Orchestrator integration
+- **13 Node-RED Contrib Nodes**: Complete suite including Bot, App Channel, Sys Channel, UI Channel, Orchestrator, Dashboard widgets, and testing tools
 - **Real-time Communication**: Socket.IO client integration with AlephScript protocol (CLIENT_REGISTER, rooms, namespaces)
 - **3-Channel Architecture**: Specialized nodes for app, sys, and ui channels with state management
 - **Angular UI Components**: Dashboard 2.0 management panel and GamificationUI extensions
 - **State Management**: Comprehensive state tracking, transitions, and action coordination
 - **Multi-Bot Support**: Room-based communication with cross-bot messaging capabilities
+- **Automated Installation**: One-command setup with `npm run install:node-red-auto`
+- **Production Ready**: Comprehensive examples and documentation for enterprise deployment
 
 ## Architecture
 
@@ -92,11 +94,25 @@ An Angular application extending the GamificationUI pattern for Node-RED managem
 
 ### Installation
 
+#### Quick Installation (Recommended)
+
 ```bash
 # Clone the repository
 git clone https://github.com/escrivivir-co/node-red-alephscript-sdk.git
 cd node-red-alephscript-sdk
 
+# Install dependencies and build
+npm install
+
+# Install automatically to Node-RED (Windows/Linux/macOS)
+npm run install:node-red-auto
+```
+
+**✅ Installation verified successfully on Windows Git Bash!**
+
+#### Manual Installation
+
+```bash
 # Install root dependencies (monorepo management)
 npm install
 
@@ -105,6 +121,25 @@ npm run install:all
 
 # Build all packages with HTML asset copying
 npm run build:all
+
+# Manual installation to Node-RED
+cd ~/.node-red
+npm install path/to/node-red-alephscript-sdk/packages/node-red-contrib-alephscript
+```
+
+#### Available Scripts
+
+```bash
+# Automated installation (detects Node-RED directory)
+npm run install:node-red-auto
+
+# Individual builds
+npm run build:contrib        # node-red-contrib-alephscript only
+npm run build:ui            # node-red-gamify-ui only
+npm run build:all           # Build all packages
+
+# Development with hot reload
+npm run dev
 ```
 
 ### Development Setup
@@ -128,24 +163,410 @@ npm run lint:fix:all
 
 ### Usage in Node-RED
 
-1. **Install the contrib package:**
-   ```bash
-   cd ~/.node-red
-   npm install path/to/node-red-alephscript-sdk/packages/node-red-contrib-alephscript
-   ```
+**✅ After successful installation, restart Node-RED to see the 13 AlephScript nodes in the palette!**
 
-2. **Start Node-RED and find AlephScript nodes in the palette**
+#### Available Nodes:
+- **alephscript-bot** - Basic bot with Socket.IO integration
+- **alephscript-enhanced-bot** - Advanced bot with features array
+- **alephscript-app-channel** - Application state management
+- **alephscript-sys-channel** - System health monitoring  
+- **alephscript-ui-channel** - User interface notifications
+- **alephscript-orchestrator** - Central message hub
+- **alephscript-config** - Configuration node
+- **Format nodes** - Data formatting for each channel (3 nodes)
+- **Dashboard widgets** - Bot registry, room tester, stream monitor (3 nodes)
 
-3. **Configure a Bot Node:**
-   - Server URL: `http://localhost:3000` (AlephScript server)
-   - Namespace: `/runtime`
+#### Quick Start Configuration:
+
+1. **Basic Bot Setup:**
+   - Server URL: `http://localhost:3000` (AlephScript ws-server)
+   - Namespace: `/runtime`  
    - Bot Name: `MyNodeRedBot`
    - Auto-connect: ✅
 
-4. **Add App Channel Node for state management:**
+2. **Add App Channel for state management:**
    - Connect to same server
-   - Configure state filters: `['initial', 'running', 'completed']`
-   - Configure action filters: `['get_state', 'reset_state']`
+   - State filters: `['initial', 'running', 'completed']`
+   - Action filters: `['get_state', 'reset_state']`
+
+## 📁 Flow Examples
+
+The `examples/flows/` directory contains 6 comprehensive flow demonstrations:
+
+1. **[Basic Bot Connection](examples/flows/01-basic-bot-connection.json)** - Simple client-server connection
+2. **[Multi-Channel Bot](examples/flows/02-multi-channel-bot.json)** - App/Sys/UI channel integration
+3. **[Orchestrator Pipeline](examples/flows/03-orchestrator-pipeline.json)** - Message routing and processing
+4. **[Cross-Room Communication](examples/flows/04-cross-room-communication.json)** - Multi-bot room messaging
+5. **[Dashboard Monitoring](examples/flows/05-dashboard-monitoring.json)** - Real-time monitoring widgets
+6. **[Complete System Demo](examples/flows/06-complete-system-demo.json)** - Full production scenario
+
+### Quick Import
+
+1. Open Node-RED editor (`http://localhost:1880`)
+2. Go to Menu → Import
+3. Select any flow JSON from `examples/flows/`
+4. Deploy and test!
+
+**📖 See [examples/README.md](examples/README.md) for detailed documentation and setup instructions.**
+
+## 🚀 Example Flows
+
+### Flow 1: Basic Bot Registration
+
+```json
+[
+  {
+    "id": "basic-bot-flow",
+    "type": "tab",
+    "label": "Basic AlephScript Bot",
+    "disabled": false,
+    "info": ""
+  },
+  {
+    "id": "aleph-bot-1",
+    "type": "alephscript-bot",
+    "z": "basic-bot-flow",
+    "name": "Demo Bot",
+    "serverUrl": "http://localhost:3000",
+    "namespace": "/runtime",
+    "botName": "NodeRedDemoBot",
+    "autoConnect": true,
+    "features": ["messaging", "state-sync"],
+    "x": 200,
+    "y": 200,
+    "wires": [["debug-output"]]
+  },
+  {
+    "id": "debug-output",
+    "type": "debug",
+    "z": "basic-bot-flow",
+    "name": "Bot Events",
+    "active": true,
+    "tosidebar": true,
+    "console": false,
+    "tostatus": false,
+    "complete": "payload",
+    "targetType": "msg",
+    "x": 400,
+    "y": 200,
+    "wires": []
+  }
+]
+```
+
+### Flow 2: 3-Channel Orchestration
+
+```json
+[
+  {
+    "id": "orchestration-flow",
+    "type": "tab",
+    "label": "3-Channel AlephScript System",
+    "disabled": false,
+    "info": ""
+  },
+  {
+    "id": "orchestrator-hub",
+    "type": "alephscript-orchestrator",
+    "z": "orchestration-flow",
+    "name": "Central Hub",
+    "serverUrl": "http://localhost:3000",
+    "namespace": "/runtime",
+    "enableCrossChannel": true,
+    "x": 300,
+    "y": 200,
+    "wires": [["app-channel"], ["sys-channel"], ["ui-channel"]]
+  },
+  {
+    "id": "app-channel",
+    "type": "alephscript-app-channel",
+    "z": "orchestration-flow",
+    "name": "App Channel",
+    "serverUrl": "http://localhost:3000",
+    "namespace": "/app",
+    "stateFilters": ["initial", "running", "completed"],
+    "actionFilters": ["get_state", "set_state", "reset_state"],
+    "x": 150,
+    "y": 300,
+    "wires": [["app-debug"]]
+  },
+  {
+    "id": "sys-channel",
+    "type": "alephscript-sys-channel",
+    "z": "orchestration-flow",
+    "name": "System Channel",
+    "serverUrl": "http://localhost:3000",
+    "namespace": "/sys",
+    "healthMonitoring": true,
+    "errorReporting": true,
+    "x": 300,
+    "y": 300,
+    "wires": [["sys-debug"]]
+  },
+  {
+    "id": "ui-channel",
+    "type": "alephscript-ui-channel",
+    "z": "orchestration-flow",
+    "name": "UI Channel",
+    "serverUrl": "http://localhost:3000",
+    "namespace": "/ui",
+    "notificationTypes": ["info", "warning", "error"],
+    "phaseChangeTracking": true,
+    "x": 450,
+    "y": 300,
+    "wires": [["ui-debug"]]
+  },
+  {
+    "id": "app-debug",
+    "type": "debug",
+    "z": "orchestration-flow",
+    "name": "App Events",
+    "x": 150,
+    "y": 400,
+    "wires": []
+  },
+  {
+    "id": "sys-debug",
+    "type": "debug",
+    "z": "orchestration-flow",
+    "name": "Sys Events",
+    "x": 300,
+    "y": 400,
+    "wires": []
+  },
+  {
+    "id": "ui-debug",
+    "type": "debug",
+    "z": "orchestration-flow",
+    "name": "UI Events",
+    "x": 450,
+    "y": 400,
+    "wires": []
+  }
+]
+```
+
+### Flow 3: Multi-Bot Room Communication
+
+```json
+[
+  {
+    "id": "multi-bot-flow",
+    "type": "tab",
+    "label": "Multi-Bot Room System",
+    "disabled": false,
+    "info": ""
+  },
+  {
+    "id": "bot-manager-1",
+    "type": "alephscript-enhanced-bot",
+    "z": "multi-bot-flow",
+    "name": "Manager Bot",
+    "serverUrl": "http://localhost:3000",
+    "namespace": "/runtime",
+    "botName": "ManagerBot",
+    "autoConnect": true,
+    "features": ["room-management", "cross-bot-messaging", "state-coordination"],
+    "roomId": "demo-room-001",
+    "x": 200,
+    "y": 150,
+    "wires": [["room-tester"]]
+  },
+  {
+    "id": "bot-worker-1",
+    "type": "alephscript-enhanced-bot",
+    "z": "multi-bot-flow",
+    "name": "Worker Bot 1",
+    "serverUrl": "http://localhost:3000",
+    "namespace": "/runtime",
+    "botName": "WorkerBot1",
+    "autoConnect": true,
+    "features": ["task-execution", "status-reporting"],
+    "roomId": "demo-room-001",
+    "x": 200,
+    "y": 250,
+    "wires": [["room-tester"]]
+  },
+  {
+    "id": "bot-worker-2",
+    "type": "alephscript-enhanced-bot",
+    "z": "multi-bot-flow",
+    "name": "Worker Bot 2",
+    "serverUrl": "http://localhost:3000",
+    "namespace": "/runtime",
+    "botName": "WorkerBot2",
+    "autoConnect": true,
+    "features": ["task-execution", "status-reporting"],
+    "roomId": "demo-room-001",
+    "x": 200,
+    "y": 350,
+    "wires": [["room-tester"]]
+  },
+  {
+    "id": "room-tester",
+    "type": "alephscript-room-tester",
+    "z": "multi-bot-flow",
+    "name": "Room Communication Tester",
+    "serverUrl": "http://localhost:3000",
+    "namespace": "/runtime",
+    "roomId": "demo-room-001",
+    "testInterval": 5000,
+    "crossBotMessages": true,
+    "x": 450,
+    "y": 250,
+    "wires": [["stream-monitor"]]
+  },
+  {
+    "id": "stream-monitor",
+    "type": "alephscript-stream-monitor",
+    "z": "multi-bot-flow",
+    "name": "Activity Monitor",
+    "serverUrl": "http://localhost:3000",
+    "monitorChannels": ["app", "sys", "ui"],
+    "bufferSize": 100,
+    "realTimeUpdates": true,
+    "x": 700,
+    "y": 250,
+    "wires": [["activity-debug"]]
+  },
+  {
+    "id": "activity-debug",
+    "type": "debug",
+    "z": "multi-bot-flow",
+    "name": "Room Activity",
+    "x": 900,
+    "y": 250,
+    "wires": []
+  }
+]
+```
+
+### Flow 4: State Machine Integration
+
+```json
+[
+  {
+    "id": "state-machine-flow",
+    "type": "tab",
+    "label": "AlephScript + State Machine",
+    "disabled": false,
+    "info": ""
+  },
+  {
+    "id": "config-node",
+    "type": "alephscript-config",
+    "serverUrl": "http://localhost:3000",
+    "globalNamespace": "/runtime",
+    "autoReconnect": true,
+    "reconnectDelay": 1000
+  },
+  {
+    "id": "state-bot",
+    "type": "alephscript-enhanced-bot",
+    "z": "state-machine-flow",
+    "name": "State Machine Bot",
+    "config": "config-node",
+    "botName": "StateMachineBot",
+    "features": ["state-transitions", "event-handling", "phase-management"],
+    "x": 200,
+    "y": 200,
+    "wires": [["app-formatter"]]
+  },
+  {
+    "id": "app-formatter",
+    "type": "alephscript-app-format",
+    "z": "state-machine-flow",
+    "name": "State Formatter",
+    "stateTransformations": {
+      "initial": "ready",
+      "running": "executing",
+      "completed": "finished",
+      "error": "failed"
+    },
+    "x": 400,
+    "y": 200,
+    "wires": [["app-channel-state"]]
+  },
+  {
+    "id": "app-channel-state",
+    "type": "alephscript-app-channel",
+    "z": "state-machine-flow",
+    "name": "State Manager",
+    "config": "config-node",
+    "stateFilters": ["ready", "executing", "finished", "failed"],
+    "actionFilters": ["transition", "rollback", "reset"],
+    "x": 600,
+    "y": 200,
+    "wires": [["state-debug"], ["ui-formatter"]]
+  },
+  {
+    "id": "ui-formatter",
+    "type": "alephscript-ui-format",
+    "z": "state-machine-flow",
+    "name": "UI Formatter",
+    "notificationTemplates": {
+      "ready": "System is ready for operation",
+      "executing": "Processing request...",
+      "finished": "Operation completed successfully",
+      "failed": "Operation failed - check logs"
+    },
+    "x": 400,
+    "y": 300,
+    "wires": [["ui-channel-notify"]]
+  },
+  {
+    "id": "ui-channel-notify",
+    "type": "alephscript-ui-channel",
+    "z": "state-machine-flow",
+    "name": "UI Notifications",
+    "config": "config-node",
+    "notificationTypes": ["info", "success", "warning", "error"],
+    "x": 600,
+    "y": 300,
+    "wires": [["ui-debug"]]
+  },
+  {
+    "id": "state-debug",
+    "type": "debug",
+    "z": "state-machine-flow",
+    "name": "State Changes",
+    "x": 800,
+    "y": 200,
+    "wires": []
+  },
+  {
+    "id": "ui-debug",
+    "type": "debug",
+    "z": "state-machine-flow",
+    "name": "UI Events",
+    "x": 800,
+    "y": 300,
+    "wires": []
+  }
+]
+```
+
+## 📊 Dashboard 2.0 Integration
+
+The SDK includes Dashboard 2.0 widgets for comprehensive monitoring:
+
+### Bot Registry Widget
+- Real-time bot registration tracking
+- Connection status monitoring
+- Feature capability overview
+
+### Room Communication Tester
+- Cross-bot message testing
+- Room-based communication verification
+- Performance metrics
+
+### Stream Monitor
+- Multi-channel activity visualization
+- Real-time event streaming
+- Buffer management and replay
+
+### Integration with X+1 Demo
+The Node-RED AlephScript integration works seamlessly with the existing X+1 demo configuration in `state-machine-mcp-driver`.
 
 ## Build Scripts Documentation
 
