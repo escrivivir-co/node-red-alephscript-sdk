@@ -1,0 +1,600 @@
+[
+    {
+        "id": "2f84c32edd46b0c4",
+        "type": "tab",
+        "label": "CHANNEL_KICK",
+        "disabled": false,
+        "info": "",
+        "env": []
+    },
+    {
+        "id": "3d95779c45ca0cb0",
+        "type": "alephscript-enhanced-bot",
+        "z": "2f84c32edd46b0c4",
+        "name": "RED_CHANNEL_KICK_ENHANCED",
+        "botName": "NodeRedBot",
+        "serverUrl": "http://localhost:3000",
+        "namespace": "/runtime",
+        "room": "STREAM-KICK-BOT-AS_ROOM",
+        "autoConnect": true,
+        "features": [
+            "messaging",
+            "node-red-integration"
+        ],
+        "outputSelection": [
+            "app",
+            "sys",
+            "ui",
+            "debug"
+        ],
+        "triggerMode": "manual",
+        "intervalSeconds": 5,
+        "payloadType": "timestamp",
+        "payload": "",
+        "x": 190,
+        "y": 80,
+        "wires": [
+            [
+                "2b534e5f29fba955"
+            ],
+            [
+                "bfc942d6a50d5962"
+            ],
+            [
+                "042fa3f6886e3084"
+            ],
+            [
+                "9c7792cf85a35e44"
+            ]
+        ]
+    },
+    {
+        "id": "bfc942d6a50d5962",
+        "type": "debug",
+        "z": "2f84c32edd46b0c4",
+        "name": "debug 5",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "false",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 460,
+        "y": 80,
+        "wires": []
+    },
+    {
+        "id": "2b534e5f29fba955",
+        "type": "debug",
+        "z": "2f84c32edd46b0c4",
+        "name": "debug 6",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "false",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 460,
+        "y": 40,
+        "wires": []
+    },
+    {
+        "id": "042fa3f6886e3084",
+        "type": "debug",
+        "z": "2f84c32edd46b0c4",
+        "name": "debug 7",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "false",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 460,
+        "y": 120,
+        "wires": []
+    },
+    {
+        "id": "9c7792cf85a35e44",
+        "type": "switch",
+        "z": "2f84c32edd46b0c4",
+        "name": "payload.event",
+        "property": "payload.event",
+        "propertyType": "msg",
+        "rules": [
+            {
+                "t": "eq",
+                "v": "APP_INFO",
+                "vt": "str"
+            },
+            {
+                "t": "eq",
+                "v": "UI_INFO",
+                "vt": "str"
+            },
+            {
+                "t": "else"
+            }
+        ],
+        "checkall": "true",
+        "repair": false,
+        "outputs": 3,
+        "x": 180,
+        "y": 200,
+        "wires": [
+            [
+                "a45df3ff78fe151e"
+            ],
+            [
+                "a45df3ff78fe151e"
+            ],
+            [
+                "8afd4148857a8498"
+            ]
+        ]
+    },
+    {
+        "id": "8afd4148857a8498",
+        "type": "debug",
+        "z": "2f84c32edd46b0c4",
+        "name": "UI STREAM",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "payload",
+        "targetType": "msg",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 190,
+        "y": 240,
+        "wires": []
+    },
+    {
+        "id": "a45df3ff78fe151e",
+        "type": "change",
+        "z": "2f84c32edd46b0c4",
+        "name": "",
+        "rules": [
+            {
+                "t": "set",
+                "p": "payload",
+                "pt": "msg",
+                "to": "payload.args",
+                "tot": "msg"
+            }
+        ],
+        "action": "",
+        "property": "",
+        "from": "",
+        "to": "",
+        "reg": false,
+        "x": 400,
+        "y": 200,
+        "wires": [
+            [
+                "d8192385defa7d59"
+            ]
+        ]
+    },
+    {
+        "id": "d8192385defa7d59",
+        "type": "split",
+        "z": "2f84c32edd46b0c4",
+        "name": "",
+        "splt": "\\n",
+        "spltType": "str",
+        "arraySplt": 1,
+        "arraySpltType": "len",
+        "stream": false,
+        "addname": "",
+        "property": "payload",
+        "x": 570,
+        "y": 200,
+        "wires": [
+            [
+                "455a0da0ea2cd6e6"
+            ]
+        ]
+    },
+    {
+        "id": "455a0da0ea2cd6e6",
+        "type": "switch",
+        "z": "2f84c32edd46b0c4",
+        "name": "source",
+        "property": "payload.source",
+        "propertyType": "msg",
+        "rules": [
+            {
+                "t": "eq",
+                "v": "kick-bot",
+                "vt": "str"
+            },
+            {
+                "t": "else"
+            }
+        ],
+        "checkall": "true",
+        "repair": false,
+        "outputs": 2,
+        "x": 730,
+        "y": 200,
+        "wires": [
+            [
+                "2bb99a03110e9a85"
+            ],
+            [
+                "83200e181fdf1676"
+            ]
+        ]
+    },
+    {
+        "id": "2bb99a03110e9a85",
+        "type": "switch",
+        "z": "2f84c32edd46b0c4",
+        "name": "type",
+        "property": "payload.type",
+        "propertyType": "msg",
+        "rules": [
+            {
+                "t": "eq",
+                "v": "kick_ui_update",
+                "vt": "str"
+            },
+            {
+                "t": "eq",
+                "v": "kick_event",
+                "vt": "str"
+            },
+            {
+                "t": "eq",
+                "v": "kick_message",
+                "vt": "str"
+            },
+            {
+                "t": "eq",
+                "v": "kick_chat_render",
+                "vt": "str"
+            },
+            {
+                "t": "else"
+            }
+        ],
+        "checkall": "true",
+        "repair": false,
+        "outputs": 5,
+        "x": 910,
+        "y": 120,
+        "wires": [
+            [
+                "142b74eefa1a4961"
+            ],
+            [
+                "142b74eefa1a4961"
+            ],
+            [
+                "926b1c867dbcf8b9",
+                "eba33b285098b1a2"
+            ],
+            [
+                "142b74eefa1a4961"
+            ],
+            [
+                "142b74eefa1a4961"
+            ]
+        ]
+    },
+    {
+        "id": "142b74eefa1a4961",
+        "type": "debug",
+        "z": "2f84c32edd46b0c4",
+        "name": "BOT_CHANNEL",
+        "active": false,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "payload",
+        "targetType": "msg",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 1120,
+        "y": 180,
+        "wires": []
+    },
+    {
+        "id": "83200e181fdf1676",
+        "type": "debug",
+        "z": "2f84c32edd46b0c4",
+        "name": "UNKNOWN",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "payload",
+        "targetType": "msg",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 930,
+        "y": 240,
+        "wires": []
+    },
+    {
+        "id": "926b1c867dbcf8b9",
+        "type": "debug",
+        "z": "2f84c32edd46b0c4",
+        "name": "BOT_MESSAGE",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "payload.payload",
+        "targetType": "msg",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 1090,
+        "y": 60,
+        "wires": []
+    },
+    {
+        "id": "2ac943ab445c511f",
+        "type": "ui-dice",
+        "z": "2f84c32edd46b0c4",
+        "name": "Dado",
+        "group": "16baa620a7d7a5e7",
+        "order": 0,
+        "value": "payload",
+        "valueType": "msg",
+        "width": 0,
+        "height": 0,
+        "x": 790,
+        "y": 660,
+        "wires": []
+    },
+    {
+        "id": "eba33b285098b1a2",
+        "type": "function",
+        "z": "2f84c32edd46b0c4",
+        "name": "EsComando",
+        "func": "const payload = msg.payload.payload || {};\nconst text = payload.message || \"\";\n\nif (text.includes(\"-->\")) {\n    return [msg, null];\n} else {\n    return [null, msg];\n}\n\n",
+        "outputs": 2,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 230,
+        "y": 420,
+        "wires": [
+            [
+                "f97244cec6e89398"
+            ],
+            [
+                "55d658efccf9ff0e"
+            ]
+        ]
+    },
+    {
+        "id": "55d658efccf9ff0e",
+        "type": "debug",
+        "z": "2f84c32edd46b0c4",
+        "name": "MENSAJE",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "payload.payload",
+        "targetType": "msg",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 170,
+        "y": 580,
+        "wires": []
+    },
+    {
+        "id": "f97244cec6e89398",
+        "type": "function",
+        "z": "2f84c32edd46b0c4",
+        "name": "GetComando",
+        "func": "const payload = msg.payload.payload || {};\nconst text = payload.message || \"\";\n\nconst seg = text.split(\" \");\n\nif (seg.length > 0) {\n    const command = text.split(\" \")[0].replace(\"-->\", \"\");\n    msg.payload.command = command;\n} else {\n    msg.payload.command = \"?\"\n}\n\nreturn msg;",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 450,
+        "y": 420,
+        "wires": [
+            [
+                "03d4799df34d9240"
+            ]
+        ]
+    },
+    {
+        "id": "03d4799df34d9240",
+        "type": "switch",
+        "z": "2f84c32edd46b0c4",
+        "name": "Comandos",
+        "property": "payload.command",
+        "propertyType": "msg",
+        "rules": [
+            {
+                "t": "eq",
+                "v": "dice",
+                "vt": "str"
+            },
+            {
+                "t": "else"
+            }
+        ],
+        "checkall": "true",
+        "repair": false,
+        "outputs": 2,
+        "x": 370,
+        "y": 780,
+        "wires": [
+            [
+                "9cb44e581b6df07d"
+            ],
+            [
+                "066cae81592ee9e4"
+            ]
+        ]
+    },
+    {
+        "id": "066cae81592ee9e4",
+        "type": "debug",
+        "z": "2f84c32edd46b0c4",
+        "name": "COMMANDOS",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "payload",
+        "targetType": "msg",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 540,
+        "y": 840,
+        "wires": []
+    },
+    {
+        "id": "d437c617291bbba4",
+        "type": "debug",
+        "z": "2f84c32edd46b0c4",
+        "name": "DICE",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "payload",
+        "targetType": "msg",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 790,
+        "y": 740,
+        "wires": []
+    },
+    {
+        "id": "9cb44e581b6df07d",
+        "type": "function",
+        "z": "2f84c32edd46b0c4",
+        "name": "GetValor",
+        "func": "const payload = msg.payload.payload || {};\nconst text = payload.message || \"\";\n\nconst seg = text.split(\" \");\n\nif (seg.length > 1) {\n    const value = text.split(\" \")[1];\n    msg.payload = value;\n} else {\n    msg.payload = 6\n}\n\nreturn msg;",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 600,
+        "y": 680,
+        "wires": [
+            [
+                "2ac943ab445c511f",
+                "d437c617291bbba4"
+            ]
+        ]
+    },
+    {
+        "id": "16baa620a7d7a5e7",
+        "type": "ui-group",
+        "name": "COMANDOS",
+        "page": "94ae042eb5563649",
+        "width": 6,
+        "height": 1,
+        "order": -1,
+        "showTitle": true,
+        "className": "",
+        "visible": "true",
+        "disabled": "false",
+        "groupType": "default"
+    },
+    {
+        "id": "94ae042eb5563649",
+        "type": "ui-page",
+        "name": "AZAR",
+        "ui": "706c8bf1bb7b8c1e",
+        "path": "/page2",
+        "icon": "home",
+        "layout": "grid",
+        "theme": "45fbc2894a4219af",
+        "breakpoints": [
+            {
+                "name": "Default",
+                "px": "0",
+                "cols": "3"
+            },
+            {
+                "name": "Tablet",
+                "px": "576",
+                "cols": "6"
+            },
+            {
+                "name": "Small Desktop",
+                "px": "768",
+                "cols": "9"
+            },
+            {
+                "name": "Desktop",
+                "px": "1024",
+                "cols": "12"
+            }
+        ],
+        "order": -1,
+        "className": "",
+        "visible": "true",
+        "disabled": "false"
+    },
+    {
+        "id": "706c8bf1bb7b8c1e",
+        "type": "ui-base",
+        "name": "DESK",
+        "path": "/dashboard",
+        "appIcon": "",
+        "includeClientData": true,
+        "acceptsClientConfig": [
+            "ui-notification",
+            "ui-control"
+        ],
+        "showPathInSidebar": false,
+        "headerContent": "page",
+        "navigationStyle": "default",
+        "titleBarStyle": "default",
+        "showReconnectNotification": true,
+        "notificationDisplayTime": 1,
+        "showDisconnectNotification": true,
+        "allowInstall": true
+    },
+    {
+        "id": "45fbc2894a4219af",
+        "type": "ui-theme",
+        "name": "Default Theme",
+        "colors": {
+            "surface": "#ffffff",
+            "primary": "#0094CE",
+            "bgPage": "#eeeeee",
+            "groupBg": "#ffffff",
+            "groupOutline": "#cccccc"
+        },
+        "sizes": {
+            "density": "default",
+            "pagePadding": "12px",
+            "groupGap": "12px",
+            "groupBorderRadius": "4px",
+            "widgetGap": "12px"
+        }
+    },
+    {
+        "id": "ec0b4ad7ee7612bb",
+        "type": "global-config",
+        "env": [],
+        "modules": {
+            "node-red-contrib-alephscript": "0.1.0",
+            "@yoshoku/node-red-dashboard-2-ui-dice": "0.2.0",
+            "@flowfuse/node-red-dashboard": "1.26.0"
+        }
+    }
+]

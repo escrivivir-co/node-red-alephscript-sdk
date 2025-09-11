@@ -1,0 +1,1 @@
+@yoshoku/node-red-dashboard-2-ui-dice
