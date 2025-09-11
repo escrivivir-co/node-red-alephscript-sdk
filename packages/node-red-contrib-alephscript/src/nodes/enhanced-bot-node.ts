@@ -1,38 +1,43 @@
-import { Node, NodeDef, NodeInitializer, NodeMessage } from 'node-red';
-import { io, Socket } from 'socket.io-client';
+import { Node, NodeDef, NodeInitializer, NodeMessage } from "node-red";
+import { io, Socket } from "socket.io-client";
+import { AlephScriptClient } from "@alephscript/core";
 
 // Define NodeSend type locally since it's not exported
-type NodeSend = (msg: NodeMessage | NodeMessage[] | (NodeMessage | null)[] | null) => void;
+type NodeSend = (
+  msg: NodeMessage | NodeMessage[] | (NodeMessage | null)[] | null
+) => void;
 
 interface EnhancedBotNodeDef extends NodeDef {
   botName: string;
   serverUrl: string;
   namespace: string;
+  room: string;
   autoConnect: boolean;
   features: string[];
   // Enhanced properties for multi-output
-  outputSelection: ('app' | 'sys' | 'ui' | 'debug')[];
-  triggerMode: 'manual' | 'interval' | 'external';
+  outputSelection: ("app" | "sys" | "ui" | "debug")[];
+  triggerMode: "manual" | "interval" | "external";
   intervalSeconds: number;
-  payloadType: 'timestamp' | 'string' | 'json' | 'number';
+  payloadType: "timestamp" | "string" | "json" | "number";
   payload: any;
 }
 
 interface EnhancedBotNode extends Node {
-  socket?: Socket;
+  as: AlephScriptClient;
   botName: string;
   serverUrl: string;
   namespace: string;
+  room: string;
   autoConnect: boolean;
   features: string[];
   // Enhanced properties
-  outputSelection: ('app' | 'sys' | 'ui' | 'debug')[];
-  triggerMode: 'manual' | 'interval' | 'external';
+  outputSelection: ("app" | "sys" | "ui" | "debug")[];
+  triggerMode: "manual" | "interval" | "external";
   intervalSeconds: number;
-  payloadType: 'timestamp' | 'string' | 'json' | 'number';
+  payloadType: "timestamp" | "string" | "json" | "number";
   payload: any;
   intervalTimer?: NodeJS.Timeout;
-  
+
   initializeConnection(): void;
   generateSessionHash(): string;
   sendToSelectedOutputs(data: any, send: NodeSend): void;
@@ -48,22 +53,26 @@ interface AlephScriptMessage {
 }
 
 const EnhancedBotNodeInitializer: NodeInitializer = (RED) => {
-  function EnhancedBotNodeConstructor(this: EnhancedBotNode, config: EnhancedBotNodeDef) {
+  function EnhancedBotNodeConstructor(
+    this: EnhancedBotNode,
+    config: EnhancedBotNodeDef
+  ) {
     RED.nodes.createNode(this, config);
-    
+
     // Original bot properties
-    this.botName = config.botName || 'NodeRedBot';
-    this.serverUrl = config.serverUrl || 'http://localhost:3000';
-    this.namespace = config.namespace || '/runtime';
+    this.botName = config.botName || "NodeRedBot";
+    this.serverUrl = config.serverUrl || "http://localhost:3000";
+    this.namespace = config.namespace || "/runtime";
+    this.room = config.room || "ENGINE_THREADS";
     this.autoConnect = config.autoConnect !== false;
-    this.features = config.features || ['messaging', 'node-red-integration'];
-    
+    this.features = config.features || ["messaging", "node-red-integration"];
+
     // Enhanced properties for multi-output
-    this.outputSelection = config.outputSelection || ['debug'];
-    this.triggerMode = config.triggerMode || 'manual';
+    this.outputSelection = config.outputSelection || ["debug"];
+    this.triggerMode = config.triggerMode || "manual";
     this.intervalSeconds = config.intervalSeconds || 5;
-    this.payloadType = config.payloadType || 'timestamp';
-    this.payload = config.payload || '';
+    this.payloadType = config.payloadType || "timestamp";
+    this.payload = config.payload || "";
 
     // Initialize AlephScript connection
     if (this.autoConnect) {
@@ -71,52 +80,51 @@ const EnhancedBotNodeInitializer: NodeInitializer = (RED) => {
     }
 
     // Start interval if configured
-    if (this.triggerMode === 'interval') {
+    if (this.triggerMode === "interval") {
       this.startInterval();
     }
 
     // Handle external input (enhanced functionality)
-    this.on('input', (msg: NodeMessage, send, done) => {
+    this.on("input", (msg: NodeMessage, send, done) => {
       try {
         // If connected to AlephScript, emit the message
-        if (this.socket && this.socket.connected) {
+        if (this.as.io && this.as.io.connected) {
           const alephMessage: AlephScriptMessage = {
             from: this.botName,
             data: msg.payload,
             timestamp: new Date().toISOString(),
-            type: msg.topic || 'node-red-message'
+            type: msg.topic || "node-red-message",
           };
-          
+
           // Emit to AlephScript server
-          this.socket.emit('ROOM_MESSAGE', {
-            event: 'NODE_RED_MESSAGE',
-            room: 'ENGINE_THREADS',
-            data: alephMessage
+          this.as.io.emit("ROOM_MESSAGE", {
+            event: "NODE_RED_MESSAGE",
+            room: "ENGINE_THREADS",
+            data: alephMessage,
           });
         }
 
         // Send to selected outputs (NEW: Multi-output functionality)
         this.sendToSelectedOutputs(msg.payload, (msgs) => send(msgs as any));
         done();
-        
       } catch (error) {
         done(error instanceof Error ? error : new Error(String(error)));
       }
     });
 
     // Handle node close
-    this.on('close', () => {
+    this.on("close", () => {
       this.stopInterval();
-      if (this.socket) {
-        this.socket.disconnect();
+      if (this.as.io) {
+        this.as.io.disconnect();
       }
     });
   }
 
   // NEW: Multi-output sender
-  EnhancedBotNodeConstructor.prototype.sendToSelectedOutputs = function(
-    this: EnhancedBotNode, 
-    data: any, 
+  EnhancedBotNodeConstructor.prototype.sendToSelectedOutputs = function (
+    this: EnhancedBotNode,
+    data: any,
     send: NodeSend
   ) {
     // Prepare base message with enhanced info
@@ -124,44 +132,44 @@ const EnhancedBotNodeInitializer: NodeInitializer = (RED) => {
       payload: data,
       timestamp: Date.now(),
       botName: this.botName,
-      source: 'enhanced-bot-node'
+      source: "enhanced-bot-node",
     };
 
     // Create output array (4 outputs: app, sys, ui, debug)
     const outputs: (NodeMessage | null)[] = [null, null, null, null];
 
     // Output 0: App Channel (if selected)
-    if (this.outputSelection.includes('app')) {
+    if (this.outputSelection.includes("app")) {
       outputs[0] = {
         ...baseMessage,
-        topic: 'app-channel-ready',
-        channelType: 'app'
+        topic: "app-channel-ready",
+        channelType: "app",
       };
     }
 
-    // Output 1: Sys Channel (if selected)  
-    if (this.outputSelection.includes('sys')) {
+    // Output 1: Sys Channel (if selected)
+    if (this.outputSelection.includes("sys")) {
       outputs[1] = {
         ...baseMessage,
-        topic: 'sys-channel-ready',
-        channelType: 'sys'
+        topic: "sys-channel-ready",
+        channelType: "sys",
       };
     }
 
     // Output 2: UI Channel (if selected)
-    if (this.outputSelection.includes('ui')) {
+    if (this.outputSelection.includes("ui")) {
       outputs[2] = {
         ...baseMessage,
-        topic: 'ui-channel-ready',
-        channelType: 'ui'
+        topic: "ui-channel-ready",
+        channelType: "ui",
       };
     }
 
     // Output 3: Debug (if selected)
-    if (this.outputSelection.includes('debug')) {
+    if (this.outputSelection.includes("debug")) {
       outputs[3] = {
         ...baseMessage,
-        topic: 'debug-output'
+        topic: "debug-output",
       };
     }
 
@@ -169,28 +177,30 @@ const EnhancedBotNodeInitializer: NodeInitializer = (RED) => {
   };
 
   // NEW: Interval functionality
-  EnhancedBotNodeConstructor.prototype.startInterval = function(this: EnhancedBotNode) {
+  EnhancedBotNodeConstructor.prototype.startInterval = function (
+    this: EnhancedBotNode
+  ) {
     this.stopInterval(); // Clear any existing interval
-    
+
     this.intervalTimer = setInterval(() => {
       let payloadData: any;
-      
+
       // Generate payload based on type
       switch (this.payloadType) {
-        case 'timestamp':
+        case "timestamp":
           payloadData = Date.now();
           break;
-        case 'string':
-          payloadData = this.payload || 'Interval trigger';
+        case "string":
+          payloadData = this.payload || "Interval trigger";
           break;
-        case 'json':
+        case "json":
           try {
-            payloadData = JSON.parse(this.payload || '{}');
+            payloadData = JSON.parse(this.payload || "{}");
           } catch {
             payloadData = {};
           }
           break;
-        case 'number':
+        case "number":
           payloadData = parseFloat(this.payload) || 0;
           break;
         default:
@@ -199,11 +209,12 @@ const EnhancedBotNodeInitializer: NodeInitializer = (RED) => {
 
       // Send to selected outputs
       this.sendToSelectedOutputs(payloadData, (msgs: any) => this.send(msgs));
-      
     }, this.intervalSeconds * 1000);
   };
 
-  EnhancedBotNodeConstructor.prototype.stopInterval = function(this: EnhancedBotNode) {
+  EnhancedBotNodeConstructor.prototype.stopInterval = function (
+    this: EnhancedBotNode
+  ) {
     if (this.intervalTimer) {
       clearInterval(this.intervalTimer);
       this.intervalTimer = undefined;
@@ -211,66 +222,89 @@ const EnhancedBotNodeInitializer: NodeInitializer = (RED) => {
   };
 
   // Original connection logic (unchanged)
-  EnhancedBotNodeConstructor.prototype.initializeConnection = function(this: EnhancedBotNode) {
+  EnhancedBotNodeConstructor.prototype.initializeConnection = function (
+    this: EnhancedBotNode
+  ) {
     try {
-      const fullUrl = this.serverUrl + this.namespace;
-      this.socket = io(fullUrl);
-      
-      this.socket.on('connect', () => {
-        this.status({ fill: 'green', shape: 'dot', text: `connected (${this.outputSelection.join(',')})` });
-        
-        // Follow AlephScript protocol: CLIENT_REGISTER first
-        this.socket?.emit('CLIENT_REGISTER', { 
-          usuario: this.botName,
-          sesion: this.generateSessionHash(),
-          type: 'EnhancedNodeRedBot',
-          features: this.features
-        });
-        
-        // Subscribe to ENGINE_THREADS room
-        this.socket?.emit('CLIENT_SUSCRIBE', { 
-          room: 'ENGINE_THREADS' 
-        });
-        
-        this.log(`🚀 Enhanced ${this.botName} registered with outputs: ${this.outputSelection.join(', ')}`);
-      });
 
-      this.socket.on('disconnect', () => {
-        this.status({ fill: 'red', shape: 'ring', text: 'disconnected' });
-        this.log(`🔌 Enhanced ${this.botName} disconnected from AlephScript server`);
+      this.as = new AlephScriptClient(
+        `NODE-RED-AS_` + this.name + "_BOT",
+        this.serverUrl || "http://localhost:3000",
+        this.namespace || "/runtime",
+        true
+      );
+      this.as.initTriggersDefinition.push(() => {
+        this.status({
+          fill: "green",
+          shape: "dot",
+          text: `connected (${this.outputSelection.join(",")})`,
+        });
       });
-
-      this.socket.on('connect_error', (error: any) => {
-        this.status({ fill: 'red', shape: 'dot', text: 'connection error' });
+      this.as.io.on("disconnect", () => {
+        this.status({ fill: "red", shape: "ring", text: "disconnected" });
+        this.log(
+          `🔌 Enhanced ${this.botName} disconnected from AlephScript server`
+        );
+      });
+      this.as.io.on("connect_error", (error: any) => {
+        this.status({ fill: "red", shape: "dot", text: "connection error" });
         this.error(`Connection error: ${error.message}`);
       });
-
       // Listen for AlephScript events and forward to debug output
-      this.socket.onAny((event: string, ...args: any[]) => {
-        if (this.outputSelection.includes('debug')) {
-          this.send([null, null, null, {
-            payload: {
-              event,
-              args,
-              source: 'alephscript-server'
+      this.as.io.onAny((event: string, ...args: any[]) => {
+        if (this.outputSelection.includes("debug")) {
+          this.send([
+            null,
+            null,
+            null,
+            {
+              payload: {
+                event,
+                args,
+                source: "alephscript-server",
+              },
+              topic: "alephscript-event",
+              timestamp: new Date().toISOString(),
             },
-            topic: 'alephscript-event',
-            timestamp: new Date().toISOString()
-          }]);
+          ]);
+        } else {
+                    this.send([
+            null,
+            null,
+            {
+              payload: {
+                event,
+                args,
+                source: "alephscript-server",
+              },
+              topic: "alephscript-event",
+              timestamp: new Date().toISOString(),
+            },
+            null,
+          ]);
         }
       });
 
+      if (this.room) {
+        this.as.io.emit("CLIENT_SUSCRIBE", { room: this.room });
+      }
+      this.as.connect();
     } catch (error) {
       this.error(`Failed to initialize connection: ${error}`);
-      this.status({ fill: 'red', shape: 'dot', text: 'error' });
+      this.status({ fill: "red", shape: "dot", text: "error" });
     }
   };
 
-  EnhancedBotNodeConstructor.prototype.generateSessionHash = function(this: EnhancedBotNode): string {
+  EnhancedBotNodeConstructor.prototype.generateSessionHash = function (
+    this: EnhancedBotNode
+  ): string {
     return Math.random().toString(36).substring(2, 15);
   };
 
-  RED.nodes.registerType('alephscript-enhanced-bot', EnhancedBotNodeConstructor);
+  RED.nodes.registerType(
+    "alephscript-enhanced-bot",
+    EnhancedBotNodeConstructor
+  );
 };
 
 export = EnhancedBotNodeInitializer;

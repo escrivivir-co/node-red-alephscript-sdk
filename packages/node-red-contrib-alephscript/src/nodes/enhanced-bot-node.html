@@ -7,6 +7,7 @@
             botName: { value: "NodeRedBot", required: true },
             serverUrl: { value: "http://localhost:3000", required: true },
             namespace: { value: "/runtime", required: true },
+            room: { value: "room", required: false },
             autoConnect: { value: true },
             features: { value: ["messaging", "node-red-integration"] },
             // Enhanced properties
@@ -83,6 +84,11 @@
     <div class="form-row">
         <label for="node-input-namespace"><i class="fa fa-sitemap"></i> Namespace</label>
         <input type="text" id="node-input-namespace" placeholder="/runtime">
+    </div>
+
+    <div class="form-row">
+        <label for="node-input-room"><i class="fa fa-sitemap"></i> Room</label>
+        <input type="text" id="node-input-room" placeholder="room">
     </div>
     
     <div class="form-row">
