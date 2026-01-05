@@ -12,7 +12,7 @@
     "build:ui": "cd packages/node-red-gamify-ui && npm run build",
     "dev": "npm run dev:contrib",
     "dev:contrib": "cd packages/node-red-contrib-alephscript && npm run dev",
-    "dev:ui": "cd packages/node-red-gamify-ui && npm run dev",
+    "dev:ui": "cd packages/node-red-gamify-ui && npm run start",
     "test:all": "npm run test:contrib && npm run test:ui",
     "test:contrib": "cd packages/node-red-contrib-alephscript && npm test",
     "test:ui": "cd packages/node-red-gamify-ui && npm test",

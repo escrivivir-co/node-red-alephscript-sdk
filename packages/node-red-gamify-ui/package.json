@@ -9,7 +9,7 @@
   ],
   "scripts": {
     "ng": "ng",
-    "start": "ng serve",
+    "start": "ng serve --port 3088",
     "build": "ng build",
     "build:lib": "ng build node-red-gamify-ui",
     "test": "ng test",
