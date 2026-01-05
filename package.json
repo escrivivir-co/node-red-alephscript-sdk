@@ -35,6 +35,6 @@
   },
   "license": "MIT",
   "dependencies": {
-    "@alephscript/core": "file:../socket-gym/ws-server/packages/alephscript-core/alephscript-core-1.0.0.tgz"
+    "@alephscript/mcp-core-sdk": "file:../MCPGallery/mcp-core-sdk/alephscript-mcp-core-sdk-1.2.0.tgz"
   }
 }

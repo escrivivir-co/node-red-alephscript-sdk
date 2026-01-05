@@ -1,6 +1,6 @@
+import { AlephScriptClient } from "@alephscript/mcp-core-sdk";
 import { Node, NodeDef, NodeInitializer, NodeMessage } from "node-red";
 import { io, Socket } from "socket.io-client";
-import { AlephScriptClient } from "@alephscript/core";
 
 // Define NodeSend type locally since it's not exported
 type NodeSend = (
