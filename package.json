@@ -7,6 +7,7 @@
     "packages/*"
   ],
   "scripts": {
+    "start": "cd ../WiringAppHypergraphEditor && npm i && node-red",
     "build:all": "npm run build:contrib && npm run build:ui",
     "build:contrib": "cd packages/node-red-contrib-alephscript && npm run build:full",
     "build:ui": "cd packages/node-red-gamify-ui && npm run build",
