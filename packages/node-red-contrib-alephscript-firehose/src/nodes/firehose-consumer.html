@@ -1,0 +1,85 @@
+<script type="text/javascript">
+    RED.nodes.registerType('firehose-consumer', {
+        category: 'AlephScript Firehose',
+        color: '#e74c3c',
+        defaults: {
+            name: { value: '' },
+            config: { value: '', type: 'firehose-config' },
+            jetstreamUrl: { value: 'wss://jetstream1.us-east.bsky.network/subscribe', required: true },
+            collections: { value: 'app.bsky.feed.post' },
+            autoStart: { value: true }
+        },
+        inputs: 1,
+        outputs: 1,
+        icon: 'font-awesome/fa-fire',
+        label: function() {
+            return this.name || 'Firehose Consumer';
+        },
+        paletteLabel: 'Firehose Consumer'
+    });
+</script>
+
+<script type="text/html" data-template-name="firehose-consumer">
+    <div class="form-row">
+        <label for="node-input-name"><i class="fa fa-tag"></i> Name</label>
+        <input type="text" id="node-input-name" placeholder="Firehose Consumer">
+    </div>
+    <div class="form-row">
+        <label for="node-input-config"><i class="fa fa-cog"></i> Config</label>
+        <input type="text" id="node-input-config">
+    </div>
+    <div class="form-row">
+        <label for="node-input-jetstreamUrl"><i class="fa fa-link"></i> Jetstream URL</label>
+        <input type="text" id="node-input-jetstreamUrl" placeholder="wss://jetstream1.us-east.bsky.network/subscribe">
+    </div>
+    <div class="form-row">
+        <label for="node-input-collections"><i class="fa fa-list"></i> Collections</label>
+        <input type="text" id="node-input-collections" placeholder="app.bsky.feed.post">
+        <div class="form-tips">Comma-separated AT Protocol collections</div>
+    </div>
+    <div class="form-row">
+        <label for="node-input-autoStart"><i class="fa fa-play"></i> Auto Start</label>
+        <input type="checkbox" id="node-input-autoStart" style="display:inline-block; width:auto; vertical-align:top;">
+        <span style="margin-left:10px;">Start consuming on deploy</span>
+    </div>
+</script>
+
+<script type="text/html" data-help-name="firehose-consumer">
+    <p>Connects to the Bluesky AT Protocol firehose via Jetstream WebSocket
+    and emits raw events.</p>
+
+    <h3>Inputs</h3>
+    <dl class="message-properties">
+        <dt>payload <span class="property-type">string</span></dt>
+        <dd><code>"start"</code>, <code>"stop"</code>, <code>"resume"</code>, or <code>"status"</code></dd>
+    </dl>
+    <p><b>Commands:</b></p>
+    <ul>
+        <li><code>"start"</code> — start consuming</li>
+        <li><code>"stop"</code> — stop consuming</li>
+        <li><code>"resume"</code> — resume after a batch pause (N_FIRST mode)</li>
+        <li><code>"status"</code> — emit current status as a message</li>
+    </ul>
+
+    <h3>Outputs</h3>
+    <dl class="message-properties">
+        <dt>payload <span class="property-type">JetstreamEvent</span></dt>
+        <dd>Raw event from the firehose with did, commit, record, etc.</dd>
+        <dt>topic <span class="property-type">string</span></dt>
+        <dd><code>"firehose"</code> for events, <code>"firehose-status"</code> for status queries</dd>
+    </dl>
+
+    <h3>Consumer Modes</h3>
+    <p>Configured via the shared Config node:</p>
+    <ul>
+        <li><b>STREAM</b> — Continuous consumption, no batching</li>
+        <li><b>N_FIRST</b> — Receives N messages then pauses. Send <code>"resume"</code> for next batch</li>
+        <li><b>N_FIRST_INTERVAL</b> — Auto-batches: receives N messages, pauses, auto-resumes after interval</li>
+    </ul>
+
+    <h3>Details</h3>
+    <p>Connects to Jetstream (lightweight JSON proxy of AT Protocol firehose).
+    Public endpoint, no authentication required. Auto-reconnects with exponential backoff.</p>
+    <p>Rate: ~50-200 events/sec globally. Use the Filter node downstream to reduce volume.</p>
+    <p>In MCP-Connected mode, the consumer mode configuration is propagated to the MCPFirehoseServer automatically.</p>
+</script>

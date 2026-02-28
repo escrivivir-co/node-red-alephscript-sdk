@@ -4,3 +4,5 @@ node_modules/
 node-red-alephscript-sdk\packages\node-red-gamify-ui\dist
 node-red-alephscript-sdk\packages\node-red-gamify-ui\.angular
 *.tgz
+data/
+**/tsconfig.tsbuildinfo

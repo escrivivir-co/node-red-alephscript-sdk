@@ -1,0 +1,877 @@
+[
+    {
+        "id": "fh-flow-1",
+        "type": "tab",
+        "label": "Firehose ONFALO Pipeline",
+        "disabled": false,
+        "info": "Bluesky firehose → filter → ONFALO CDR labeling → file output + dashboard"
+    },
+    {
+        "id": "fh-consumer-1",
+        "type": "firehose-consumer",
+        "z": "fh-flow-1",
+        "name": "Bluesky Firehose",
+        "config": "fh-config-1",
+        "jetstreamUrl": "wss://jetstream1.us-east.bsky.network/subscribe",
+        "collections": "app.bsky.feed.post",
+        "autoStart": false,
+        "x": 410,
+        "y": 80,
+        "wires": [
+            [
+                "fh-filter-1",
+                "3076cc1f52636ffd"
+            ]
+        ]
+    },
+    {
+        "id": "fh-filter-1",
+        "type": "firehose-filter",
+        "z": "fh-flow-1",
+        "name": "Quality Filter",
+        "config": "fh-config-1",
+        "minTextLength": 80,
+        "maxTextLength": 2000,
+        "languages": "",
+        "enableSpamFilter": true,
+        "minWords": 5,
+        "x": 630,
+        "y": 80,
+        "wires": [
+            [
+                "09e7c8045a972b7c"
+            ],
+            [
+                "fh-debug-rejected"
+            ]
+        ]
+    },
+    {
+        "id": "fh-labeler-1",
+        "type": "firehose-labeler",
+        "z": "fh-flow-1",
+        "name": "ONFALO CDR",
+        "config": "fh-config-1",
+        "minQualityScore": 0,
+        "includeRawText": true,
+        "x": 180,
+        "y": 420,
+        "wires": [
+            [
+                "fh-fileout-1",
+                "fh-debug-labeled"
+            ],
+            [
+                "82341cd1fe51a562"
+            ]
+        ]
+    },
+    {
+        "id": "fh-fileout-1",
+        "type": "firehose-file-out",
+        "z": "fh-flow-1",
+        "name": "Save to Disk",
+        "config": "fh-config-1",
+        "subdir": "labeled",
+        "maxFiles": 1000,
+        "basePath": "",
+        "x": 470,
+        "y": 420,
+        "wires": [
+            [
+                "8ddee661d2ebdf0f"
+            ]
+        ]
+    },
+    {
+        "id": "fh-debug-labeled",
+        "type": "debug",
+        "z": "fh-flow-1",
+        "name": "Labeled Posts",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": true,
+        "complete": "true",
+        "targetType": "full",
+        "statusVal": "payload.cdr_summary.overall_quality_score",
+        "statusType": "msg",
+        "x": 300,
+        "y": 360,
+        "wires": []
+    },
+    {
+        "id": "fh-debug-rejected",
+        "type": "debug",
+        "z": "fh-flow-1",
+        "name": "Rejected",
+        "active": false,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": true,
+        "complete": "filterResult.failedRule",
+        "targetType": "msg",
+        "x": 860,
+        "y": 120,
+        "wires": []
+    },
+    {
+        "id": "fh-inject-start",
+        "type": "inject",
+        "z": "fh-flow-1",
+        "name": "Start",
+        "props": [
+            {
+                "p": "payload",
+                "v": "start",
+                "vt": "str"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "",
+        "x": 110,
+        "y": 60,
+        "wires": [
+            [
+                "fh-consumer-1"
+            ]
+        ]
+    },
+    {
+        "id": "fh-inject-stop",
+        "type": "inject",
+        "z": "fh-flow-1",
+        "name": "Stop",
+        "props": [
+            {
+                "p": "payload",
+                "v": "stop",
+                "vt": "str"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "",
+        "x": 110,
+        "y": 100,
+        "wires": [
+            [
+                "fh-consumer-1"
+            ]
+        ]
+    },
+    {
+        "id": "70e1ecf44dc6ad58",
+        "type": "debug",
+        "z": "fh-flow-1",
+        "name": "UI",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "payload",
+        "targetType": "msg",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 1010,
+        "y": 200,
+        "wires": []
+    },
+    {
+        "id": "3076cc1f52636ffd",
+        "type": "debug",
+        "z": "fh-flow-1",
+        "name": "RAW",
+        "active": false,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "payload",
+        "targetType": "msg",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 430,
+        "y": 40,
+        "wires": []
+    },
+    {
+        "id": "d2aed2b58feddc0b",
+        "type": "debug",
+        "z": "fh-flow-1",
+        "name": "CANDIDATE",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "true",
+        "targetType": "full",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 1270,
+        "y": 40,
+        "wires": []
+    },
+    {
+        "id": "9b59dc04f9073a3a",
+        "type": "firehose-file-out",
+        "z": "fh-flow-1",
+        "name": "Save to Disk Raw",
+        "config": "fh-config-1",
+        "subdir": "candidate",
+        "maxFiles": 1000,
+        "basePath": "",
+        "x": 1070,
+        "y": 80,
+        "wires": [
+            [
+                "d2aed2b58feddc0b",
+                "e5a4e0731aaefa35"
+            ]
+        ]
+    },
+    {
+        "id": "09e7c8045a972b7c",
+        "type": "function",
+        "z": "fh-flow-1",
+        "name": "set uri",
+        "func": "msg.payload.uri = \"FilteredMessage/simple-rule\"\nreturn msg;",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 870,
+        "y": 60,
+        "wires": [
+            [
+                "9b59dc04f9073a3a"
+            ]
+        ]
+    },
+    {
+        "id": "37be10a22605b346",
+        "type": "inject",
+        "z": "fh-flow-1",
+        "name": "",
+        "props": [
+            {
+                "p": "payload"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "",
+        "payload": "{\"did\":\"did:plc:2dj3vul5eysl752jikiir3dw\",\"time_us\":1772143818214752,\"kind\":\"commit\",\"commit\":{\"rev\":\"3mfs7lgbnns2l\",\"operation\":\"create\",\"collection\":\"app.bsky.feed.post\",\"rkey\":\"3mfs7lamixs2o\",\"record\":{\"$type\":\"app.bsky.feed.post\",\"createdAt\":\"2026-02-26T22:10:12.098Z\",\"langs\":[\"es\"],\"reply\":{\"parent\":{\"cid\":\"bafyreicvfpulvvscjq4zma4dcijrgv2ua3e3g3szi7eximq7drtwgyhu6m\",\"uri\":\"at://did:plc:n3vhibmhccmz3gjozklxnsqu/app.bsky.feed.post/3mfqthiofv22c\"},\"root\":{\"cid\":\"bafyreicvfpulvvscjq4zma4dcijrgv2ua3e3g3szi7eximq7drtwgyhu6m\",\"uri\":\"at://did:plc:n3vhibmhccmz3gjozklxnsqu/app.bsky.feed.post/3mfqthiofv22c\"}},\"text\":\"No me extraña lo del deepal, es un gran coche!\\n\\nA mi se me escapa por precio (malditas ayudas) , pero por lo demás me encantó.\"},\"cid\":\"bafyreia2hmatn64oz43xs442xz5yqgwck3jbcbplwjog7fdeovjp6jwp6e\"}}",
+        "payloadType": "json",
+        "x": 650,
+        "y": 40,
+        "wires": [
+            [
+                "09e7c8045a972b7c"
+            ]
+        ]
+    },
+    {
+        "id": "7595af1a9e5273c5",
+        "type": "function",
+        "z": "fh-flow-1",
+        "name": "Candiate Record 2 List",
+        "func": "/**\n * Transforms a raw Bluesky firehose commit event into a UI list item.\n */\nfunction firehoseEventToListItem(event) {\n  const record = event.commit?.record || {};\n  const isReply = !!record.reply;\n  const lang = (record.langs || [])[0] || '??';\n\n  return {\n    title: record.text?.slice(0, 50) || event.commit?.rkey,\n    description: record.text?.length > 50 ? ('...' + record.text.slice(50, 200)) : undefined,\n    menu: [\n      { label: 'Etiquetar', value: {...msg.payload} }\n    ].filter(item => item.value),\n    icon_unicode: isReply ? '💬' : '📝',\n    isChecked: false,\n  };\n}\n\nconst gLIST = \"CANDIDATES_LIST\"\nconst list = flow.get(gLIST) || [];\n\nmsg.payload.rawFile = msg.filepath;\nlist.push(firehoseEventToListItem(msg.payload));\nmsg.payload = list.reverse();\nflow.set(gLIST, list)\nreturn msg;",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 620,
+        "y": 260,
+        "wires": [
+            [
+                "f3136a27d419a7a0"
+            ]
+        ]
+    },
+    {
+        "id": "f3136a27d419a7a0",
+        "type": "ui_list",
+        "z": "fh-flow-1",
+        "group": "fh-ui-group-cdr",
+        "name": "Candidatos",
+        "order": 1,
+        "width": "12",
+        "height": "20",
+        "lineType": "three",
+        "actionType": "click",
+        "allowHTML": true,
+        "outputs": 1,
+        "topic": "",
+        "x": 850,
+        "y": 220,
+        "wires": [
+            [
+                "70e1ecf44dc6ad58",
+                "0d6e2d189326a86a"
+            ]
+        ]
+    },
+    {
+        "id": "8ddee661d2ebdf0f",
+        "type": "function",
+        "z": "fh-flow-1",
+        "name": "--",
+        "func": "/**\n * Transforms a labeled Bluesky post into a UI list item.\n */\nfunction postToListItem(post) {\n  const qualityScore = post.cdr_summary?.overall_quality_score ?? 0;\n\n  const nutricionResumen = Object.entries(post.nutricion || {})\n    .map(([key, val]) => `${key}: ${val.valor} (${val.cdr_porcentaje}%)`)\n    .join(', ');\n\n  const iconByScore = qualityScore >= 70 ? '🟢'\n    : qualityScore >= 40 ? '🟡'\n    : '🔴';\n\n  return {\n    title: post.text?.split('\\n')[0]?.slice(0, 80) || post.rkey,\n    description: nutricionResumen || undefined,\n    menu: [\n      { label: 'Fichero', value: msg.filepath },\n      { label: 'Datos', value: {...msg.payload} },\n    ],\n    icon_unicode: iconByScore,\n    isChecked: qualityScore >= 50,\n  };\n}\n\nconst list = flow.get(\"LABELED\") || [];\n\nlist.push(postToListItem(msg.payload));\nmsg.payload = list;\nflow.set(\"LABELED\", list)\nreturn msg;",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 630,
+        "y": 420,
+        "wires": [
+            [
+                "5c814ab5fc143de8"
+            ]
+        ]
+    },
+    {
+        "id": "5c814ab5fc143de8",
+        "type": "ui_list",
+        "z": "fh-flow-1",
+        "group": "fh-ui-group-cdr",
+        "name": "Etiquetados",
+        "order": 2,
+        "width": "12",
+        "height": "10",
+        "lineType": "three",
+        "actionType": "click",
+        "allowHTML": true,
+        "outputs": 1,
+        "topic": "",
+        "x": 810,
+        "y": 420,
+        "wires": [
+            [
+                "0d13f7b2fff1cced"
+            ]
+        ]
+    },
+    {
+        "id": "687f03c9b36bf725",
+        "type": "function",
+        "z": "fh-flow-1",
+        "name": "RESET CANDIDATES",
+        "func": "const gLIST = \"CANDIDATES_LIST\"\nflow.set(gLIST, [])\nmsg.payload = [];\nreturn msg;",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 620,
+        "y": 220,
+        "wires": [
+            [
+                "f3136a27d419a7a0"
+            ]
+        ]
+    },
+    {
+        "id": "0789c315c7a0b5ec",
+        "type": "inject",
+        "z": "fh-flow-1",
+        "name": "",
+        "props": [],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "",
+        "x": 290,
+        "y": 220,
+        "wires": [
+            [
+                "687f03c9b36bf725"
+            ]
+        ]
+    },
+    {
+        "id": "0d6e2d189326a86a",
+        "type": "function",
+        "z": "fh-flow-1",
+        "name": "Get Object From Menu",
+        "func": "msg.payload = msg.payload.menu[0].value;\nmsg.rawFile = msg.payload.rawFile || \"?\";\nreturn msg;",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 1060,
+        "y": 240,
+        "wires": [
+            [
+                "12f8e082b30cedc6"
+            ]
+        ]
+    },
+    {
+        "id": "f30a0b67e33d51eb",
+        "type": "inject",
+        "z": "fh-flow-1",
+        "name": "",
+        "props": [],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "",
+        "x": 510,
+        "y": 480,
+        "wires": [
+            [
+                "d9509195bfeae972"
+            ]
+        ]
+    },
+    {
+        "id": "d9509195bfeae972",
+        "type": "function",
+        "z": "fh-flow-1",
+        "name": "RESET LABELED",
+        "func": "const gLIST = \"LABELED\"\nflow.set(gLIST, [])\nmsg.payload = [];\nreturn msg;",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 790,
+        "y": 480,
+        "wires": [
+            [
+                "5c814ab5fc143de8"
+            ]
+        ]
+    },
+    {
+        "id": "df3f9bdfff279711",
+        "type": "ui_button",
+        "z": "fh-flow-1",
+        "name": "",
+        "group": "e15805f3e5e4eb74",
+        "order": 3,
+        "width": "3",
+        "height": "2",
+        "passthru": false,
+        "label": "Del E",
+        "tooltip": "",
+        "color": "",
+        "bgcolor": "",
+        "className": "",
+        "icon": "delete",
+        "payload": "",
+        "payloadType": "str",
+        "topic": "topic",
+        "topicType": "msg",
+        "x": 630,
+        "y": 480,
+        "wires": [
+            [
+                "d9509195bfeae972"
+            ]
+        ]
+    },
+    {
+        "id": "b1c21c0a174c7883",
+        "type": "ui_button",
+        "z": "fh-flow-1",
+        "name": "",
+        "group": "e15805f3e5e4eb74",
+        "order": 4,
+        "width": "3",
+        "height": "2",
+        "passthru": false,
+        "label": "Del C",
+        "tooltip": "",
+        "color": "",
+        "bgcolor": "",
+        "className": "",
+        "icon": "delete",
+        "payload": "",
+        "payloadType": "str",
+        "topic": "topic",
+        "topicType": "msg",
+        "x": 410,
+        "y": 220,
+        "wires": [
+            [
+                "687f03c9b36bf725"
+            ]
+        ]
+    },
+    {
+        "id": "ce41c300e244d859",
+        "type": "ui_button",
+        "z": "fh-flow-1",
+        "name": "",
+        "group": "e15805f3e5e4eb74",
+        "order": 1,
+        "width": "3",
+        "height": "2",
+        "passthru": false,
+        "label": "start",
+        "tooltip": "",
+        "color": "",
+        "bgcolor": "",
+        "className": "",
+        "icon": "run",
+        "payload": "start",
+        "payloadType": "str",
+        "topic": "topic",
+        "topicType": "msg",
+        "x": 230,
+        "y": 60,
+        "wires": [
+            [
+                "fh-consumer-1"
+            ]
+        ]
+    },
+    {
+        "id": "dd8399e19b95912f",
+        "type": "ui_button",
+        "z": "fh-flow-1",
+        "name": "",
+        "group": "e15805f3e5e4eb74",
+        "order": 2,
+        "width": "3",
+        "height": "2",
+        "passthru": false,
+        "label": "stop",
+        "tooltip": "",
+        "color": "",
+        "bgcolor": "",
+        "className": "",
+        "icon": "stop",
+        "payload": "stop",
+        "payloadType": "str",
+        "topic": "topic",
+        "topicType": "msg",
+        "x": 230,
+        "y": 100,
+        "wires": [
+            [
+                "fh-consumer-1"
+            ]
+        ]
+    },
+    {
+        "id": "0be3d855620212cf",
+        "type": "link in",
+        "z": "fh-flow-1",
+        "name": "link in 1",
+        "links": [
+            "e5a4e0731aaefa35",
+            "c5b1b747ae737d1b"
+        ],
+        "x": 475,
+        "y": 260,
+        "wires": [
+            [
+                "7595af1a9e5273c5"
+            ]
+        ]
+    },
+    {
+        "id": "e5a4e0731aaefa35",
+        "type": "link out",
+        "z": "fh-flow-1",
+        "name": "link out 1",
+        "mode": "link",
+        "links": [
+            "0be3d855620212cf"
+        ],
+        "x": 1205,
+        "y": 80,
+        "wires": []
+    },
+    {
+        "id": "0d13f7b2fff1cced",
+        "type": "debug",
+        "z": "fh-flow-1",
+        "name": "Labeled Posts",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "payload",
+        "targetType": "msg",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 1020,
+        "y": 420,
+        "wires": []
+    },
+    {
+        "id": "82341cd1fe51a562",
+        "type": "debug",
+        "z": "fh-flow-1",
+        "name": "Labeled Summary",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "payload",
+        "targetType": "msg",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 290,
+        "y": 480,
+        "wires": []
+    },
+    {
+        "id": "f152313b37f42fc9",
+        "type": "function",
+        "z": "fh-flow-1",
+        "name": "Cargar Candidatos",
+        "func": "const path = \"/Users/morente/Desktop/THEIA_PATH/NUEVA_BASE/SCRIPTORIUM/ALEPH/WiringEditor/data/firehose/candidate\";\nflow.set(\"BASE_CANDIDATOS\", path);\nconst fs = global.get('fs');\n\nmsg.payload = fs.readdirSync(path).filter(f => {\n    return fs.statSync(path + \"/\" + f).isFile();\n}).slice(0,100);\n\nreturn msg;",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 450,
+        "y": 620,
+        "wires": [
+            [
+                "42ef23b54174cc53"
+            ]
+        ]
+    },
+    {
+        "id": "98b948c34ebda2a4",
+        "type": "inject",
+        "z": "fh-flow-1",
+        "name": "",
+        "props": [],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "",
+        "x": 130,
+        "y": 620,
+        "wires": [
+            [
+                "f152313b37f42fc9"
+            ]
+        ]
+    },
+    {
+        "id": "87a32673fc5df4f5",
+        "type": "ui_button",
+        "z": "fh-flow-1",
+        "name": "",
+        "group": "e15805f3e5e4eb74",
+        "order": 3,
+        "width": "3",
+        "height": "2",
+        "passthru": false,
+        "label": "Refresh",
+        "tooltip": "",
+        "color": "",
+        "bgcolor": "",
+        "className": "",
+        "icon": "refresh",
+        "payload": "",
+        "payloadType": "str",
+        "topic": "topic",
+        "topicType": "msg",
+        "x": 260,
+        "y": 620,
+        "wires": [
+            [
+                "f152313b37f42fc9"
+            ]
+        ]
+    },
+    {
+        "id": "42ef23b54174cc53",
+        "type": "split",
+        "z": "fh-flow-1",
+        "name": "",
+        "splt": "\\n",
+        "spltType": "str",
+        "arraySplt": 1,
+        "arraySpltType": "len",
+        "stream": false,
+        "addname": "",
+        "property": "payload",
+        "x": 630,
+        "y": 620,
+        "wires": [
+            [
+                "ad54d5c77c5ac70c"
+            ]
+        ]
+    },
+    {
+        "id": "3b3cca62761b7015",
+        "type": "json",
+        "z": "fh-flow-1",
+        "name": "",
+        "property": "payload",
+        "action": "",
+        "pretty": false,
+        "x": 1170,
+        "y": 620,
+        "wires": [
+            [
+                "c5b1b747ae737d1b"
+            ]
+        ]
+    },
+    {
+        "id": "ad54d5c77c5ac70c",
+        "type": "function",
+        "z": "fh-flow-1",
+        "name": "Base Candidatos Path",
+        "func": "msg.filename = flow.get(\"BASE_CANDIDATOS\") + \"/\" + msg.payload;\n\nreturn msg;",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 820,
+        "y": 620,
+        "wires": [
+            [
+                "48d64762a76c7c05"
+            ]
+        ]
+    },
+    {
+        "id": "48d64762a76c7c05",
+        "type": "file in",
+        "z": "fh-flow-1",
+        "name": "",
+        "filename": "filename",
+        "filenameType": "msg",
+        "format": "utf8",
+        "chunk": false,
+        "sendError": false,
+        "encoding": "none",
+        "allProps": false,
+        "x": 1030,
+        "y": 620,
+        "wires": [
+            [
+                "3b3cca62761b7015"
+            ]
+        ]
+    },
+    {
+        "id": "c5b1b747ae737d1b",
+        "type": "link out",
+        "z": "fh-flow-1",
+        "name": "link out 2",
+        "mode": "link",
+        "links": [
+            "0be3d855620212cf"
+        ],
+        "x": 1265,
+        "y": 620,
+        "wires": []
+    },
+    {
+        "id": "12f8e082b30cedc6",
+        "type": "link out",
+        "z": "fh-flow-1",
+        "name": "link out 3",
+        "mode": "link",
+        "links": [
+            "51f93817a2b025b5"
+        ],
+        "x": 1205,
+        "y": 240,
+        "wires": []
+    },
+    {
+        "id": "51f93817a2b025b5",
+        "type": "link in",
+        "z": "fh-flow-1",
+        "name": "link in 2",
+        "links": [
+            "12f8e082b30cedc6"
+        ],
+        "x": 45,
+        "y": 420,
+        "wires": [
+            [
+                "fh-labeler-1"
+            ]
+        ]
+    },
+    {
+        "id": "fh-config-1",
+        "type": "firehose-config",
+        "name": "Firehose Local",
+        "basePath": "./data/firehose",
+        "mcpServerUrl": "http://localhost:3008",
+        "languages": "es",
+        "bufferSize": 500,
+        "mode": "standalone"
+    },
+    {
+        "id": "fh-ui-group-cdr",
+        "type": "ui_group",
+        "name": "Etiquetador",
+        "tab": "fh-ui-tab",
+        "order": 2,
+        "disp": true,
+        "width": "24",
+        "collapse": true,
+        "className": ""
+    },
+    {
+        "id": "e15805f3e5e4eb74",
+        "type": "ui_group",
+        "name": "Menú",
+        "tab": "fh-ui-tab",
+        "order": 1,
+        "disp": true,
+        "width": "24",
+        "collapse": true,
+        "className": ""
+    },
+    {
+        "id": "fh-ui-tab",
+        "type": "ui_tab",
+        "name": "Firehose ONFALO",
+        "icon": "dashboard",
+        "order": 1,
+        "disabled": false,
+        "hidden": false
+    },
+    {
+        "id": "a7457789de534eaf",
+        "type": "global-config",
+        "env": [],
+        "modules": {
+            "node-red-contrib-alephscript-firehose": "0.1.0",
+            "node-red-node-ui-list": "0.3.6",
+            "node-red-dashboard": "3.6.6"
+        }
+    }
+]

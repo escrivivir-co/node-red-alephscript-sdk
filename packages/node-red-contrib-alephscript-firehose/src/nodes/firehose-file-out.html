@@ -1,0 +1,78 @@
+<script type="text/javascript">
+    RED.nodes.registerType('firehose-file-out', {
+        category: 'AlephScript Firehose',
+        color: '#9b59b6',
+        defaults: {
+            name: { value: '' },
+            config: { value: '', type: 'firehose-config' },
+            subdir: { value: 'labeled' },
+            maxFiles: { value: 1000, validate: RED.validators.number() },
+            basePath: { value: '' }
+        },
+        inputs: 1,
+        outputs: 1,
+        icon: 'font-awesome/fa-save',
+        label: function() {
+            return this.name || 'File Out';
+        },
+        paletteLabel: 'Firehose File Out'
+    });
+</script>
+
+<script type="text/html" data-template-name="firehose-file-out">
+    <div class="form-row">
+        <label for="node-input-name"><i class="fa fa-tag"></i> Name</label>
+        <input type="text" id="node-input-name" placeholder="File Out">
+    </div>
+    <div class="form-row">
+        <label for="node-input-config"><i class="fa fa-cog"></i> Config</label>
+        <input type="text" id="node-input-config">
+    </div>
+    <div class="form-row">
+        <label for="node-input-basePath"><i class="fa fa-folder-open"></i> Base Path</label>
+        <input type="text" id="node-input-basePath" placeholder="(from config)">
+        <div class="form-tips">Override config base path. Leave empty to use config value.</div>
+    </div>
+    <div class="form-row">
+        <label for="node-input-subdir"><i class="fa fa-folder"></i> Subdirectory</label>
+        <input type="text" id="node-input-subdir" placeholder="labeled" style="width: 40%;">
+        <div class="form-tips">Subdirectory under base path (e.g. labeled, buffer, top)</div>
+    </div>
+    <div class="form-row">
+        <label for="node-input-maxFiles"><i class="fa fa-trash-o"></i> Max Files</label>
+        <input type="number" id="node-input-maxFiles" placeholder="1000" style="width: 80px;">
+        <div class="form-tips">Auto-cleanup oldest files when exceeding this count. 0 = no limit.</div>
+    </div>
+</script>
+
+<script type="text/html" data-help-name="firehose-file-out">
+    <p>Writes labeled posts as individual JSON files to disk.</p>
+
+    <h3>Inputs</h3>
+    <dl class="message-properties">
+        <dt>payload <span class="property-type">LabeledPost</span></dt>
+        <dd>Labeled post from firehose-labeler</dd>
+        <dt class="optional">subdir <span class="property-type">string</span></dt>
+        <dd>Override subdirectory for this message (e.g. <code>"top-quality"</code>)</dd>
+        <dt class="optional">basePath <span class="property-type">string</span></dt>
+        <dd>Override base path for this message</dd>
+        <dt class="optional">filename <span class="property-type">string</span></dt>
+        <dd>Override filename (default: <code>{timestamp}_{rkey}.json</code>)</dd>
+    </dl>
+
+    <h3>Outputs</h3>
+    <dl class="message-properties">
+        <dt>payload <span class="property-type">LabeledPost</span></dt>
+        <dd>Passthrough (same as input, for chaining)</dd>
+        <dt>filepath <span class="property-type">string</span></dt>
+        <dd>Absolute path of the written file</dd>
+    </dl>
+
+    <h3>Details</h3>
+    <p>Files are named <code>{timestamp}_{rkey}.json</code> and written to
+    <code>{basePath}/{subdir}/</code>. Directories are created automatically.</p>
+    <p>All path properties can be overridden per-message via <code>msg.subdir</code>,
+    <code>msg.basePath</code>, and <code>msg.filename</code>. This allows dynamic
+    routing from upstream nodes (e.g. sorting by quality score into different folders).</p>
+    <p>Auto-cleanup removes oldest files when count exceeds Max Files.</p>
+</script>

@@ -1,0 +1,97 @@
+<script type="text/javascript">
+    RED.nodes.registerType('firehose-filter', {
+        category: 'AlephScript Firehose',
+        color: '#f39c12',
+        defaults: {
+            name: { value: '' },
+            config: { value: '', type: 'firehose-config' },
+            minTextLength: { value: 80, validate: RED.validators.number() },
+            maxTextLength: { value: 2000, validate: RED.validators.number() },
+            languages: { value: '' },
+            enableSpamFilter: { value: true },
+            minWords: { value: 5, validate: RED.validators.number() }
+        },
+        inputs: 1,
+        outputs: 2,
+        outputLabels: ['passed', 'rejected'],
+        icon: 'font-awesome/fa-filter',
+        label: function() {
+            return this.name || 'Firehose Filter';
+        },
+        paletteLabel: 'Firehose Filter'
+    });
+</script>
+
+<script type="text/html" data-template-name="firehose-filter">
+    <div class="form-row">
+        <label for="node-input-name"><i class="fa fa-tag"></i> Name</label>
+        <input type="text" id="node-input-name" placeholder="Firehose Filter">
+    </div>
+    <div class="form-row">
+        <label for="node-input-config"><i class="fa fa-cog"></i> Config</label>
+        <input type="text" id="node-input-config">
+    </div>
+    <div class="form-row">
+        <label for="node-input-minTextLength"><i class="fa fa-text-width"></i> Min Length</label>
+        <input type="number" id="node-input-minTextLength" placeholder="80" style="width: 80px;">
+        <label for="node-input-maxTextLength" style="margin-left: 20px;"> Max</label>
+        <input type="number" id="node-input-maxTextLength" placeholder="2000" style="width: 80px;">
+        <div class="form-tips">Character length range for post text</div>
+    </div>
+    <div class="form-row">
+        <label for="node-input-languages"><i class="fa fa-language"></i> Languages</label>
+        <input type="text" id="node-input-languages" placeholder="(from config)" style="width: 60%;">
+        <div class="form-tips">Override config languages. Comma-separated or * for all.</div>
+    </div>
+    <div class="form-row">
+        <label for="node-input-minWords"><i class="fa fa-font"></i> Min Words</label>
+        <input type="number" id="node-input-minWords" placeholder="5" style="width: 80px;">
+        <div class="form-tips">Minimum substantive words (excluding stopwords)</div>
+    </div>
+    <div class="form-row">
+        <label for="node-input-enableSpamFilter"><i class="fa fa-ban"></i> Spam Filter</label>
+        <input type="checkbox" id="node-input-enableSpamFilter" style="display:inline-block; width:auto; vertical-align:top;">
+        <span style="margin-left:10px;">Enable spam/bot pattern detection</span>
+    </div>
+</script>
+
+<script type="text/html" data-help-name="firehose-filter">
+    <p>Filters firehose events using 7 quality rules ordered by cost.</p>
+
+    <h3>Inputs</h3>
+    <dl class="message-properties">
+        <dt>payload <span class="property-type">JetstreamEvent</span></dt>
+        <dd>Raw event from firehose-consumer</dd>
+    </dl>
+
+    <h3>Outputs</h3>
+    <ol class="node-ports">
+        <li>Passed
+            <dl class="message-properties">
+                <dt>payload <span class="property-type">JetstreamEvent</span></dt>
+                <dd>Events that passed all filter rules</dd>
+                <dt>filterResult <span class="property-type">object</span></dt>
+                <dd>Rules passed array and metadata</dd>
+            </dl>
+        </li>
+        <li>Rejected
+            <dl class="message-properties">
+                <dt>payload <span class="property-type">JetstreamEvent</span></dt>
+                <dd>Events that failed a filter rule</dd>
+                <dt>filterResult.failedRule <span class="property-type">string</span></dt>
+                <dd>ID of the rule that rejected the event</dd>
+            </dl>
+        </li>
+    </ol>
+
+    <h3>Rules (ordered by cost)</h3>
+    <ol>
+        <li><b>has-text</b> — post has non-empty text</li>
+        <li><b>is-new-post</b> — create operation on app.bsky.feed.post</li>
+        <li><b>text-length</b> — between min/max character length</li>
+        <li><b>lang-filter</b> — language in allowed list</li>
+        <li><b>not-pure-url</b> — not just URLs/hashtags/mentions</li>
+        <li><b>no-spam</b> — no repeated chars or excessive hashtags</li>
+        <li><b>substantive</b> — minimum content words</li>
+    </ol>
+</script>

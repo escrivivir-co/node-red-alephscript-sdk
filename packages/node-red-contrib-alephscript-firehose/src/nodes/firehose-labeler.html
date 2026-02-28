@@ -1,0 +1,78 @@
+<script type="text/javascript">
+    RED.nodes.registerType('firehose-labeler', {
+        category: 'AlephScript Firehose',
+        color: '#2ecc71',
+        defaults: {
+            name: { value: '' },
+            config: { value: '', type: 'firehose-config' },
+            minQualityScore: { value: 0, validate: RED.validators.number() },
+            includeRawText: { value: true }
+        },
+        inputs: 1,
+        outputs: 2,
+        outputLabels: ['labeled post', 'CDR summary'],
+        icon: 'font-awesome/fa-tags',
+        label: function() {
+            return this.name || 'ONFALO Labeler';
+        },
+        paletteLabel: 'ONFALO Labeler'
+    });
+</script>
+
+<script type="text/html" data-template-name="firehose-labeler">
+    <div class="form-row">
+        <label for="node-input-name"><i class="fa fa-tag"></i> Name</label>
+        <input type="text" id="node-input-name" placeholder="ONFALO Labeler">
+    </div>
+    <div class="form-row">
+        <label for="node-input-config"><i class="fa fa-cog"></i> Config</label>
+        <input type="text" id="node-input-config">
+    </div>
+    <div class="form-row">
+        <label for="node-input-minQualityScore"><i class="fa fa-star"></i> Min Quality</label>
+        <input type="number" id="node-input-minQualityScore" placeholder="0" style="width: 80px;">
+        <div class="form-tips">Minimum overall quality score (0-100) for output 1. CDR summary always emitted on output 2.</div>
+    </div>
+    <div class="form-row">
+        <label for="node-input-includeRawText"><i class="fa fa-file-text-o"></i> Include Text</label>
+        <input type="checkbox" id="node-input-includeRawText" style="display:inline-block; width:auto; vertical-align:top;">
+        <span style="margin-left:10px;">Include raw post text in labeled output</span>
+    </div>
+</script>
+
+<script type="text/html" data-help-name="firehose-labeler">
+    <p>Applies ONFALO CDR (Cognitive Dietary Reference) labeling to posts.
+    Analyzes 5 cognitive nutrients using heuristic regex markers.</p>
+
+    <h3>Inputs</h3>
+    <dl class="message-properties">
+        <dt>payload <span class="property-type">JetstreamEvent</span></dt>
+        <dd>Filtered event from firehose-filter</dd>
+    </dl>
+
+    <h3>Outputs</h3>
+    <ol class="node-ports">
+        <li>Labeled Post
+            <dl class="message-properties">
+                <dt>payload <span class="property-type">LabeledPost</span></dt>
+                <dd>Full labeled post with CDR scores, nutricion, metadata.
+                Only emitted if quality score >= Min Quality threshold.</dd>
+            </dl>
+        </li>
+        <li>CDR Summary
+            <dl class="message-properties">
+                <dt>payload <span class="property-type">CDRSummary</span></dt>
+                <dd>Always emitted. Contains ok/not-ok for each nutrient + overall_quality_score.</dd>
+            </dl>
+        </li>
+    </ol>
+
+    <h3>CDR Nutrients</h3>
+    <ul>
+        <li><b>Pensamiento critico</b> — Critical thinking markers (target: >= 60%)</li>
+        <li><b>Pluralidad</b> — Diversity of perspectives (target: >= 30%)</li>
+        <li><b>Transparencia</b> — Source/limitation transparency (target: >= 100%)</li>
+        <li><b>Autonomia</b> — Encourages independent thinking (target: >= 50%)</li>
+        <li><b>Complacencia</b> — Sycophantic patterns (target: <= 20%)</li>
+    </ul>
+</script>

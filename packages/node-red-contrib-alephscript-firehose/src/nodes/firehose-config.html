@@ -1,0 +1,116 @@
+<script type="text/javascript">
+    RED.nodes.registerType('firehose-config', {
+        category: 'config',
+        defaults: {
+            name: { value: 'Firehose Config' },
+            basePath: { value: './data/firehose', required: true },
+            mcpServerUrl: { value: 'http://localhost:3008' },
+            languages: { value: 'es', required: true },
+            bufferSize: { value: 500, validate: RED.validators.number() },
+            mode: { value: 'standalone' },
+            consumerMode: { value: 'STREAM' },
+            consumerQuantity: { value: 50, validate: RED.validators.number() },
+            consumerBatchSize: { value: 50, validate: RED.validators.number() }
+        },
+        label: function() {
+            return this.name || 'Firehose Config';
+        },
+        oneditprepare: function() {
+            var toggleConsumerFields = function() {
+                var mode = $("#node-config-input-consumerMode").val();
+                if (mode === "STREAM") {
+                    $(".consumer-quantity-row, .consumer-batchsize-row").hide();
+                } else if (mode === "N_FIRST") {
+                    $(".consumer-quantity-row").show().find("label").html('<i class="fa fa-sort-numeric-asc"></i> Batch Size');
+                    $(".consumer-quantity-row .form-tips").text("Number of messages per batch before pausing");
+                    $(".consumer-batchsize-row").hide();
+                } else if (mode === "N_FIRST_INTERVAL") {
+                    $(".consumer-quantity-row").show().find("label").html('<i class="fa fa-clock-o"></i> Interval (ms)');
+                    $(".consumer-quantity-row .form-tips").text("Milliseconds between auto-resume of batches");
+                    $(".consumer-batchsize-row").show();
+                }
+            };
+            $("#node-config-input-consumerMode").on("change", toggleConsumerFields);
+            toggleConsumerFields();
+        }
+    });
+</script>
+
+<script type="text/html" data-template-name="firehose-config">
+    <div class="form-row">
+        <label for="node-config-input-name"><i class="fa fa-tag"></i> Name</label>
+        <input type="text" id="node-config-input-name" placeholder="Firehose Config">
+    </div>
+    <div class="form-row">
+        <label for="node-config-input-basePath"><i class="fa fa-folder-open"></i> Base Path</label>
+        <input type="text" id="node-config-input-basePath" placeholder="./data/firehose">
+        <div class="form-tips">Absolute or relative path for file output</div>
+    </div>
+    <div class="form-row">
+        <label for="node-config-input-languages"><i class="fa fa-language"></i> Languages</label>
+        <input type="text" id="node-config-input-languages" placeholder="es" style="width: 60%;">
+        <div class="form-tips">Comma-separated: es,en,pt or * for all</div>
+    </div>
+    <div class="form-row">
+        <label for="node-config-input-mode"><i class="fa fa-cog"></i> Mode</label>
+        <select id="node-config-input-mode">
+            <option value="standalone">Standalone (direct WebSocket)</option>
+            <option value="mcp-connected">MCP-Connected (via MCPFirehoseServer)</option>
+        </select>
+    </div>
+    <div class="form-row">
+        <label for="node-config-input-mcpServerUrl"><i class="fa fa-server"></i> MCP URL</label>
+        <input type="text" id="node-config-input-mcpServerUrl" placeholder="http://localhost:3008" style="width: 60%;">
+    </div>
+    <div class="form-row">
+        <label for="node-config-input-bufferSize"><i class="fa fa-database"></i> Buffer Size</label>
+        <input type="number" id="node-config-input-bufferSize" placeholder="500" style="width: 80px;">
+    </div>
+
+    <hr/>
+    <div class="form-row">
+        <label for="node-config-input-consumerMode"><i class="fa fa-sliders"></i> Consumer Mode</label>
+        <select id="node-config-input-consumerMode">
+            <option value="STREAM">STREAM (continuous)</option>
+            <option value="N_FIRST">N_FIRST (fixed batch, then pause)</option>
+            <option value="N_FIRST_INTERVAL">N_FIRST_INTERVAL (batches on timer)</option>
+        </select>
+    </div>
+    <div class="form-row consumer-quantity-row">
+        <label for="node-config-input-consumerQuantity"><i class="fa fa-sort-numeric-asc"></i> Batch Size</label>
+        <input type="number" id="node-config-input-consumerQuantity" placeholder="50" style="width: 100px;">
+        <div class="form-tips">Number of messages per batch before pausing</div>
+    </div>
+    <div class="form-row consumer-batchsize-row">
+        <label for="node-config-input-consumerBatchSize"><i class="fa fa-th-list"></i> Msgs / Interval</label>
+        <input type="number" id="node-config-input-consumerBatchSize" placeholder="50" style="width: 100px;">
+        <div class="form-tips">Messages per interval batch (N_FIRST_INTERVAL only)</div>
+    </div>
+</script>
+
+<script type="text/html" data-help-name="firehose-config">
+    <p>Shared configuration for Firehose pipeline nodes.</p>
+    <h3>Properties</h3>
+    <dl class="message-properties">
+        <dt>Base Path <span class="property-type">string</span></dt>
+        <dd>Directory for file output (labeled posts, stats, rules)</dd>
+        <dt>Languages <span class="property-type">string</span></dt>
+        <dd>Comma-separated language codes for filtering (e.g. es,en,pt). Use * for all.</dd>
+        <dt>Mode <span class="property-type">string</span></dt>
+        <dd><b>Standalone:</b> nodes connect directly to Jetstream WebSocket.
+        <b>MCP-Connected:</b> nodes use MCPFirehoseServer via HTTP.</dd>
+        <dt>MCP URL <span class="property-type">string</span></dt>
+        <dd>MCPFirehoseServer URL (only used in MCP-Connected mode)</dd>
+    </dl>
+    <h3>Consumer Mode</h3>
+    <dl class="message-properties">
+        <dt>STREAM</dt>
+        <dd>Continuous consumption. Messages flow without interruption.</dd>
+        <dt>N_FIRST</dt>
+        <dd>Receives a fixed number of messages (quantity), then pauses.
+        Send <code>"resume"</code> to the consumer node to fetch the next batch.</dd>
+        <dt>N_FIRST_INTERVAL</dt>
+        <dd>Auto-batches on a timer. Receives batchSize messages, pauses,
+        then auto-resumes after quantity milliseconds.</dd>
+    </dl>
+</script>

@@ -270,16 +270,16 @@ export = function(RED: NodeAPI) {
     function setupCrossChannelRouting(this: OrchestratorNode) {
         // Merge all channels for cross-channel analysis (following orchestrator.ts)
         const allChannels$ = merge(
-            this.appChannel$.pipe(map(msg => ({ ...msg, sourceChannel: 'app' }))),
-            this.sysChannel$.pipe(map(msg => ({ ...msg, sourceChannel: 'sys' }))),
-            this.uiChannel$.pipe(map(msg => ({ ...msg, sourceChannel: 'ui' })))
+            this.appChannel$.pipe(map((msg: ChannelMessage) => ({ ...msg, sourceChannel: 'app' as const }))),
+            this.sysChannel$.pipe(map((msg: ChannelMessage) => ({ ...msg, sourceChannel: 'sys' as const }))),
+            this.uiChannel$.pipe(map((msg: ChannelMessage) => ({ ...msg, sourceChannel: 'ui' as const })))
         ).pipe(
             takeUntil(this.destroy$),
             share()
         );
-        
+
         // Subscribe to merged stream for cross-channel correlation
-        allChannels$.subscribe((message) => {
+        allChannels$.subscribe((message: ChannelMessage & { sourceChannel: string }) => {
             // Send aggregated message to output 4
             const aggregatedMsg = {
                 payload: message,
