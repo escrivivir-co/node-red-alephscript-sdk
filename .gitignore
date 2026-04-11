@@ -6,3 +6,4 @@ node-red-alephscript-sdk\packages\node-red-gamify-ui\.angular
 *.tgz
 data/
 **/tsconfig.tsbuildinfo
+**/.DS_Store
