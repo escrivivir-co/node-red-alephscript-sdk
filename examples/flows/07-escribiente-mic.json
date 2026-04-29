@@ -1,0 +1,212 @@
+[
+  {
+    "id": "esc-mic-tab",
+    "type": "tab",
+    "label": "Escribiente Mic Session",
+    "disabled": false,
+    "info": "# Escribiente Mic Session\n\nFlow de ejemplo para capturar audio desde micrófono en el dashboard, transcribir por chunks y cerrar una sesión exportable.\n\n## Recorrido\n1. Ejecuta precheck.\n2. Abre sesión desde el widget.\n3. Graba con micrófono en bloques de 15s.\n4. El worker procesa INBOX/OUTBOX y devuelve resultados.\n5. Cierra sesión para generar full.txt, informe.md y export.zip."
+  },
+  {
+    "id": "esc-mic-dashboard",
+    "type": "alephscript-escribiente-dashboard-recorder",
+    "z": "esc-mic-tab",
+    "name": "Escribiente Recorder · Mic",
+    "group": "esc-mic-group",
+    "width": 12,
+    "height": 10,
+    "title": "Escribiente · Mic Session",
+    "defaultChunkSec": 15,
+    "x": 260,
+    "y": 200,
+    "wires": [["esc-mic-precheck", "esc-mic-session", "esc-mic-chunker", "esc-mic-closer"]]
+  },
+  {
+    "id": "esc-mic-precheck",
+    "type": "alephscript-escribiente-precheck",
+    "z": "esc-mic-tab",
+    "name": "Mic Precheck",
+    "config": "esc-mic-config",
+    "runOnDeploy": true,
+    "timeoutMs": 180000,
+    "x": 560,
+    "y": 120,
+    "wires": [["esc-mic-dashboard", "esc-mic-debug"]]
+  },
+  {
+    "id": "esc-mic-session",
+    "type": "alephscript-escribiente-session",
+    "z": "esc-mic-tab",
+    "name": "Mic Session",
+    "config": "esc-mic-config",
+    "x": 550,
+    "y": 180,
+    "wires": [["esc-mic-dashboard", "esc-mic-debug"]]
+  },
+  {
+    "id": "esc-mic-chunker",
+    "type": "alephscript-escribiente-chunker",
+    "z": "esc-mic-tab",
+    "name": "Mic Chunker",
+    "config": "esc-mic-config",
+    "timeoutMs": 600000,
+    "x": 560,
+    "y": 240,
+    "wires": [["esc-mic-dashboard", "esc-mic-transcriber", "esc-mic-debug"]]
+  },
+  {
+    "id": "esc-mic-transcriber",
+    "type": "alephscript-escribiente-transcriber",
+    "z": "esc-mic-tab",
+    "name": "Mic Transcriber",
+    "config": "esc-mic-config",
+    "autoStart": true,
+    "pollIntervalMs": 1500,
+    "x": 850,
+    "y": 240,
+    "wires": [["esc-mic-dashboard", "esc-mic-debug"]]
+  },
+  {
+    "id": "esc-mic-closer",
+    "type": "alephscript-escribiente-session-closer",
+    "z": "esc-mic-tab",
+    "name": "Mic Session Closer",
+    "config": "esc-mic-config",
+    "timeoutMs": 600000,
+    "x": 580,
+    "y": 300,
+    "wires": [["esc-mic-dashboard", "esc-mic-debug"]]
+  },
+  {
+    "id": "esc-mic-boot",
+    "type": "inject",
+    "z": "esc-mic-tab",
+    "name": "Boot Precheck",
+    "props": [
+      { "p": "payload" },
+      { "p": "topic", "vt": "str" }
+    ],
+    "repeat": "",
+    "crontab": "",
+    "once": true,
+    "onceDelay": "0.5",
+    "topic": "run_precheck",
+    "payload": "{\"action\":\"precheck\"}",
+    "payloadType": "json",
+    "x": 260,
+    "y": 120,
+    "wires": [["esc-mic-precheck"]]
+  },
+  {
+    "id": "esc-mic-debug",
+    "type": "debug",
+    "z": "esc-mic-tab",
+    "name": "Escribiente Mic Debug",
+    "active": true,
+    "tosidebar": true,
+    "console": false,
+    "tostatus": false,
+    "complete": "true",
+    "targetType": "full",
+    "x": 860,
+    "y": 140,
+    "wires": []
+  },
+  {
+    "id": "esc-mic-group",
+    "type": "ui-group",
+    "name": "ESCRIBIENTE MIC",
+    "page": "esc-mic-page",
+    "width": 12,
+    "height": 1,
+    "order": 1,
+    "showTitle": true,
+    "className": "",
+    "visible": "true",
+    "disabled": "false",
+    "groupType": "default"
+  },
+  {
+    "id": "esc-mic-page",
+    "type": "ui-page",
+    "name": "Escribiente Mic",
+    "ui": "esc-ui-base",
+    "path": "/escribiente-mic",
+    "icon": "mic",
+    "layout": "grid",
+    "theme": "esc-ui-theme",
+    "breakpoints": [
+      { "name": "Default", "px": "0", "cols": "3" },
+      { "name": "Tablet", "px": "576", "cols": "6" },
+      { "name": "Small Desktop", "px": "768", "cols": "9" },
+      { "name": "Desktop", "px": "1024", "cols": "12" }
+    ],
+    "order": 1,
+    "className": "",
+    "visible": "true",
+    "disabled": "false"
+  },
+  {
+    "id": "esc-ui-base",
+    "type": "ui-base",
+    "name": "DESK",
+    "path": "/dashboard",
+    "appIcon": "",
+    "includeClientData": true,
+    "acceptsClientConfig": ["ui-notification", "ui-control"],
+    "showPathInSidebar": false,
+    "headerContent": "page",
+    "navigationStyle": "default",
+    "titleBarStyle": "default",
+    "showReconnectNotification": true,
+    "notificationDisplayTime": 1,
+    "showDisconnectNotification": true,
+    "allowInstall": true
+  },
+  {
+    "id": "esc-ui-theme",
+    "type": "ui-theme",
+    "name": "Escribiente Theme",
+    "colors": {
+      "surface": "#ffffff",
+      "primary": "#8e44ad",
+      "bgPage": "#f7f0fb",
+      "groupBg": "#ffffff",
+      "groupOutline": "#d9c5e6"
+    },
+    "sizes": {
+      "density": "default",
+      "pagePadding": "12px",
+      "groupGap": "12px",
+      "groupBorderRadius": "8px",
+      "widgetGap": "12px"
+    }
+  },
+  {
+    "id": "esc-mic-config",
+    "type": "alephscript-escribiente-config",
+    "name": "Escribiente Defaults · Mic",
+    "pythonCommand": "../.venv/Scripts/python.exe",
+    "workerScript": "../DocumentMachineSDK/workers/escribiente-whisper/worker.py",
+    "precheckScript": "../DocumentMachineSDK/workers/escribiente-whisper/precheck.py",
+    "sessionsRoot": "../ARCHIVO/PLUGINS/DOCUMENT_MACHINE/STORAGE/TRANSCRIPTIONS",
+    "queueRoot": "../ARCHIVO/PLUGINS/DOCUMENT_MACHINE/STORAGE/ESCRIBIENTE_QUEUE",
+    "ffmpegCommand": "ffmpeg",
+    "model": "small",
+    "device": "auto",
+    "computeType": "int8_float32",
+    "language": "es",
+    "beamSize": "5",
+    "chunkSec": "15",
+    "pollIntervalMs": "1500",
+    "defaultSource": "mic"
+  },
+  {
+    "id": "esc-global-config",
+    "type": "global-config",
+    "env": [],
+    "modules": {
+      "node-red-contrib-alephscript-escribiente": "0.1.0",
+      "@flowfuse/node-red-dashboard": "1.26.0"
+    }
+  }
+]

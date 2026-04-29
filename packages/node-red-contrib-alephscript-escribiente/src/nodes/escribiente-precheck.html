@@ -1,0 +1,41 @@
+<script type="text/html" data-template-name="alephscript-escribiente-precheck">
+    <div class="form-row">
+        <label for="node-input-name"><i class="fa fa-tag"></i> Name</label>
+        <input type="text" id="node-input-name" placeholder="Escribiente Precheck">
+    </div>
+    <div class="form-row">
+        <label for="node-input-config"><i class="fa fa-cog"></i> Config</label>
+        <input type="text" id="node-input-config">
+    </div>
+    <div class="form-row">
+        <label for="node-input-runOnDeploy"><i class="fa fa-play"></i> Run on deploy</label>
+        <input type="checkbox" id="node-input-runOnDeploy" style="display:inline-block; width:auto; vertical-align:top;">
+    </div>
+    <div class="form-row">
+        <label for="node-input-timeoutMs"><i class="fa fa-hourglass"></i> Timeout ms</label>
+        <input type="number" id="node-input-timeoutMs" placeholder="180000">
+    </div>
+</script>
+
+<script type="text/html" data-help-name="alephscript-escribiente-precheck">
+    <p>Runs the Python precheck for the Escribiente worker and returns recommendations for chunk size, model, and device.</p>
+</script>
+
+<script type="text/javascript">
+    RED.nodes.registerType('alephscript-escribiente-precheck', {
+        category: 'AlephScript Escribiente',
+        color: '#8e44ad',
+        defaults: {
+            name: { value: '' },
+            config: { value: '', type: 'alephscript-escribiente-config', required: true },
+            runOnDeploy: { value: true },
+            timeoutMs: { value: 180000, validate: RED.validators.number() }
+        },
+        inputs: 1,
+        outputs: 1,
+        icon: 'font-awesome/fa-stethoscope',
+        label: function() {
+            return this.name || 'Escribiente Precheck';
+        }
+    });
+</script>

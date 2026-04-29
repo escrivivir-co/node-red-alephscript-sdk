@@ -1,0 +1,97 @@
+<script type="text/html" data-template-name="alephscript-escribiente-config">
+    <div class="form-row">
+        <label for="node-config-input-name"><i class="fa fa-tag"></i> Name</label>
+        <input type="text" id="node-config-input-name" placeholder="Escribiente Defaults">
+    </div>
+    <div class="form-row">
+        <label for="node-config-input-pythonCommand"><i class="fa fa-terminal"></i> Python</label>
+        <input type="text" id="node-config-input-pythonCommand" placeholder="../.venv/Scripts/python.exe">
+    </div>
+    <div class="form-row">
+        <label for="node-config-input-workerScript"><i class="fa fa-cogs"></i> Worker</label>
+        <input type="text" id="node-config-input-workerScript" placeholder="../DocumentMachineSDK/workers/escribiente-whisper/worker.py">
+    </div>
+    <div class="form-row">
+        <label for="node-config-input-precheckScript"><i class="fa fa-stethoscope"></i> Precheck</label>
+        <input type="text" id="node-config-input-precheckScript" placeholder="../DocumentMachineSDK/workers/escribiente-whisper/precheck.py">
+    </div>
+    <div class="form-row">
+        <label for="node-config-input-sessionsRoot"><i class="fa fa-folder-open"></i> Sessions Root</label>
+        <input type="text" id="node-config-input-sessionsRoot" placeholder="../ARCHIVO/PLUGINS/DOCUMENT_MACHINE/STORAGE/TRANSCRIPTIONS">
+    </div>
+    <div class="form-row">
+        <label for="node-config-input-queueRoot"><i class="fa fa-inbox"></i> Queue Root</label>
+        <input type="text" id="node-config-input-queueRoot" placeholder="../ARCHIVO/PLUGINS/DOCUMENT_MACHINE/STORAGE/ESCRIBIENTE_QUEUE">
+    </div>
+    <div class="form-row">
+        <label for="node-config-input-ffmpegCommand"><i class="fa fa-film"></i> ffmpeg</label>
+        <input type="text" id="node-config-input-ffmpegCommand" placeholder="ffmpeg">
+    </div>
+    <div class="form-row">
+        <label for="node-config-input-model"><i class="fa fa-microchip"></i> Model</label>
+        <select id="node-config-input-model">
+            <option value="base">base</option>
+            <option value="small" selected>small</option>
+            <option value="medium">medium</option>
+        </select>
+        <label for="node-config-input-device" style="margin-left: 20px;"><i class="fa fa-bolt"></i> Device</label>
+        <select id="node-config-input-device" style="width: 140px;">
+            <option value="cpu" selected>cpu</option>
+            <option value="cuda">cuda</option>
+            <option value="auto">auto</option>
+        </select>
+    </div>
+    <div class="form-row">
+        <label for="node-config-input-computeType"><i class="fa fa-tachometer"></i> Compute</label>
+        <input type="text" id="node-config-input-computeType" placeholder="int8" style="width: 140px;">
+        <label for="node-config-input-language" style="margin-left: 20px;"><i class="fa fa-language"></i> Lang</label>
+        <input type="text" id="node-config-input-language" placeholder="es" style="width: 80px;">
+    </div>
+    <div class="form-row">
+        <label for="node-config-input-beamSize"><i class="fa fa-sitemap"></i> Beam</label>
+        <input type="number" id="node-config-input-beamSize" placeholder="5" style="width: 80px;">
+        <label for="node-config-input-chunkSec" style="margin-left: 20px;"><i class="fa fa-clock-o"></i> Chunk Sec</label>
+        <input type="number" id="node-config-input-chunkSec" placeholder="60" style="width: 80px;">
+        <label for="node-config-input-pollIntervalMs" style="margin-left: 20px;">Poll ms</label>
+        <input type="number" id="node-config-input-pollIntervalMs" placeholder="1500" style="width: 90px;">
+    </div>
+    <div class="form-row">
+        <label for="node-config-input-defaultSource"><i class="fa fa-dot-circle-o"></i> Default Source</label>
+        <select id="node-config-input-defaultSource">
+            <option value="mic">mic</option>
+            <option value="mp3">mp3</option>
+            <option value="mixed" selected>mixed</option>
+        </select>
+    </div>
+</script>
+
+<script type="text/html" data-help-name="alephscript-escribiente-config">
+    <p><strong>AlephScript Escribiente configuration</strong></p>
+    <p>Shared configuration node for the Escribiente transcription workflow.</p>
+</script>
+
+<script type="text/javascript">
+    RED.nodes.registerType('alephscript-escribiente-config', {
+        category: 'config',
+        defaults: {
+            name: { value: 'Escribiente Defaults' },
+            pythonCommand: { value: '../.venv/Scripts/python.exe', required: true },
+            workerScript: { value: '../DocumentMachineSDK/workers/escribiente-whisper/worker.py', required: true },
+            precheckScript: { value: '../DocumentMachineSDK/workers/escribiente-whisper/precheck.py', required: true },
+            sessionsRoot: { value: '../ARCHIVO/PLUGINS/DOCUMENT_MACHINE/STORAGE/TRANSCRIPTIONS', required: true },
+            queueRoot: { value: '../ARCHIVO/PLUGINS/DOCUMENT_MACHINE/STORAGE/ESCRIBIENTE_QUEUE', required: true },
+            ffmpegCommand: { value: 'ffmpeg', required: true },
+            model: { value: 'small', required: true },
+            device: { value: 'cpu', required: true },
+            computeType: { value: 'int8', required: true },
+            language: { value: 'es', required: true },
+            beamSize: { value: 5, validate: RED.validators.number() },
+            chunkSec: { value: 60, validate: RED.validators.number() },
+            pollIntervalMs: { value: 1500, validate: RED.validators.number() },
+            defaultSource: { value: 'mixed', required: true }
+        },
+        label: function() {
+            return this.name || 'Escribiente Defaults';
+        }
+    });
+</script>

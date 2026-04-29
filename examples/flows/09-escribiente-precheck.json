@@ -1,0 +1,77 @@
+[
+  {
+    "id": "esc-precheck-tab",
+    "type": "tab",
+    "label": "Escribiente Precheck",
+    "disabled": false,
+    "info": "# Escribiente Precheck\n\nFlow mínimo para validar entorno de transcripción: Python, ffmpeg, GPU/CUDA, modelo recomendado y chunkSec sugerido."
+  },
+  {
+    "id": "esc-precheck-trigger",
+    "type": "inject",
+    "z": "esc-precheck-tab",
+    "name": "Run Precheck",
+    "props": [
+      { "p": "payload" },
+      { "p": "topic", "vt": "str" }
+    ],
+    "repeat": "",
+    "crontab": "",
+    "once": true,
+    "onceDelay": "0.5",
+    "topic": "run_precheck",
+    "payload": "{\"action\":\"precheck\"}",
+    "payloadType": "json",
+    "x": 180,
+    "y": 120,
+    "wires": [["esc-precheck-node"]]
+  },
+  {
+    "id": "esc-precheck-node",
+    "type": "alephscript-escribiente-precheck",
+    "z": "esc-precheck-tab",
+    "name": "Escribiente Precheck",
+    "config": "esc-precheck-config",
+    "runOnDeploy": false,
+    "timeoutMs": 180000,
+    "x": 430,
+    "y": 120,
+    "wires": [["esc-precheck-debug"]]
+  },
+  {
+    "id": "esc-precheck-debug",
+    "type": "debug",
+    "z": "esc-precheck-tab",
+    "name": "Precheck JSON",
+    "active": true,
+    "tosidebar": true,
+    "console": false,
+    "tostatus": true,
+    "complete": "payload",
+    "targetType": "msg",
+    "statusVal": "payload.ready ? 'ready' : 'not ready'",
+    "statusType": "jsonata",
+    "x": 690,
+    "y": 120,
+    "wires": []
+  },
+  {
+    "id": "esc-precheck-config",
+    "type": "alephscript-escribiente-config",
+    "name": "Escribiente Defaults · Precheck",
+    "pythonCommand": "../.venv/Scripts/python.exe",
+    "workerScript": "../DocumentMachineSDK/workers/escribiente-whisper/worker.py",
+    "precheckScript": "../DocumentMachineSDK/workers/escribiente-whisper/precheck.py",
+    "sessionsRoot": "../ARCHIVO/PLUGINS/DOCUMENT_MACHINE/STORAGE/TRANSCRIPTIONS",
+    "queueRoot": "../ARCHIVO/PLUGINS/DOCUMENT_MACHINE/STORAGE/ESCRIBIENTE_QUEUE",
+    "ffmpegCommand": "ffmpeg",
+    "model": "small",
+    "device": "auto",
+    "computeType": "int8_float32",
+    "language": "es",
+    "beamSize": "5",
+    "chunkSec": "60",
+    "pollIntervalMs": "1500",
+    "defaultSource": "mixed"
+  }
+]

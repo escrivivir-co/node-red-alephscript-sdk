@@ -1,0 +1,31 @@
+<script type="text/html" data-template-name="alephscript-escribiente-session">
+    <div class="form-row">
+        <label for="node-input-name"><i class="fa fa-tag"></i> Name</label>
+        <input type="text" id="node-input-name" placeholder="Escribiente Session">
+    </div>
+    <div class="form-row">
+        <label for="node-input-config"><i class="fa fa-cog"></i> Config</label>
+        <input type="text" id="node-input-config">
+    </div>
+</script>
+
+<script type="text/html" data-help-name="alephscript-escribiente-session">
+    <p>Creates, reads, and marks Escribiente transcription sessions for closing.</p>
+</script>
+
+<script type="text/javascript">
+    RED.nodes.registerType('alephscript-escribiente-session', {
+        category: 'AlephScript Escribiente',
+        color: '#8e44ad',
+        defaults: {
+            name: { value: '' },
+            config: { value: '', type: 'alephscript-escribiente-config', required: true }
+        },
+        inputs: 1,
+        outputs: 1,
+        icon: 'font-awesome/fa-folder-open',
+        label: function() {
+            return this.name || 'Escribiente Session';
+        }
+    });
+</script>

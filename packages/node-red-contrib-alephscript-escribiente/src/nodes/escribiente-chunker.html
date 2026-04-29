@@ -1,0 +1,36 @@
+<script type="text/html" data-template-name="alephscript-escribiente-chunker">
+    <div class="form-row">
+        <label for="node-input-name"><i class="fa fa-tag"></i> Name</label>
+        <input type="text" id="node-input-name" placeholder="Escribiente Chunker">
+    </div>
+    <div class="form-row">
+        <label for="node-input-config"><i class="fa fa-cog"></i> Config</label>
+        <input type="text" id="node-input-config">
+    </div>
+    <div class="form-row">
+        <label for="node-input-timeoutMs"><i class="fa fa-hourglass"></i> Timeout ms</label>
+        <input type="number" id="node-input-timeoutMs" placeholder="600000">
+    </div>
+</script>
+
+<script type="text/html" data-help-name="alephscript-escribiente-chunker">
+    <p>Queues microphone chunks directly and slices uploaded MP3 files into Whisper jobs.</p>
+</script>
+
+<script type="text/javascript">
+    RED.nodes.registerType('alephscript-escribiente-chunker', {
+        category: 'AlephScript Escribiente',
+        color: '#8e44ad',
+        defaults: {
+            name: { value: '' },
+            config: { value: '', type: 'alephscript-escribiente-config', required: true },
+            timeoutMs: { value: 600000, validate: RED.validators.number() }
+        },
+        inputs: 1,
+        outputs: 1,
+        icon: 'font-awesome/fa-scissors',
+        label: function() {
+            return this.name || 'Escribiente Chunker';
+        }
+    });
+</script>

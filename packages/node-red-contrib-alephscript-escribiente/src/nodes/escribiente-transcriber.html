@@ -1,0 +1,41 @@
+<script type="text/html" data-template-name="alephscript-escribiente-transcriber">
+    <div class="form-row">
+        <label for="node-input-name"><i class="fa fa-tag"></i> Name</label>
+        <input type="text" id="node-input-name" placeholder="Escribiente Transcriber">
+    </div>
+    <div class="form-row">
+        <label for="node-input-config"><i class="fa fa-cog"></i> Config</label>
+        <input type="text" id="node-input-config">
+    </div>
+    <div class="form-row">
+        <label for="node-input-autoStart"><i class="fa fa-play"></i> Auto start</label>
+        <input type="checkbox" id="node-input-autoStart" style="display:inline-block; width:auto; vertical-align:top;" checked>
+    </div>
+    <div class="form-row">
+        <label for="node-input-pollIntervalMs"><i class="fa fa-refresh"></i> Poll ms</label>
+        <input type="number" id="node-input-pollIntervalMs" placeholder="1500">
+    </div>
+</script>
+
+<script type="text/html" data-help-name="alephscript-escribiente-transcriber">
+    <p>Watches OUTBOX results from the Escribiente worker and materializes them into the session text folder.</p>
+</script>
+
+<script type="text/javascript">
+    RED.nodes.registerType('alephscript-escribiente-transcriber', {
+        category: 'AlephScript Escribiente',
+        color: '#8e44ad',
+        defaults: {
+            name: { value: '' },
+            config: { value: '', type: 'alephscript-escribiente-config', required: true },
+            autoStart: { value: true },
+            pollIntervalMs: { value: 1500, validate: RED.validators.number() }
+        },
+        inputs: 1,
+        outputs: 1,
+        icon: 'font-awesome/fa-file-text-o',
+        label: function() {
+            return this.name || 'Escribiente Transcriber';
+        }
+    });
+</script>

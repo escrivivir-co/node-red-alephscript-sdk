@@ -1,0 +1,22 @@
+{
+	"reverse": {
+		"https://es.wikipedia.org/wiki/": {
+			"externos": [],
+			"internos": [],
+			"headers": [],
+			"descartados": []
+		},
+		"https://es.wikipedia.org/wiki/Isaac_Asimov": {
+			"externos": [],
+			"internos": [],
+			"headers": [],
+			"descartados": []
+		},
+		"https://es.wikipedia.org/wiki/Esquema_Nacional_de_Seguridad": {
+			"externos": [],
+			"internos": [],
+			"headers": [],
+			"descartados": []
+		}
+	}
+}

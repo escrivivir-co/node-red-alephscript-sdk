@@ -1,0 +1,353 @@
+<script type="text/html" data-template-name="alephscript-escribiente-dashboard-recorder">
+    <div class="form-row">
+        <label for="node-input-name"><i class="fa fa-tag"></i> Name</label>
+        <input type="text" id="node-input-name" placeholder="Escribiente Recorder">
+    </div>
+    <div class="form-row">
+        <label for="node-input-group"><i class="fa fa-table"></i> Group</label>
+        <input type="text" id="node-input-group">
+    </div>
+    <div class="form-row">
+        <label for="node-input-width"><i class="fa fa-arrows-h"></i> Width</label>
+        <select id="node-input-width">
+            <option value="0">auto</option>
+            <option value="4">4</option>
+            <option value="6" selected>6</option>
+            <option value="8">8</option>
+            <option value="12">12</option>
+        </select>
+        <label for="node-input-height" style="margin-left: 20px;"><i class="fa fa-arrows-v"></i> Height</label>
+        <input type="number" id="node-input-height" placeholder="8" style="width:80px">
+    </div>
+    <div class="form-row">
+        <label for="node-input-title"><i class="fa fa-header"></i> Title</label>
+        <input type="text" id="node-input-title" placeholder="Alephscript Escribiente">
+    </div>
+    <div class="form-row">
+        <label for="node-input-defaultChunkSec"><i class="fa fa-clock-o"></i> Default Chunk Sec</label>
+        <input type="number" id="node-input-defaultChunkSec" placeholder="60" style="width:100px">
+    </div>
+</script>
+
+<script type="text/html" data-help-name="alephscript-escribiente-dashboard-recorder">
+    <p>Dashboard widget for microphone capture, MP3 upload, session control, and live transcript feedback.</p>
+</script>
+
+<script type="text/javascript">
+    RED.nodes.registerType('alephscript-escribiente-dashboard-recorder', {
+        category: 'dashboard',
+        color: '#8e44ad',
+        defaults: {
+            name: { value: '' },
+            group: { value: '', type: 'ui-group', required: true },
+            width: { value: 6, validate: RED.validators.number() },
+            height: { value: 8, validate: RED.validators.number() },
+            title: { value: 'Alephscript Escribiente' },
+            defaultChunkSec: { value: 60, validate: RED.validators.number() },
+            format: { value: '' }
+        },
+        inputs: 1,
+        outputs: 1,
+        icon: 'font-awesome/fa-microphone',
+        label: function() {
+            return this.name || 'Escribiente Recorder';
+        },
+        oneditprepare: function() {
+            this.format = `
+<div id="escribiente-recorder-{{$id}}" class="escribiente-recorder">
+  <style>
+    .escribiente-recorder { padding: 10px; font-family: Arial, sans-serif; display: flex; flex-direction: column; gap: 10px; }
+    .escribiente-card { border: 1px solid #d9c5e6; border-radius: 8px; padding: 10px; background: #fff; }
+    .escribiente-title { margin: 0 0 8px; color: #8e44ad; font-weight: 700; }
+    .escribiente-row { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+    .escribiente-row input, .escribiente-row select { flex: 1; min-width: 120px; padding: 6px; border: 1px solid #ddd; border-radius: 4px; }
+    .escribiente-row button { padding: 6px 10px; border: none; border-radius: 4px; cursor: pointer; font-weight: 600; }
+    .btn-primary { background: #8e44ad; color: #fff; }
+    .btn-secondary { background: #6c757d; color: #fff; }
+    .btn-danger { background: #c0392b; color: #fff; }
+    .btn-success { background: #27ae60; color: #fff; }
+    .status-pill { display: inline-block; padding: 4px 8px; border-radius: 999px; font-size: 11px; font-weight: 700; }
+    .status-ok { background: #d4edda; color: #155724; }
+    .status-warn { background: #fff3cd; color: #856404; }
+    .status-bad { background: #f8d7da; color: #721c24; }
+    .log-box { max-height: 220px; overflow-y: auto; border: 1px solid #eee; border-radius: 4px; padding: 8px; background: #fafafa; font-size: 12px; }
+    .chunk-item { border-bottom: 1px dashed #ddd; padding: 6px 0; }
+    .chunk-item:last-child { border-bottom: none; }
+    .chunk-meta { color: #666; font-size: 11px; }
+    .timer { font-size: 20px; font-weight: 700; color: #8e44ad; }
+    .mono { font-family: Consolas, monospace; font-size: 12px; }
+  </style>
+
+  <div class="escribiente-card">
+    <h3 class="escribiente-title">{{title}}</h3>
+    <div class="escribiente-row">
+      <input type="text" id="slug-{{$id}}" placeholder="slug de sesión">
+      <select id="source-{{$id}}">
+        <option value="mixed">mixed</option>
+        <option value="mic">mic</option>
+        <option value="mp3">mp3</option>
+      </select>
+      <input type="number" id="chunk-sec-{{$id}}" value="{{defaultChunkSec}}" min="5" step="5">
+    </div>
+    <div class="escribiente-row" style="margin-top:8px;">
+      <button type="button" class="btn-primary" onclick="escribienteRunPrecheck('{{$id}}')">Precheck</button>
+      <button type="button" class="btn-success" onclick="escribienteOpenSession('{{$id}}')">Abrir sesión</button>
+      <button type="button" class="btn-danger" onclick="escribienteCloseSession('{{$id}}')">Cerrar sesión</button>
+      <span class="mono" id="session-id-{{$id}}">sin sesión</span>
+    </div>
+    <div style="margin-top:8px;">
+      <span id="precheck-pill-{{$id}}" class="status-pill status-warn">precheck pendiente</span>
+    </div>
+  </div>
+
+  <div class="escribiente-card">
+    <div class="escribiente-row" style="justify-content:space-between;">
+      <strong>Micrófono</strong>
+      <span class="timer" id="timer-{{$id}}">00:00</span>
+    </div>
+    <div class="escribiente-row" style="margin-top:8px;">
+      <button type="button" class="btn-primary" onclick="escribienteStartMic('{{$id}}')">Play</button>
+      <button type="button" class="btn-secondary" onclick="escribientePauseMic('{{$id}}')">Pause</button>
+      <button type="button" class="btn-secondary" onclick="escribienteResumeMic('{{$id}}')">Resume</button>
+      <button type="button" class="btn-danger" onclick="escribienteStopMic('{{$id}}')">Stop</button>
+    </div>
+  </div>
+
+  <div class="escribiente-card">
+    <strong>MP3 origen</strong>
+    <div class="escribiente-row" style="margin-top:8px;">
+      <input type="file" id="file-{{$id}}" accept="audio/mpeg,.mp3,audio/*">
+      <button type="button" class="btn-primary" onclick="escribienteUploadMp3('{{$id}}')">Subir y trocear</button>
+    </div>
+  </div>
+
+  <div class="escribiente-card">
+    <strong>Actividad</strong>
+    <div id="warnings-{{$id}}" class="mono" style="margin-top:8px; color:#856404;"></div>
+    <div id="chunks-{{$id}}" class="log-box" style="margin-top:8px;"></div>
+  </div>
+</div>
+
+<script>
+(function() {
+  const widgetId = '{{$id}}';
+  const state = {
+    sessionId: null,
+    chunkSec: Number({{defaultChunkSec}}) || 60,
+    recorder: null,
+    stream: null,
+    timerHandle: null,
+    elapsed: 0,
+    chunkStart: 0,
+    chunks: new Map()
+  };
+
+  function fmt(seconds) {
+    const total = Math.max(0, Math.floor(seconds));
+    const mins = String(Math.floor(total / 60)).padStart(2, '0');
+    const secs = String(total % 60).padStart(2, '0');
+    return mins + ':' + secs;
+  }
+
+  function updateTimer() {
+    const el = document.getElementById('timer-' + widgetId);
+    if (el) el.textContent = fmt(state.elapsed);
+  }
+
+  function startTimer() {
+    stopTimer();
+    state.timerHandle = setInterval(function() {
+      state.elapsed += 1;
+      updateTimer();
+    }, 1000);
+  }
+
+  function stopTimer() {
+    if (state.timerHandle) {
+      clearInterval(state.timerHandle);
+      state.timerHandle = null;
+    }
+  }
+
+  function addChunk(id, status, text, meta) {
+    state.chunks.set(id, { status, text, meta });
+    const box = document.getElementById('chunks-' + widgetId);
+    if (!box) return;
+    box.innerHTML = Array.from(state.chunks.entries()).reverse().map(function(entry) {
+      const item = entry[1];
+      return '<div class="chunk-item">'
+        + '<div><strong>' + entry[0] + '</strong> — <span class="status-pill ' + (item.status === 'done' ? 'status-ok' : item.status === 'failed' ? 'status-bad' : 'status-warn') + '">' + item.status + '</span></div>'
+        + '<div class="chunk-meta">' + (item.meta || '') + '</div>'
+        + '<div>' + (item.text || '') + '</div>'
+        + '</div>';
+    }).join('');
+  }
+
+  function setWarnings(lines) {
+    const el = document.getElementById('warnings-' + widgetId);
+    if (el) {
+      el.innerHTML = (lines || []).map(function(line) { return '• ' + line; }).join('<br>');
+    }
+  }
+
+  function setPrecheckState(ready, warnings) {
+    const pill = document.getElementById('precheck-pill-' + widgetId);
+    if (pill) {
+      pill.className = 'status-pill ' + (ready ? (warnings && warnings.length ? 'status-warn' : 'status-ok') : 'status-bad');
+      pill.textContent = ready ? 'entorno listo' : 'entorno no listo';
+    }
+    setWarnings(warnings || []);
+  }
+
+  function getChunkSec() {
+    const value = Number((document.getElementById('chunk-sec-' + widgetId) || {}).value);
+    state.chunkSec = Number.isFinite(value) && value > 0 ? value : state.chunkSec;
+    return state.chunkSec;
+  }
+
+  function getSource() {
+    return (document.getElementById('source-' + widgetId) || {}).value || 'mixed';
+  }
+
+  function getSlug() {
+    return (document.getElementById('slug-' + widgetId) || {}).value || 'sesion';
+  }
+
+  function updateSessionLabel() {
+    const el = document.getElementById('session-id-' + widgetId);
+    if (el) {
+      el.textContent = state.sessionId || 'sin sesión';
+    }
+  }
+
+  function blobToBase64(blob) {
+    return new Promise(function(resolve, reject) {
+      const reader = new FileReader();
+      reader.onload = function() { resolve(reader.result); };
+      reader.onerror = reject;
+      reader.readAsDataURL(blob);
+    });
+  }
+
+  window.escribienteRunPrecheck = function(id) {
+    if (id !== widgetId) return;
+    send({ payload: { command: 'run_precheck' } });
+  };
+
+  window.escribienteOpenSession = function(id) {
+    if (id !== widgetId) return;
+    send({ payload: { command: 'open_session', slug: getSlug(), source: getSource(), chunkSec: getChunkSec() } });
+  };
+
+  window.escribienteCloseSession = function(id) {
+    if (id !== widgetId || !state.sessionId) return;
+    send({ payload: { command: 'close_session', sessionId: state.sessionId } });
+  };
+
+  window.escribienteStartMic = async function(id) {
+    if (id !== widgetId || !state.sessionId) return;
+    if (state.recorder) return;
+    const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+    const mimeType = MediaRecorder.isTypeSupported('audio/webm;codecs=opus') ? 'audio/webm;codecs=opus' : 'audio/webm';
+    const recorder = new MediaRecorder(stream, { mimeType: mimeType });
+    state.stream = stream;
+    state.recorder = recorder;
+    state.chunkStart = state.elapsed;
+
+    recorder.ondataavailable = async function(event) {
+      if (!event.data || !event.data.size || !state.sessionId) return;
+      const startSec = state.chunkStart;
+      const endSec = state.elapsed || (startSec + getChunkSec());
+      state.chunkStart = endSec;
+      const base64 = await blobToBase64(event.data);
+      send({ payload: {
+        command: 'mic_chunk',
+        sessionId: state.sessionId,
+        data: base64,
+        mimeType: event.data.type || mimeType,
+        fileName: 'mic-' + Date.now() + '.webm',
+        startSec: startSec,
+        endSec: endSec,
+        chunkSec: getChunkSec()
+      } });
+    };
+
+    recorder.start(getChunkSec() * 1000);
+    startTimer();
+    addChunk('mic-live', 'queued', 'Grabación iniciada', 'MediaRecorder chunk=' + getChunkSec() + 's');
+  };
+
+  window.escribientePauseMic = function(id) {
+    if (id !== widgetId || !state.recorder) return;
+    state.recorder.pause();
+    stopTimer();
+  };
+
+  window.escribienteResumeMic = function(id) {
+    if (id !== widgetId || !state.recorder) return;
+    state.recorder.resume();
+    startTimer();
+  };
+
+  window.escribienteStopMic = function(id) {
+    if (id !== widgetId || !state.recorder) return;
+    state.recorder.stop();
+    if (state.stream) {
+      state.stream.getTracks().forEach(function(track) { track.stop(); });
+    }
+    state.recorder = null;
+    state.stream = null;
+    stopTimer();
+  };
+
+  window.escribienteUploadMp3 = async function(id) {
+    if (id !== widgetId || !state.sessionId) return;
+    const input = document.getElementById('file-' + widgetId);
+    const file = input && input.files ? input.files[0] : null;
+    if (!file) return;
+    const base64 = await blobToBase64(file);
+    send({ payload: {
+      command: 'upload_mp3',
+      sessionId: state.sessionId,
+      data: base64,
+      fileName: file.name,
+      mimeType: file.type || 'audio/mpeg',
+      chunkSec: getChunkSec()
+    } });
+    addChunk('upload-' + Date.now(), 'queued', 'MP3 enviado para troceado', file.name);
+  };
+
+  this.scope.msg = {};
+  this.scope.$watch('msg', function(newVal) {
+    if (!newVal || !newVal.topic) return;
+    if (newVal.topic === 'precheck_result') {
+      setPrecheckState(Boolean(newVal.payload.ready), newVal.payload.warnings || []);
+    } else if (newVal.topic === 'session_opened') {
+      state.sessionId = newVal.payload.sessionId || newVal.sessionId || (newVal.payload && newVal.payload.session && newVal.payload.session.sessionId) || null;
+      state.elapsed = 0;
+      state.chunks.clear();
+      updateTimer();
+      updateSessionLabel();
+      addChunk(state.sessionId || 'session', 'queued', 'Sesión abierta', getSlug());
+    } else if (newVal.topic === 'chunk_queued') {
+      const chunkId = (newVal.payload && newVal.payload.chunkId) || newVal.chunkId;
+      addChunk(chunkId, 'queued', 'En cola para Whisper', (newVal.payload && newVal.payload.audioPath) || '');
+    } else if (newVal.topic === 'chunk_completed') {
+      const result = newVal.payload.result || {};
+      addChunk(result.chunkId || newVal.chunkId, 'done', result.text || '', (result.language || '') + ' ' + ((result.languageProbability || 0).toFixed ? result.languageProbability.toFixed(2) : ''));
+    } else if (newVal.topic === 'chunk_failed') {
+      const error = newVal.payload.error || {};
+      addChunk(error.chunkId || newVal.chunkId, 'failed', error.error || 'Error de transcripción', '');
+    } else if (newVal.topic === 'session_closed') {
+      const info = newVal.payload || {};
+      addChunk('cierre', 'done', 'Sesión cerrada', info.exportZip || info.reportPath || '');
+      state.sessionId = null;
+      updateSessionLabel();
+    }
+  });
+})();
+</script>
+`;
+        }
+    });
+</script>
