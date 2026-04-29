@@ -15,6 +15,7 @@
     "width": 12,
     "height": 10,
     "title": "Escribiente · Mic Session",
+    "defaultSource": "mic",
     "defaultChunkSec": 15,
     "x": 260,
     "y": 200,
@@ -205,8 +206,8 @@
     "type": "global-config",
     "env": [],
     "modules": {
-      "node-red-contrib-alephscript-escribiente": "0.1.0",
-      "@flowfuse/node-red-dashboard": "1.26.0"
+      "node-red-dashboard-2-alephscript-escribiente": "0.1.0",
+      "@flowfuse/node-red-dashboard": "1.30.2"
     }
   }
 ]

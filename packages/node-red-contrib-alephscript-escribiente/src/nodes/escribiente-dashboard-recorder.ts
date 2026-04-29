@@ -5,12 +5,33 @@ interface DashboardRecorderNodeDef extends NodeDef {
   width: number;
   height: number;
   defaultChunkSec: number;
+  defaultSource?: 'mic' | 'mp3' | 'mixed';
   title: string;
-  format: string;
 }
 
 interface DashboardRecorderNode extends Node {
   defaultChunkSec: number;
+}
+
+interface DashboardDataStore {
+  save(base: DashboardBaseNode, node: Node, msg: NodeMessage): void;
+}
+
+interface DashboardBaseNode extends Node {
+  stores?: {
+    data?: DashboardDataStore;
+  };
+}
+
+interface DashboardEvents {
+  onInput?: (msg: NodeMessage, send: (msg?: NodeMessage) => void) => void | Promise<void>;
+  onSocket?: Record<string, (conn: unknown, id: string, msg: NodeMessage) => void>;
+  onError?: (error: Error) => void;
+}
+
+interface DashboardGroupNode extends Node {
+  register(node: Node, config: DashboardRecorderNodeDef, evts: DashboardEvents): void;
+  getBase(): DashboardBaseNode;
 }
 
 function normalizeUiCommand(msg: NodeMessage): NodeMessage | null {
@@ -88,43 +109,96 @@ function normalizeUiCommand(msg: NodeMessage): NodeMessage | null {
   return null;
 }
 
+function updateStatus(node: Node, msg: NodeMessage): void {
+  const topic = msg.topic || '';
+
+  if (topic === 'open_session_request') {
+    node.status({ fill: 'blue', shape: 'dot', text: 'opening session' });
+    return;
+  }
+
+  if (topic === 'mic_chunk' || topic === 'upload_mp3') {
+    node.status({ fill: 'blue', shape: 'dot', text: 'sending audio' });
+    return;
+  }
+
+  if (topic === 'run_precheck') {
+    node.status({ fill: 'blue', shape: 'dot', text: 'precheck' });
+    return;
+  }
+
+  if (topic === 'session_opened') {
+    const payload = msg.payload as { sessionId?: string } | undefined;
+    node.status({ fill: 'green', shape: 'dot', text: payload?.sessionId || 'session open' });
+    return;
+  }
+
+  if (topic === 'session_closed' || topic === 'session_closing') {
+    node.status({ fill: 'yellow', shape: 'ring', text: topic === 'session_closed' ? 'session closed' : 'closing session' });
+    return;
+  }
+
+  if (topic === 'chunk_completed') {
+    node.status({ fill: 'green', shape: 'dot', text: 'transcribed' });
+    return;
+  }
+
+  if (topic === 'chunk_failed' || topic === 'precheck_error') {
+    node.status({ fill: 'red', shape: 'ring', text: topic === 'chunk_failed' ? 'chunk failed' : 'precheck error' });
+    return;
+  }
+
+  if (topic === 'precheck_result') {
+    const payload = msg.payload as { ready?: boolean; warnings?: unknown[] } | undefined;
+    node.status({
+      fill: payload?.ready ? (payload?.warnings?.length ? 'yellow' : 'green') : 'red',
+      shape: 'dot',
+      text: payload?.ready ? 'ready' : 'not ready'
+    });
+  }
+}
+
 export = function (RED: NodeAPI) {
   function EscribienteDashboardRecorderNode(this: DashboardRecorderNode, config: DashboardRecorderNodeDef) {
     RED.nodes.createNode(this, config);
     this.defaultChunkSec = Number(config.defaultChunkSec) || 60;
 
-    this.on('input', (msg: NodeMessage, send, done) => {
-      const normalized = normalizeUiCommand(msg);
-      if (normalized) {
-        if (normalized.topic === 'open_session_request') {
-          this.status({ fill: 'blue', shape: 'dot', text: 'opening session' });
-        } else if (normalized.topic === 'mic_chunk' || normalized.topic === 'upload_mp3') {
-          this.status({ fill: 'blue', shape: 'dot', text: 'sending audio' });
-        } else if (normalized.topic === 'run_precheck') {
-          this.status({ fill: 'blue', shape: 'dot', text: 'precheck' });
+    const group = RED.nodes.getNode(config.group) as DashboardGroupNode | null;
+    if (!group) {
+      this.error('Dashboard 2 group node not found');
+      return;
+    }
+
+    const base = group.getBase?.();
+    const saveLatestMessage = (msg: NodeMessage) => {
+      if (base?.stores?.data?.save) {
+        base.stores.data.save(base, this, msg);
+      }
+    };
+
+    const evts: DashboardEvents = {
+      onInput: async (msg: NodeMessage) => {
+        saveLatestMessage(msg);
+        updateStatus(this, msg);
+      },
+      onSocket: {
+        'escribiente-send': (_conn: unknown, id: string, msg: NodeMessage) => {
+          if (id !== this.id) {
+            return;
+          }
+
+          const normalized = normalizeUiCommand(msg);
+          const outbound = normalized || msg;
+          updateStatus(this, outbound);
+          this.send(outbound);
         }
-        send(normalized);
-        done();
-        return;
+      },
+      onError: (error: Error) => {
+        this.error(error.message);
       }
+    };
 
-      if (msg.topic === 'session_opened') {
-        const payload = msg.payload as { sessionId?: string } | undefined;
-        this.status({ fill: 'green', shape: 'dot', text: payload?.sessionId || 'session open' });
-      } else if (msg.topic === 'session_closed') {
-        this.status({ fill: 'yellow', shape: 'ring', text: 'session closed' });
-      } else if (msg.topic === 'chunk_completed') {
-        this.status({ fill: 'green', shape: 'dot', text: 'transcribed' });
-      } else if (msg.topic === 'chunk_failed') {
-        this.status({ fill: 'red', shape: 'ring', text: 'chunk failed' });
-      } else if (msg.topic === 'precheck_result') {
-        const payload = msg.payload as { ready?: boolean; warnings?: unknown[] } | undefined;
-        this.status({ fill: payload?.ready ? (payload?.warnings?.length ? 'yellow' : 'green') : 'red', shape: 'dot', text: payload?.ready ? 'ready' : 'not ready' });
-      }
-
-      send(msg);
-      done();
-    });
+    group.register(this, config, evts);
   }
 
   RED.nodes.registerType('alephscript-escribiente-dashboard-recorder', EscribienteDashboardRecorderNode);

@@ -1,212 +1,492 @@
 [
-  {
-    "id": "esc-mp3-tab",
-    "type": "tab",
-    "label": "Escribiente MP3 Session",
-    "disabled": false,
-    "info": "# Escribiente MP3 Session\n\nFlow de ejemplo para cargar un MP3, trocearlo por bloques de 60s y devolver cada tramo transcrito al dashboard.\n\n## Recorrido\n1. Ejecuta precheck.\n2. Abre sesión desde el widget.\n3. Sube un MP3.\n4. `escribiente-chunker` lo divide en WAVs y crea jobs.\n5. `escribiente-transcriber` recoge resultados del worker.\n6. Cierra sesión para consolidar y exportar."
-  },
-  {
-    "id": "esc-mp3-dashboard",
-    "type": "alephscript-escribiente-dashboard-recorder",
-    "z": "esc-mp3-tab",
-    "name": "Escribiente Recorder · MP3",
-    "group": "esc-mp3-group",
-    "width": 12,
-    "height": 10,
-    "title": "Escribiente · MP3 Session",
-    "defaultChunkSec": 60,
-    "x": 260,
-    "y": 200,
-    "wires": [["esc-mp3-precheck", "esc-mp3-session", "esc-mp3-chunker", "esc-mp3-closer"]]
-  },
-  {
-    "id": "esc-mp3-precheck",
-    "type": "alephscript-escribiente-precheck",
-    "z": "esc-mp3-tab",
-    "name": "MP3 Precheck",
-    "config": "esc-mp3-config",
-    "runOnDeploy": true,
-    "timeoutMs": 180000,
-    "x": 560,
-    "y": 120,
-    "wires": [["esc-mp3-dashboard", "esc-mp3-debug"]]
-  },
-  {
-    "id": "esc-mp3-session",
-    "type": "alephscript-escribiente-session",
-    "z": "esc-mp3-tab",
-    "name": "MP3 Session",
-    "config": "esc-mp3-config",
-    "x": 550,
-    "y": 180,
-    "wires": [["esc-mp3-dashboard", "esc-mp3-debug"]]
-  },
-  {
-    "id": "esc-mp3-chunker",
-    "type": "alephscript-escribiente-chunker",
-    "z": "esc-mp3-tab",
-    "name": "MP3 Chunker",
-    "config": "esc-mp3-config",
-    "timeoutMs": 600000,
-    "x": 560,
-    "y": 240,
-    "wires": [["esc-mp3-dashboard", "esc-mp3-transcriber", "esc-mp3-debug"]]
-  },
-  {
-    "id": "esc-mp3-transcriber",
-    "type": "alephscript-escribiente-transcriber",
-    "z": "esc-mp3-tab",
-    "name": "MP3 Transcriber",
-    "config": "esc-mp3-config",
-    "autoStart": true,
-    "pollIntervalMs": 1500,
-    "x": 850,
-    "y": 240,
-    "wires": [["esc-mp3-dashboard", "esc-mp3-debug"]]
-  },
-  {
-    "id": "esc-mp3-closer",
-    "type": "alephscript-escribiente-session-closer",
-    "z": "esc-mp3-tab",
-    "name": "MP3 Session Closer",
-    "config": "esc-mp3-config",
-    "timeoutMs": 600000,
-    "x": 580,
-    "y": 300,
-    "wires": [["esc-mp3-dashboard", "esc-mp3-debug"]]
-  },
-  {
-    "id": "esc-mp3-boot",
-    "type": "inject",
-    "z": "esc-mp3-tab",
-    "name": "Boot Precheck",
-    "props": [
-      { "p": "payload" },
-      { "p": "topic", "vt": "str" }
-    ],
-    "repeat": "",
-    "crontab": "",
-    "once": true,
-    "onceDelay": "0.5",
-    "topic": "run_precheck",
-    "payload": "{\"action\":\"precheck\"}",
-    "payloadType": "json",
-    "x": 260,
-    "y": 120,
-    "wires": [["esc-mp3-precheck"]]
-  },
-  {
-    "id": "esc-mp3-debug",
-    "type": "debug",
-    "z": "esc-mp3-tab",
-    "name": "Escribiente MP3 Debug",
-    "active": true,
-    "tosidebar": true,
-    "console": false,
-    "tostatus": false,
-    "complete": "true",
-    "targetType": "full",
-    "x": 860,
-    "y": 140,
-    "wires": []
-  },
-  {
-    "id": "esc-mp3-group",
-    "type": "ui-group",
-    "name": "ESCRIBIENTE MP3",
-    "page": "esc-mp3-page",
-    "width": 12,
-    "height": 1,
-    "order": 1,
-    "showTitle": true,
-    "className": "",
-    "visible": "true",
-    "disabled": "false",
-    "groupType": "default"
-  },
-  {
-    "id": "esc-mp3-page",
-    "type": "ui-page",
-    "name": "Escribiente MP3",
-    "ui": "esc-ui-base-mp3",
-    "path": "/escribiente-mp3",
-    "icon": "library_music",
-    "layout": "grid",
-    "theme": "esc-ui-theme-mp3",
-    "breakpoints": [
-      { "name": "Default", "px": "0", "cols": "3" },
-      { "name": "Tablet", "px": "576", "cols": "6" },
-      { "name": "Small Desktop", "px": "768", "cols": "9" },
-      { "name": "Desktop", "px": "1024", "cols": "12" }
-    ],
-    "order": 1,
-    "className": "",
-    "visible": "true",
-    "disabled": "false"
-  },
-  {
-    "id": "esc-ui-base-mp3",
-    "type": "ui-base",
-    "name": "DESK",
-    "path": "/dashboard",
-    "appIcon": "",
-    "includeClientData": true,
-    "acceptsClientConfig": ["ui-notification", "ui-control"],
-    "showPathInSidebar": false,
-    "headerContent": "page",
-    "navigationStyle": "default",
-    "titleBarStyle": "default",
-    "showReconnectNotification": true,
-    "notificationDisplayTime": 1,
-    "showDisconnectNotification": true,
-    "allowInstall": true
-  },
-  {
-    "id": "esc-ui-theme-mp3",
-    "type": "ui-theme",
-    "name": "Escribiente Theme MP3",
-    "colors": {
-      "surface": "#ffffff",
-      "primary": "#8e44ad",
-      "bgPage": "#f7f0fb",
-      "groupBg": "#ffffff",
-      "groupOutline": "#d9c5e6"
+    {
+        "id": "esc-mp3-tab",
+        "type": "tab",
+        "label": "Escribiente MP3 Session",
+        "disabled": false,
+        "info": "# Escribiente MP3 Session\n\nFlow de ejemplo para cargar un MP3, trocearlo por bloques de 60s y devolver cada tramo transcrito al dashboard.\n\n## Recorrido\n1. Ejecuta precheck.\n2. Abre sesión desde el widget.\n3. Sube un MP3.\n4. `escribiente-chunker` lo divide en WAVs y crea jobs.\n5. `escribiente-transcriber` recoge resultados del worker.\n6. Cierra sesión para consolidar y exportar."
     },
-    "sizes": {
-      "density": "default",
-      "pagePadding": "12px",
-      "groupGap": "12px",
-      "groupBorderRadius": "8px",
-      "widgetGap": "12px"
+    {
+        "id": "esc-mp3-dashboard",
+        "type": "alephscript-escribiente-dashboard-recorder",
+        "z": "esc-mp3-tab",
+        "name": "Escribiente Recorder · MP3",
+        "group": "esc-mp3-group",
+        "width": 12,
+        "height": 10,
+        "title": "Escribiente · MP3 Session",
+        "defaultSource": "mp3",
+        "defaultChunkSec": 60,
+        "x": 840,
+        "y": 780,
+        "wires": [
+            [
+                "369df223ca4f5457"
+            ]
+        ]
+    },
+    {
+        "id": "esc-mp3-precheck",
+        "type": "alephscript-escribiente-precheck",
+        "z": "esc-mp3-tab",
+        "name": "MP3 Precheck",
+        "config": "esc-mp3-config",
+        "runOnDeploy": true,
+        "timeoutMs": 180000,
+        "x": 560,
+        "y": 120,
+        "wires": [
+            [
+                "esc-mp3-debug",
+                "1833ec8b4d03a413"
+            ]
+        ]
+    },
+    {
+        "id": "esc-mp3-session",
+        "type": "alephscript-escribiente-session",
+        "z": "esc-mp3-tab",
+        "name": "MP3 Session",
+        "config": "esc-mp3-config",
+        "x": 550,
+        "y": 440,
+        "wires": [
+            [
+                "d5f5703defd0511f"
+            ]
+        ]
+    },
+    {
+        "id": "esc-mp3-chunker",
+        "type": "alephscript-escribiente-chunker",
+        "z": "esc-mp3-tab",
+        "name": "MP3 Chunker",
+        "config": "esc-mp3-config",
+        "timeoutMs": 600000,
+        "x": 560,
+        "y": 240,
+        "wires": [
+            [
+                "esc-mp3-transcriber",
+                "f1b95cedee4a0f18"
+            ]
+        ]
+    },
+    {
+        "id": "esc-mp3-transcriber",
+        "type": "alephscript-escribiente-transcriber",
+        "z": "esc-mp3-tab",
+        "name": "MP3 Transcriber",
+        "config": "esc-mp3-config",
+        "autoStart": true,
+        "pollIntervalMs": 1500,
+        "x": 900,
+        "y": 300,
+        "wires": [
+            [
+                "1d53a4aec787cd77"
+            ]
+        ]
+    },
+    {
+        "id": "esc-mp3-closer",
+        "type": "alephscript-escribiente-session-closer",
+        "z": "esc-mp3-tab",
+        "name": "MP3 Session Closer",
+        "config": "esc-mp3-config",
+        "timeoutMs": 600000,
+        "x": 580,
+        "y": 340,
+        "wires": [
+            [
+                "dfc38ac7b713d549"
+            ]
+        ]
+    },
+    {
+        "id": "esc-mp3-boot",
+        "type": "inject",
+        "z": "esc-mp3-tab",
+        "name": "Boot Precheck",
+        "props": [
+            {
+                "p": "payload"
+            },
+            {
+                "p": "topic",
+                "vt": "str"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": true,
+        "onceDelay": "0.5",
+        "topic": "run_precheck",
+        "payload": "{\"action\":\"precheck\"}",
+        "payloadType": "json",
+        "x": 260,
+        "y": 120,
+        "wires": [
+            [
+                "esc-mp3-precheck"
+            ]
+        ]
+    },
+    {
+        "id": "esc-mp3-debug",
+        "type": "debug",
+        "z": "esc-mp3-tab",
+        "name": "Escribiente MP3 Debug",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "true",
+        "targetType": "full",
+        "x": 830,
+        "y": 100,
+        "wires": []
+    },
+    {
+        "id": "6067843f8a164c60",
+        "type": "debug",
+        "z": "esc-mp3-tab",
+        "name": "Escribiente MP3 Debug",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "true",
+        "targetType": "full",
+        "x": 1210,
+        "y": 380,
+        "wires": []
+    },
+    {
+        "id": "bebfcbc74781f17a",
+        "type": "debug",
+        "z": "esc-mp3-tab",
+        "name": "Escribiente MP3 Debug",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "true",
+        "targetType": "full",
+        "x": 1210,
+        "y": 500,
+        "wires": []
+    },
+    {
+        "id": "1b4a1316c480afec",
+        "type": "debug",
+        "z": "esc-mp3-tab",
+        "name": "Escribiente MP3 Debug",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "true",
+        "targetType": "full",
+        "x": 1210,
+        "y": 460,
+        "wires": []
+    },
+    {
+        "id": "f97f1a1c0bea8e9d",
+        "type": "debug",
+        "z": "esc-mp3-tab",
+        "name": "Escribiente MP3 Debug",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "true",
+        "targetType": "full",
+        "x": 1210,
+        "y": 420,
+        "wires": []
+    },
+    {
+        "id": "2a36ea121ae7cdc3",
+        "type": "link in",
+        "z": "esc-mp3-tab",
+        "name": "link in 1",
+        "links": [
+            "1833ec8b4d03a413",
+            "dfc38ac7b713d549",
+            "f1b95cedee4a0f18",
+            "d5f5703defd0511f",
+            "1d53a4aec787cd77"
+        ],
+        "x": 675,
+        "y": 780,
+        "wires": [
+            [
+                "esc-mp3-dashboard"
+            ]
+        ]
+    },
+    {
+        "id": "369df223ca4f5457",
+        "type": "link out",
+        "z": "esc-mp3-tab",
+        "name": "link out 1",
+        "mode": "link",
+        "links": [
+            "a9b514c3b4fccd0b",
+            "c3d3e1e7c01a988c",
+            "1e87d27a4fd14581",
+            "d00c393e3dc215c0"
+        ],
+        "x": 1035,
+        "y": 780,
+        "wires": []
+    },
+    {
+        "id": "1833ec8b4d03a413",
+        "type": "link out",
+        "z": "esc-mp3-tab",
+        "name": "link out 2",
+        "mode": "link",
+        "links": [
+            "2a36ea121ae7cdc3"
+        ],
+        "x": 755,
+        "y": 140,
+        "wires": []
+    },
+    {
+        "id": "dfc38ac7b713d549",
+        "type": "link out",
+        "z": "esc-mp3-tab",
+        "name": "link out 3",
+        "mode": "link",
+        "links": [
+            "2a36ea121ae7cdc3"
+        ],
+        "x": 755,
+        "y": 340,
+        "wires": []
+    },
+    {
+        "id": "f1b95cedee4a0f18",
+        "type": "link out",
+        "z": "esc-mp3-tab",
+        "name": "link out 4",
+        "mode": "link",
+        "links": [
+            "2a36ea121ae7cdc3"
+        ],
+        "x": 755,
+        "y": 220,
+        "wires": []
+    },
+    {
+        "id": "d5f5703defd0511f",
+        "type": "link out",
+        "z": "esc-mp3-tab",
+        "name": "link out 5",
+        "mode": "link",
+        "links": [
+            "2a36ea121ae7cdc3"
+        ],
+        "x": 755,
+        "y": 440,
+        "wires": []
+    },
+    {
+        "id": "1d53a4aec787cd77",
+        "type": "link out",
+        "z": "esc-mp3-tab",
+        "name": "link out 6",
+        "mode": "link",
+        "links": [
+            "2a36ea121ae7cdc3"
+        ],
+        "x": 1085,
+        "y": 300,
+        "wires": []
+    },
+    {
+        "id": "a9b514c3b4fccd0b",
+        "type": "link in",
+        "z": "esc-mp3-tab",
+        "name": "link in 2",
+        "links": [
+            "369df223ca4f5457"
+        ],
+        "x": 425,
+        "y": 240,
+        "wires": [
+            [
+                "esc-mp3-chunker"
+            ]
+        ]
+    },
+    {
+        "id": "c3d3e1e7c01a988c",
+        "type": "link in",
+        "z": "esc-mp3-tab",
+        "name": "link in 3",
+        "links": [
+            "369df223ca4f5457"
+        ],
+        "x": 425,
+        "y": 340,
+        "wires": [
+            [
+                "esc-mp3-closer"
+            ]
+        ]
+    },
+    {
+        "id": "1e87d27a4fd14581",
+        "type": "link in",
+        "z": "esc-mp3-tab",
+        "name": "link in 4",
+        "links": [
+            "369df223ca4f5457"
+        ],
+        "x": 425,
+        "y": 120,
+        "wires": [
+            [
+                "esc-mp3-precheck"
+            ]
+        ]
+    },
+    {
+        "id": "d00c393e3dc215c0",
+        "type": "link in",
+        "z": "esc-mp3-tab",
+        "name": "link in 5",
+        "links": [
+            "369df223ca4f5457"
+        ],
+        "x": 425,
+        "y": 440,
+        "wires": [
+            [
+                "esc-mp3-session"
+            ]
+        ]
+    },
+    {
+        "id": "esc-mp3-group",
+        "type": "ui-group",
+        "name": "ESCRIBIENTE MP3",
+        "page": "esc-mp3-page",
+        "width": 12,
+        "height": 1,
+        "order": 1,
+        "showTitle": true,
+        "className": "",
+        "visible": "true",
+        "disabled": "false",
+        "groupType": "default"
+    },
+    {
+        "id": "esc-mp3-config",
+        "type": "alephscript-escribiente-config",
+        "name": "Escribiente Defaults · MP3",
+        "pythonCommand": "../.venv/Scripts/python.exe",
+        "workerScript": "../DocumentMachineSDK/workers/escribiente-whisper/worker.py",
+        "precheckScript": "../DocumentMachineSDK/workers/escribiente-whisper/precheck.py",
+        "sessionsRoot": "../ARCHIVO/PLUGINS/DOCUMENT_MACHINE/STORAGE/TRANSCRIPTIONS",
+        "queueRoot": "../ARCHIVO/PLUGINS/DOCUMENT_MACHINE/STORAGE/ESCRIBIENTE_QUEUE",
+        "ffmpegCommand": "ffmpeg",
+        "model": "small",
+        "device": "auto",
+        "computeType": "int8_float32",
+        "language": "es",
+        "beamSize": "5",
+        "chunkSec": "60",
+        "pollIntervalMs": "1500",
+        "defaultSource": "mp3"
+    },
+    {
+        "id": "esc-mp3-page",
+        "type": "ui-page",
+        "name": "Escribiente MP3",
+        "ui": "esc-ui-base-mp3",
+        "path": "/escribiente-mp3",
+        "icon": "library_music",
+        "layout": "grid",
+        "theme": "esc-ui-theme-mp3",
+        "breakpoints": [
+            {
+                "name": "Default",
+                "px": "0",
+                "cols": "3"
+            },
+            {
+                "name": "Tablet",
+                "px": "576",
+                "cols": "6"
+            },
+            {
+                "name": "Small Desktop",
+                "px": "768",
+                "cols": "9"
+            },
+            {
+                "name": "Desktop",
+                "px": "1024",
+                "cols": "12"
+            }
+        ],
+        "order": 1,
+        "className": "",
+        "visible": "true",
+        "disabled": "false"
+    },
+    {
+        "id": "esc-ui-base-mp3",
+        "type": "ui-base",
+        "name": "DESK",
+        "path": "/dashboard",
+        "appIcon": "",
+        "includeClientData": true,
+        "acceptsClientConfig": [
+            "ui-notification",
+            "ui-control"
+        ],
+        "showPathInSidebar": false,
+        "headerContent": "page",
+        "navigationStyle": "default",
+        "titleBarStyle": "default",
+        "showReconnectNotification": true,
+        "notificationDisplayTime": 1,
+        "showDisconnectNotification": true,
+        "allowInstall": true
+    },
+    {
+        "id": "esc-ui-theme-mp3",
+        "type": "ui-theme",
+        "name": "Escribiente Theme MP3",
+        "colors": {
+            "surface": "#ffffff",
+            "primary": "#8e44ad",
+            "bgPage": "#f7f0fb",
+            "groupBg": "#ffffff",
+            "groupOutline": "#d9c5e6"
+        },
+        "sizes": {
+            "density": "default",
+            "pagePadding": "12px",
+            "groupGap": "12px",
+            "groupBorderRadius": "8px",
+            "widgetGap": "12px"
+        }
+    },
+    {
+        "id": "408057fd3c931a71",
+        "type": "global-config",
+        "env": [],
+        "modules": {
+            "node-red-dashboard-2-alephscript-escribiente": "0.1.0",
+            "@flowfuse/node-red-dashboard": "1.30.2"
+        }
     }
-  },
-  {
-    "id": "esc-mp3-config",
-    "type": "alephscript-escribiente-config",
-    "name": "Escribiente Defaults · MP3",
-    "pythonCommand": "../.venv/Scripts/python.exe",
-    "workerScript": "../DocumentMachineSDK/workers/escribiente-whisper/worker.py",
-    "precheckScript": "../DocumentMachineSDK/workers/escribiente-whisper/precheck.py",
-    "sessionsRoot": "../ARCHIVO/PLUGINS/DOCUMENT_MACHINE/STORAGE/TRANSCRIPTIONS",
-    "queueRoot": "../ARCHIVO/PLUGINS/DOCUMENT_MACHINE/STORAGE/ESCRIBIENTE_QUEUE",
-    "ffmpegCommand": "ffmpeg",
-    "model": "small",
-    "device": "auto",
-    "computeType": "int8_float32",
-    "language": "es",
-    "beamSize": "5",
-    "chunkSec": "60",
-    "pollIntervalMs": "1500",
-    "defaultSource": "mp3"
-  },
-  {
-    "id": "esc-global-config-mp3",
-    "type": "global-config",
-    "env": [],
-    "modules": {
-      "node-red-contrib-alephscript-escribiente": "0.1.0",
-      "@flowfuse/node-red-dashboard": "1.26.0"
-    }
-  }
 ]
