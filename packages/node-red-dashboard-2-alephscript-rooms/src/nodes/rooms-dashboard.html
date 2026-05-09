@@ -1,0 +1,62 @@
+<script type="text/html" data-template-name="alephscript-rooms-dashboard">
+    <div class="form-row">
+        <label for="node-input-name"><i class="fa fa-tag"></i> Name</label>
+        <input type="text" id="node-input-name" placeholder="Rooms Dashboard">
+    </div>
+    <div class="form-row">
+        <label for="node-input-config"><i class="fa fa-cog"></i> Rooms config</label>
+        <input type="text" id="node-input-config">
+    </div>
+    <div class="form-row">
+        <label for="node-input-group"><i class="fa fa-table"></i> Group</label>
+        <input type="text" id="node-input-group">
+    </div>
+    <div class="form-row">
+        <label for="node-input-width"><i class="fa fa-arrows-h"></i> Width</label>
+        <select id="node-input-width">
+            <option value="0">auto</option>
+            <option value="6">6</option>
+            <option value="8">8</option>
+            <option value="10">10</option>
+            <option value="12" selected>12</option>
+        </select>
+        <label for="node-input-height" style="margin-left:20px;"><i class="fa fa-arrows-v"></i> Height</label>
+        <input type="number" id="node-input-height" placeholder="12" style="width:80px;">
+    </div>
+    <div class="form-row">
+        <label for="node-input-title"><i class="fa fa-header"></i> Title</label>
+        <input type="text" id="node-input-title" placeholder="AlephScript Rooms MVP">
+    </div>
+    <div class="form-row">
+        <label for="node-input-defaultRoom"><i class="fa fa-comments"></i> Default room</label>
+        <input type="text" id="node-input-defaultRoom" placeholder="ROOMS_LAB">
+    </div>
+</script>
+
+<script type="text/html" data-help-name="alephscript-rooms-dashboard">
+    <p>Dashboard 2 Rooms MVP widget. It does <strong>not</strong> connect from the browser directly to the Rooms runtime.</p>
+    <p>The widget sends UI commands back to the flow, and the flow delegates them to <code>alephscript-rooms-server</code> and <code>alephscript-rooms-agent-dummy</code>.</p>
+</script>
+
+<script type="text/javascript">
+    RED.nodes.registerType('alephscript-rooms-dashboard', {
+        category: 'dashboard',
+        color: '#4a235a',
+        defaults: {
+            name: { value: '' },
+            config: { value: '', type: 'alephscript-rooms-config', required: true },
+            group: { value: '', type: 'ui-group', required: true },
+            order: { value: 0 },
+            width: { value: 12, validate: RED.validators.number() },
+            height: { value: 12, validate: RED.validators.number() },
+            title: { value: 'AlephScript Rooms MVP' },
+            defaultRoom: { value: 'ROOMS_LAB' }
+        },
+        inputs: 1,
+        outputs: 1,
+        icon: 'font-awesome/fa-object-group',
+        label: function() {
+            return this.name || 'Rooms Dashboard';
+        }
+    });
+</script>

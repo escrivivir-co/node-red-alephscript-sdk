@@ -1,0 +1,37 @@
+<script type="text/html" data-template-name="alephscript-rooms-server">
+    <div class="form-row">
+        <label for="node-input-name"><i class="fa fa-tag"></i> Name</label>
+        <input type="text" id="node-input-name" placeholder="Rooms Server">
+    </div>
+    <div class="form-row">
+        <label for="node-input-config"><i class="fa fa-cog"></i> Rooms config</label>
+        <input type="text" id="node-input-config">
+    </div>
+    <div class="form-row">
+        <input type="checkbox" id="node-input-requestStateOnDeploy" style="display:inline-block; width:auto; vertical-align:top;">
+        <label for="node-input-requestStateOnDeploy" style="width:80%;"> Request state on deploy</label>
+    </div>
+</script>
+
+<script type="text/html" data-help-name="alephscript-rooms-server">
+    <p>Starts or points at the Rooms runtime and emits <code>SET_SERVER_STATE</code> snapshots plus operational logs.</p>
+    <p>Recommended MVP configuration: pair this node with <code>alephscript-rooms-config</code> in <strong>managed-port</strong> mode.</p>
+</script>
+
+<script type="text/javascript">
+    RED.nodes.registerType('alephscript-rooms-server', {
+        category: 'AlephScript',
+        color: '#2c3e50',
+        defaults: {
+            name: { value: '' },
+            config: { value: '', type: 'alephscript-rooms-config', required: true },
+            requestStateOnDeploy: { value: true }
+        },
+        inputs: 1,
+        outputs: 1,
+        icon: 'font-awesome/fa-server',
+        label: function() {
+            return this.name || 'Rooms Server';
+        }
+    });
+</script>

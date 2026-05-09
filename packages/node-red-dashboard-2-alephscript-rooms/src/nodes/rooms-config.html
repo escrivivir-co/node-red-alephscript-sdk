@@ -1,0 +1,68 @@
+<script type="text/html" data-template-name="alephscript-rooms-config">
+    <div class="form-row">
+        <label for="node-config-input-name"><i class="fa fa-tag"></i> Name</label>
+        <input type="text" id="node-config-input-name" placeholder="Rooms Runtime">
+    </div>
+    <div class="form-row">
+        <label for="node-config-input-mode"><i class="fa fa-random"></i> Mode</label>
+        <select id="node-config-input-mode">
+            <option value="managed-port">managed-port (MVP default)</option>
+            <option value="external">external</option>
+            <option value="same-origin">same-origin (experimental)</option>
+        </select>
+    </div>
+    <div class="form-row mode-external">
+        <label for="node-config-input-externalUrl"><i class="fa fa-server"></i> External URL</label>
+        <input type="text" id="node-config-input-externalUrl" placeholder="http://localhost:3010">
+    </div>
+    <div class="form-row">
+        <label for="node-config-input-namespace"><i class="fa fa-sitemap"></i> Namespace</label>
+        <input type="text" id="node-config-input-namespace" placeholder="/runtime">
+    </div>
+    <div class="form-row mode-managed">
+        <label for="node-config-input-managedHost"><i class="fa fa-laptop"></i> Managed host</label>
+        <input type="text" id="node-config-input-managedHost" placeholder="127.0.0.1" style="width:160px;">
+        <label for="node-config-input-managedPort" style="margin-left:20px;"><i class="fa fa-plug"></i> Port</label>
+        <input type="number" id="node-config-input-managedPort" placeholder="3010" style="width:100px;">
+    </div>
+    <div class="form-row">
+        <label for="node-config-input-pollIntervalMs"><i class="fa fa-refresh"></i> Poll interval</label>
+        <input type="number" id="node-config-input-pollIntervalMs" placeholder="5000" style="width:100px;">
+    </div>
+    <div class="form-tips mode-same-origin" style="margin-top:8px;">
+        same-origin queda como modo experimental. En este MVP el modo recomendado es managed-port porque el SDK fija el path de Socket.IO en <code>/socket.io</code>.
+    </div>
+</script>
+
+<script type="text/html" data-help-name="alephscript-rooms-config">
+    <p>Config node for the AlephScript Rooms MVP runtime.</p>
+    <p><strong>managed-port</strong> is the recommended MVP mode: the runtime starts inside the Node-RED container on a dedicated internal port.</p>
+</script>
+
+<script type="text/javascript">
+    RED.nodes.registerType('alephscript-rooms-config', {
+        category: 'config',
+        defaults: {
+            name: { value: 'Rooms Runtime' },
+            mode: { value: 'managed-port' },
+            externalUrl: { value: 'http://localhost:3010' },
+            namespace: { value: '/runtime' },
+            managedPort: { value: 3010, validate: RED.validators.number() },
+            managedHost: { value: '127.0.0.1' },
+            pollIntervalMs: { value: 5000, validate: RED.validators.number() }
+        },
+        label: function() {
+            return this.name || 'Rooms Runtime';
+        },
+        oneditprepare: function() {
+            function toggleRoomsModeFields() {
+                var mode = $('#node-config-input-mode').val();
+                $('.mode-external').toggle(mode === 'external');
+                $('.mode-managed').toggle(mode === 'managed-port');
+                $('.mode-same-origin').toggle(mode === 'same-origin');
+            }
+            $('#node-config-input-mode').on('change', toggleRoomsModeFields);
+            toggleRoomsModeFields();
+        }
+    });
+</script>

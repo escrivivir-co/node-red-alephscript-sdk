@@ -4,6 +4,9 @@
   "description": "Node-RED contrib nodes for AlephScript ecosystem integration",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
+  "files": [
+    "dist/**/*"
+  ],
   "scripts": {
     "build": "rm -rf dist tsconfig.tsbuildinfo && tsc --build",
     "build:full": "npm run clean && npm run build && npm run copy:html",
@@ -36,12 +39,11 @@
       "alephscript-ui-format": "dist/nodes/ui-format-node.js",
       "alephscript-config": "dist/nodes/alephscript-config.js",
       "alephscript-bot-registry": "dist/nodes/alephscript-bot-registry.js",
-      "alephscript-room-tester": "dist/nodes/alephscript-room-tester.js",
       "alephscript-stream-monitor": "dist/nodes/alephscript-stream-monitor.js"
     }
   },
   "dependencies": {
-    "@alephscript/mcp-core-sdk": "file:../../../MCPGallery/mcp-core-sdk/alephscript-mcp-core-sdk-1.3.0.tgz",
+    "@alephscript/mcp-core-sdk": "^1.3.0",
     "rxjs": "^7.8.1",
     "socket.io-client": "^4.7.2"
   },
@@ -59,5 +61,17 @@
   "peerDependencies": {
     "node-red": ">=3.0.0"
   },
+  "author": {
+    "name": "AlephScript Ops",
+    "email": "ops@escrivivir.co",
+    "url": "https://escrivivir.co"
+  },
+  "maintainers": [
+    {
+      "name": "AlephScript Ops",
+      "email": "ops@escrivivir.co",
+      "url": "https://escrivivir.co"
+    }
+  ],
   "license": "MIT"
 }

@@ -1,0 +1,70 @@
+<script type="text/html" data-template-name="alephscript-core-client">
+    <div class="form-row">
+        <label for="node-input-name"><i class="fa fa-tag"></i> Name</label>
+        <input type="text" id="node-input-name" placeholder="AlephScript Core Client">
+    </div>
+    <div class="form-row">
+        <label for="node-input-config"><i class="fa fa-cog"></i> Server</label>
+        <input type="text" id="node-input-config">
+    </div>
+    <div class="form-row">
+        <label for="node-input-clientName"><i class="fa fa-user"></i> Client</label>
+        <input type="text" id="node-input-clientName" placeholder="node-red-core-client">
+    </div>
+    <div class="form-row">
+        <label for="node-input-session"><i class="fa fa-key"></i> Session</label>
+        <input type="text" id="node-input-session" placeholder="auto">
+    </div>
+    <div class="form-row">
+        <label for="node-input-clientType"><i class="fa fa-id-badge"></i> Type</label>
+        <input type="text" id="node-input-clientType" placeholder="NodeRedCoreClient">
+    </div>
+    <div class="form-row">
+        <label for="node-input-defaultRoom"><i class="fa fa-comments"></i> Default room</label>
+        <input type="text" id="node-input-defaultRoom" placeholder="ENGINE_THREADS">
+    </div>
+    <div class="form-row">
+        <label for="node-input-features"><i class="fa fa-list"></i> Features</label>
+        <input type="text" id="node-input-features" placeholder="node-red,alephscript-core">
+    </div>
+    <div class="form-row">
+        <label>&nbsp;</label>
+        <input type="checkbox" id="node-input-autoRegister" style="display:inline-block; width:auto; vertical-align:top;">
+        <label for="node-input-autoRegister" style="width:70%;"> Auto register</label>
+    </div>
+    <div class="form-row">
+        <label>&nbsp;</label>
+        <input type="checkbox" id="node-input-autoSubscribe" style="display:inline-block; width:auto; vertical-align:top;">
+        <label for="node-input-autoSubscribe" style="width:70%;"> Auto subscribe default room</label>
+    </div>
+</script>
+
+<script type="text/html" data-help-name="alephscript-core-client">
+    <p>Generic AlephScript protocol client for Node-RED.</p>
+    <p>Supported commands through <code>msg.payload.command</code> or <code>msg.topic</code>: <code>register</code>, <code>subscribe</code>, <code>unsubscribe</code>, <code>room_message</code>, <code>get_server_state</code>, <code>raw_emit</code>.</p>
+    <p>This is a core transport node. Rooms-specific pedagogical UI belongs to P0 <code>node-red-dashboard-2-alephscript-rooms</code>.</p>
+</script>
+
+<script type="text/javascript">
+    RED.nodes.registerType('alephscript-core-client', {
+        category: 'AlephScript',
+        color: '#3498db',
+        defaults: {
+            name: { value: '' },
+            config: { value: '', type: 'alephscript-core-config', required: true },
+            clientName: { value: 'node-red-core-client', required: true },
+            session: { value: '' },
+            clientType: { value: 'NodeRedCoreClient' },
+            defaultRoom: { value: 'ENGINE_THREADS' },
+            autoRegister: { value: true },
+            autoSubscribe: { value: true },
+            features: { value: 'node-red,alephscript-core' }
+        },
+        inputs: 1,
+        outputs: 1,
+        icon: 'font-awesome/fa-plug',
+        label: function() {
+            return this.name || this.clientName || 'AlephScript Core Client';
+        }
+    });
+</script>

@@ -1,0 +1,67 @@
+<script type="text/html" data-template-name="alephscript-rooms-agent-dummy">
+    <div class="form-row">
+        <label for="node-input-name"><i class="fa fa-tag"></i> Name</label>
+        <input type="text" id="node-input-name" placeholder="Rooms Dummy Agents">
+    </div>
+    <div class="form-row">
+        <label for="node-input-config"><i class="fa fa-cog"></i> Rooms config</label>
+        <input type="text" id="node-input-config">
+    </div>
+    <div class="form-row">
+        <label for="node-input-agentCount"><i class="fa fa-users"></i> Agent count</label>
+        <input type="number" id="node-input-agentCount" placeholder="3" style="width:100px;">
+    </div>
+    <div class="form-row">
+        <label for="node-input-agentPrefix"><i class="fa fa-id-card"></i> Prefix</label>
+        <input type="text" id="node-input-agentPrefix" placeholder="dummy-agent">
+    </div>
+    <div class="form-row">
+        <label for="node-input-defaultRoom"><i class="fa fa-comments"></i> Default room</label>
+        <input type="text" id="node-input-defaultRoom" placeholder="ROOMS_LAB">
+    </div>
+    <div class="form-row">
+        <label for="node-input-messageEvent"><i class="fa fa-bolt"></i> Message event</label>
+        <input type="text" id="node-input-messageEvent" placeholder="ROOMS_LAB_MESSAGE">
+    </div>
+    <div class="form-row">
+        <label for="node-input-features"><i class="fa fa-list"></i> Features</label>
+        <input type="text" id="node-input-features" placeholder="ROOM_MESSAGE,GET_SERVER_STATE">
+    </div>
+    <div class="form-row">
+        <input type="checkbox" id="node-input-autoStart" style="display:inline-block; width:auto; vertical-align:top;">
+        <label for="node-input-autoStart" style="width:80%;"> Auto create agents on deploy</label>
+    </div>
+    <div class="form-row">
+        <input type="checkbox" id="node-input-makeFirstMaster" style="display:inline-block; width:auto; vertical-align:top;">
+        <label for="node-input-makeFirstMaster" style="width:80%;"> Make first agent room master</label>
+    </div>
+</script>
+
+<script type="text/html" data-help-name="alephscript-rooms-agent-dummy">
+    <p>Creates one or more <code>AlephScriptClient</code> dummy agents for the Rooms MVP lab.</p>
+    <p>Supported commands via input: <code>create_agents</code>, <code>join_room</code>, <code>leave_room</code>, <code>send_room_message</code>, <code>reset_agents</code>, <code>get_status</code>.</p>
+</script>
+
+<script type="text/javascript">
+    RED.nodes.registerType('alephscript-rooms-agent-dummy', {
+        category: 'AlephScript',
+        color: '#16a085',
+        defaults: {
+            name: { value: '' },
+            config: { value: '', type: 'alephscript-rooms-config', required: true },
+            agentCount: { value: 3, validate: RED.validators.number() },
+            agentPrefix: { value: 'dummy-agent' },
+            defaultRoom: { value: 'ROOMS_LAB' },
+            autoStart: { value: true },
+            makeFirstMaster: { value: true },
+            messageEvent: { value: 'ROOMS_LAB_MESSAGE' },
+            features: { value: 'ROOM_MESSAGE,GET_SERVER_STATE' }
+        },
+        inputs: 1,
+        outputs: 1,
+        icon: 'font-awesome/fa-user-secret',
+        label: function() {
+            return this.name || 'Rooms Dummy Agents';
+        }
+    });
+</script>

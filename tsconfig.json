@@ -3,7 +3,7 @@
     "target": "ES2022",
     "module": "ES2022",
     "lib": ["ES2022", "DOM"],
-    "moduleResolution": "node",
+    "moduleResolution": "bundler",
     "strict": true,
     "esModuleInterop": true,
     "skipLibCheck": true,
@@ -12,6 +12,9 @@
   "references": [
     {
       "path": "./packages/node-red-contrib-alephscript"
+    },
+    {
+      "path": "./packages/node-red-dashboard-2-alephscript-rooms"
     },
     {
       "path": "./packages/node-red-gamify-ui"
