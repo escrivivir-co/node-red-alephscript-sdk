@@ -8,6 +8,10 @@ export interface RoomsRuntimeInfo {
   namespace: string
   internal: boolean
   available: boolean
+  authEnabled?: boolean
+  bindHost?: string
+  defaultRoom?: string
+  healthPath?: string
   meshBaseUrl?: string
   note?: string
   experimental?: boolean

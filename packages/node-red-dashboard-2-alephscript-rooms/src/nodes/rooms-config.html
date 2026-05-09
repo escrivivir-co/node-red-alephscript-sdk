@@ -25,6 +25,9 @@
         <label for="node-config-input-managedPort" style="margin-left:20px;"><i class="fa fa-plug"></i> Port</label>
         <input type="number" id="node-config-input-managedPort" placeholder="3010" style="width:100px;">
     </div>
+    <div class="form-tips mode-managed" style="margin-top:8px;">
+        <code>managedHost</code> es solo la URL interna que usarán monitor/UI/dummy-lab para hablar con el runtime. El bind real del listener se configura en el nodo <code>alephscript-rooms-server</code> mediante <code>bindHost</code>.
+    </div>
     <div class="form-row">
         <label for="node-config-input-pollIntervalMs"><i class="fa fa-refresh"></i> Poll interval</label>
         <input type="number" id="node-config-input-pollIntervalMs" placeholder="5000" style="width:100px;">
