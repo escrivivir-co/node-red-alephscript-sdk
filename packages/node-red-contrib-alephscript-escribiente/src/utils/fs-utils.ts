@@ -59,6 +59,10 @@ export function writeJsonFile(filePath: string, payload: unknown): void {
   fs.writeFileSync(filePath, JSON.stringify(payload, null, 2), 'utf8');
 }
 
+export function sanitizeFileName(fileName: string): string {
+  return fileName.replace(/[^a-zA-Z0-9._-]+/g, '-');
+}
+
 export function audioExtensionFromMimeOrName(mimeType?: string, fileName?: string, fallback = '.webm'): string {
   if (fileName) {
     const ext = path.extname(fileName);
@@ -79,6 +83,11 @@ export function audioExtensionFromMimeOrName(mimeType?: string, fileName?: strin
 export function decodeBase64Payload(data: string): Buffer {
   const normalized = data.includes(',') ? data.split(',')[1] : data;
   return Buffer.from(normalized, 'base64');
+}
+
+export function isPathWithin(parentDir: string, candidatePath: string): boolean {
+  const relative = path.relative(path.resolve(parentDir), path.resolve(candidatePath));
+  return relative === '' || (!relative.startsWith('..') && !path.isAbsolute(relative));
 }
 
 export function nextChunkIndex(audioDir: string): number {

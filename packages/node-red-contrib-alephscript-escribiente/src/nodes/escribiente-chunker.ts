@@ -7,9 +7,11 @@ import {
   audioExtensionFromMimeOrName,
   decodeBase64Payload,
   formatChunkId,
+  isPathWithin,
   nextChunkIndex,
   nowIso,
   readJsonFile,
+  sanitizeFileName,
   updateManifest,
   writeJsonFile
 } from '../utils/fs-utils';
@@ -41,12 +43,18 @@ interface ChunkerNode extends Node {
   configNode: EscribienteConfigNode;
 }
 
-function sanitizeFileName(fileName: string): string {
-  return fileName.replace(/[^a-zA-Z0-9._-]+/g, '-');
-}
-
 function buildManifestPath(sessionsRoot: string, sessionId: string): string {
   return path.join(sessionsRoot, sessionId, 'manifest.json');
+}
+
+function resolveSessionAudioPath(manifest: SessionManifest, audioPath: string): string {
+  const resolvedPath = path.resolve(audioPath);
+  const allowedRoots = [manifest.sourceFilesDir, manifest.audioDir];
+  const isAllowed = allowedRoots.some((allowedRoot) => isPathWithin(allowedRoot, resolvedPath));
+  if (!isAllowed) {
+    throw new Error('audioPath must stay inside the current session directories');
+  }
+  return resolvedPath;
 }
 
 function shouldHandleMessage(msg: NodeMessage, command: ChunkerCommand): boolean {
@@ -110,7 +118,7 @@ export = function (RED: NodeAPI) {
         const manifestPath = buildManifestPath(resolved.sessionsRoot, sessionId);
         const manifest = readManifest(resolved.sessionsRoot, sessionId);
         if (!manifest.sessionId) {
-          throw new Error(`Session manifest not found for ${sessionId}`);
+          throw new Error(`Session manifest not found* for ${manifestPath}`);
         }
 
         const source = command.source || manifest.source || resolved.defaultSource;
@@ -124,7 +132,11 @@ export = function (RED: NodeAPI) {
 
         this.status({ fill: 'blue', shape: 'dot', text: 'queueing audio' });
 
-        let localSourcePath: string | undefined = sourceAudioPath;
+        let localSourcePath: string | undefined;
+        if (sourceAudioPath) {
+          localSourcePath = resolveSessionAudioPath(manifest, sourceAudioPath);
+        }
+
         if (!localSourcePath && buffer) {
           const sourceFileName = sanitizeFileName(command.fileName || `${Date.now()}${ext}`);
           localSourcePath = path.join(manifest.sourceFilesDir, sourceFileName);

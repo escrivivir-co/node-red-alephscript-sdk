@@ -4,6 +4,10 @@
         <input type="text" id="node-input-name" placeholder="Escribiente Recorder">
     </div>
     <div class="form-row">
+        <label for="node-input-config"><i class="fa fa-cog"></i> Config</label>
+        <input type="text" id="node-input-config">
+    </div>
+    <div class="form-row">
         <label for="node-input-group"><i class="fa fa-table"></i> Group</label>
         <input type="text" id="node-input-group">
     </div>
@@ -38,7 +42,8 @@
 </script>
 
 <script type="text/html" data-help-name="alephscript-escribiente-dashboard-recorder">
-    <p>Dashboard 2.0 widget for microphone capture, MP3 upload, session control and live transcript feedback.</p>
+    <p>Dashboard 2.0 widget for microphone capture, MP3 upload over HTTP, session control and live transcript feedback.</p>
+    <p>Use the same Escribiente config node as the session/chunker chain so uploaded audio lands inside the matching <code>TRANSCRIPTIONS/{sessionId}/source-files/</code> folder.</p>
 </script>
 
 <script type="text/javascript">
@@ -47,6 +52,7 @@
         color: '#223322',
         defaults: {
             name: { value: '' },
+            config: { value: '', type: 'alephscript-escribiente-config', required: true },
             group: { value: '', type: 'ui-group', required: true },
             order: { value: 0 },
             width: { value: 12, validate: RED.validators.number() },

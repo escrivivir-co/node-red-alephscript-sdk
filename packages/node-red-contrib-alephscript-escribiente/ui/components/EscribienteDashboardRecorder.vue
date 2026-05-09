@@ -39,8 +39,9 @@
       <strong>MP3 origen</strong>
       <div class="escribiente-row actions-row">
         <input ref="fileInput" type="file" accept="audio/mpeg,.mp3,audio/*">
-        <button type="button" class="btn-primary" :disabled="!sessionId" @click="uploadMp3">Subir y trocear</button>
+        <button type="button" class="btn-primary" :disabled="!sessionId || !uploadEnabled || isUploading" @click="uploadMp3">{{ uploadButtonLabel }}</button>
       </div>
+      <div v-if="!uploadEnabled" class="upload-note">Asigna el mismo config de Escribiente que usa la sesión para habilitar la subida MP3.</div>
     </div>
 
     <div class="escribiente-card">
@@ -85,7 +86,8 @@ export default {
       timerHandle: null,
       elapsed: 0,
       chunkStart: 0,
-      isPaused: false
+      isPaused: false,
+      isUploading: false
     }
   },
   computed: {
@@ -124,6 +126,12 @@ export default {
     },
     orderedChunks () {
       return [...this.chunks].reverse()
+    },
+    uploadEnabled () {
+      return Boolean(this.props.uploadEnabled && this.props.uploadPath)
+    },
+    uploadButtonLabel () {
+      return this.isUploading ? 'Subiendo…' : 'Subir y trocear'
     }
   },
   created () {
@@ -226,22 +234,55 @@ export default {
       this.stopTimer()
     },
     async uploadMp3 () {
-      if (!this.sessionId) {
+      if (!this.sessionId || this.isUploading) {
         return
       }
-      const file = this.$refs.fileInput?.files?.[0]
+      const fileInput = this.$refs.fileInput
+      const file = fileInput?.files?.[0]
       if (!file) {
         return
       }
-      const data = await this.blobToBase64(file)
-      this.emitCommand('upload_mp3', {
-        sessionId: this.sessionId,
-        data,
-        fileName: file.name,
-        mimeType: file.type || 'audio/mpeg',
-        chunkSec: this.normalizedChunkSec
-      })
-      this.addOrUpdateChunk(`upload-${Date.now()}`, 'queued', 'MP3 enviado para troceado', file.name)
+      if (!this.uploadEnabled) {
+        this.addOrUpdateChunk('upload-config', 'failed', 'La subida MP3 necesita un config de Escribiente en este recorder', 'Config requerida')
+        return
+      }
+
+      const uploadId = `upload-${Date.now()}`
+      this.isUploading = true
+      this.addOrUpdateChunk(uploadId, 'queued', 'Subiendo MP3 al runtime…', `${file.name} · ${this.formatFileSize(file.size)}`)
+
+      try {
+        const formData = new FormData()
+        formData.set('sessionId', this.sessionId)
+        formData.set('file', file, file.name)
+
+        const response = await fetch(this.props.uploadPath, {
+          method: 'POST',
+          body: formData
+        })
+
+        const result = await response.json().catch(() => ({}))
+        if (!response.ok) {
+          throw new Error(result.error || `Upload HTTP ${response.status}`)
+        }
+
+        this.emitCommand('upload_mp3', {
+          sessionId: this.sessionId,
+          audioPath: result.audioPath,
+          fileName: file.name,
+          mimeType: result.mimeType || file.type || 'audio/mpeg',
+          chunkSec: this.normalizedChunkSec
+        })
+        this.addOrUpdateChunk(uploadId, 'queued', 'MP3 subido; iniciando troceado', `${file.name} · ${this.formatFileSize(result.size || file.size)}`)
+
+        if (fileInput) {
+          fileInput.value = ''
+        }
+      } catch (error) {
+        this.addOrUpdateChunk(uploadId, 'failed', error instanceof Error ? error.message : String(error), file.name)
+      } finally {
+        this.isUploading = false
+      }
     },
     onLoad (msg) {
       if (msg) {
@@ -316,6 +357,21 @@ export default {
         'status-bad': status === 'failed',
         'status-warn': status !== 'done' && status !== 'failed'
       }
+    },
+    formatFileSize (size) {
+      if (!Number.isFinite(size) || size < 0) {
+        return 'tamaño desconocido'
+      }
+
+      if (size < 1024) {
+        return `${size} B`
+      }
+
+      if (size < (1024 * 1024)) {
+        return `${(size / 1024).toFixed(1)} KB`
+      }
+
+      return `${(size / (1024 * 1024)).toFixed(1)} MB`
     },
     blobToBase64 (blob) {
       return new Promise((resolve, reject) => {
@@ -468,6 +524,12 @@ export default {
 .warnings {
   margin-top: 8px;
   color: #856404;
+}
+
+.upload-note {
+  margin-top: 8px;
+  font-size: 12px;
+  color: #666;
 }
 
 .log-box {
