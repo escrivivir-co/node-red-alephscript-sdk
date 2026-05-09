@@ -43,6 +43,7 @@
     <p>Generic AlephScript protocol client for Node-RED.</p>
     <p>Supported commands through <code>msg.payload.command</code> or <code>msg.topic</code>: <code>register</code>, <code>subscribe</code>, <code>unsubscribe</code>, <code>room_message</code>, <code>get_server_state</code>, <code>raw_emit</code>.</p>
     <p>This is a core transport node. Rooms-specific pedagogical UI belongs to P0 <code>node-red-dashboard-2-alephscript-rooms</code>.</p>
+    <p>When the shared config emits <code>auth_error</code>, this node sets a red status and forwards a message with <code>topic=auth_error</code> through its regular output.</p>
 </script>
 
 <script type="text/javascript">

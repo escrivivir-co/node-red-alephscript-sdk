@@ -12,6 +12,18 @@
         <input type="text" id="node-config-input-namespace" placeholder="/runtime">
     </div>
     <div class="form-row">
+        <label for="node-config-input-authUser"><i class="fa fa-user"></i> Auth user</label>
+        <input type="text" id="node-config-input-authUser" placeholder="node-red-core-client">
+    </div>
+    <div class="form-row">
+        <label for="node-config-input-authRoom"><i class="fa fa-comments"></i> Auth room</label>
+        <input type="text" id="node-config-input-authRoom" placeholder="ROOMS_LAB">
+    </div>
+    <div class="form-row">
+        <label for="node-config-input-authToken"><i class="fa fa-key"></i> Auth token</label>
+        <input type="password" id="node-config-input-authToken" placeholder="shared secret">
+    </div>
+    <div class="form-row">
         <label>&nbsp;</label>
         <input type="checkbox" id="node-config-input-reconnection" style="display:inline-block; width:auto; vertical-align:top;">
         <label for="node-config-input-reconnection" style="width:70%;"> Auto-reconnect</label>
@@ -29,6 +41,7 @@
 <script type="text/html" data-help-name="alephscript-core-config">
     <p>Shared Socket.IO connection configuration for AlephScript Core nodes.</p>
     <p>This node intentionally contains no Dashboard 2 widget logic and no legacy room tester UI.</p>
+    <p><strong>Auth token</strong> se guarda como credencial de Node-RED y se redacciona en el editor. Si el runtime Rooms usa shared-secret auth, configura aquí <code>token</code>, <code>room</code> y <code>user</code>.</p>
 </script>
 
 <script type="text/javascript">
@@ -38,6 +51,9 @@
             name: { value: 'AlephScript Core Server' },
             serverUrl: { value: 'http://localhost:3001', required: true },
             namespace: { value: '/runtime' },
+            authToken: { value: '' },
+            authUser: { value: '' },
+            authRoom: { value: '' },
             reconnection: { value: true },
             reconnectionAttempts: { value: 5, validate: RED.validators.number() },
             reconnectionDelay: { value: 1000, validate: RED.validators.number() },

@@ -1,10 +1,21 @@
 import { Node, NodeAPI, NodeDef, NodeMessage } from 'node-red';
 import { Socket } from 'socket.io-client';
 
+interface CoreAuthErrorPayload {
+  reason?: string;
+  message?: string;
+  error?: {
+    message?: string;
+  };
+  [key: string]: unknown;
+}
+
 interface CoreConfigNode extends Node {
   getSocket(): Socket | undefined;
   addConnectionCallback(callback: (connected: boolean) => void): void;
   removeConnectionCallback(callback: (connected: boolean) => void): void;
+  addAuthErrorCallback(callback: (payload: CoreAuthErrorPayload) => void): void;
+  removeAuthErrorCallback(callback: (payload: CoreAuthErrorPayload) => void): void;
 }
 
 interface CoreClientNodeDef extends NodeDef {
@@ -26,6 +37,8 @@ interface CoreClientNode extends Node {
   defaultRoom: string;
   features: string[];
   connectionCallback?: (connected: boolean) => void;
+  authErrorCallback?: (payload: CoreAuthErrorPayload) => void;
+  lastAuthError?: string;
 }
 
 interface CoreCommandPayload {
@@ -48,6 +61,10 @@ function sessionId(): string {
   return `nr-${Date.now()}-${Math.random().toString(36).slice(2, 10)}`;
 }
 
+function formatAuthReason(payload: CoreAuthErrorPayload): string {
+  return payload.reason || payload.message || payload.error?.message || 'unauthorized';
+}
+
 export = function (RED: NodeAPI) {
   function CoreClientNode(this: CoreClientNode, config: CoreClientNodeDef) {
     RED.nodes.createNode(this, config);
@@ -56,7 +73,7 @@ export = function (RED: NodeAPI) {
     this.clientName = config.clientName || 'node-red-core-client';
     this.session = config.session || sessionId();
     this.clientType = config.clientType || 'NodeRedCoreClient';
-    this.defaultRoom = config.defaultRoom || 'ENGINE_THREADS';
+    this.defaultRoom = config.defaultRoom || process.env.ROOMS_DEFAULT_ROOM || 'ENGINE_THREADS';
     this.features = parseFeatures(config.features);
 
     if (!this.configNode) {
@@ -66,7 +83,14 @@ export = function (RED: NodeAPI) {
     }
 
     this.connectionCallback = (connected: boolean) => {
-      this.status({ fill: connected ? 'green' : 'red', shape: connected ? 'dot' : 'ring', text: connected ? 'connected' : 'disconnected' });
+      if (connected) {
+        this.lastAuthError = undefined;
+      }
+      this.status({
+        fill: connected ? 'green' : 'red',
+        shape: connected ? 'dot' : (this.lastAuthError ? 'dot' : 'ring'),
+        text: connected ? 'connected' : (this.lastAuthError ? `auth: ${this.lastAuthError}` : 'disconnected')
+      });
       if (connected) {
         if (config.autoRegister !== false) {
           registerClient(this);
@@ -78,6 +102,24 @@ export = function (RED: NodeAPI) {
     };
 
     this.configNode.addConnectionCallback(this.connectionCallback);
+
+    this.authErrorCallback = (payload: CoreAuthErrorPayload) => {
+      const reason = formatAuthReason(payload);
+      this.lastAuthError = reason;
+      this.status({ fill: 'red', shape: 'dot', text: `auth: ${reason}` });
+      this.send({
+        topic: 'auth_error',
+        payload,
+        alephscript: {
+          source: 'auth',
+          clientName: this.clientName,
+          receivedAt: new Date().toISOString(),
+          reason
+        }
+      });
+    };
+    this.configNode.addAuthErrorCallback(this.authErrorCallback);
+
     wireInboundEvents(this);
 
     this.on('input', (msg: NodeMessage, send, done) => {
@@ -93,6 +135,9 @@ export = function (RED: NodeAPI) {
     this.on('close', () => {
       if (this.configNode && this.connectionCallback) {
         this.configNode.removeConnectionCallback(this.connectionCallback);
+      }
+      if (this.configNode && this.authErrorCallback) {
+        this.configNode.removeAuthErrorCallback(this.authErrorCallback);
       }
     });
   }
@@ -167,6 +212,10 @@ export = function (RED: NodeAPI) {
     }
 
     socket.onAny((event: string, ...args: unknown[]) => {
+      if (event === 'auth_error') {
+        return;
+      }
+
       node.send({
         topic: event,
         payload: args.length === 1 ? args[0] : args,
